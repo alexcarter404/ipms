@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import TextareaInput from '@/Components/TextareaInput.vue';
+import DateInput from '@/Components/DateInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link } from '@inertiajs/vue3';
 
@@ -156,7 +157,7 @@ watch(
                 </div>
                 <div>
                     <InputLabel value="Application date" />
-                    <TextInput v-model="form.application_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="form.application_date" class="mt-1" />
                     <InputError :message="form.errors.application_date" class="mt-1" />
                 </div>
                 <div>
@@ -166,7 +167,7 @@ watch(
                 </div>
                 <div>
                     <InputLabel value="Publication date" />
-                    <TextInput v-model="form.publication_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="form.publication_date" class="mt-1" />
                     <InputError :message="form.errors.publication_date" class="mt-1" />
                 </div>
                 <div>
@@ -176,7 +177,7 @@ watch(
                 </div>
                 <div>
                     <InputLabel value="Registration / grant date" />
-                    <TextInput v-model="form.registration_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="form.registration_date" class="mt-1" />
                     <InputError :message="form.errors.registration_date" class="mt-1" />
                 </div>
                 <div>
@@ -186,12 +187,12 @@ watch(
                 </div>
                 <div>
                     <InputLabel value="Priority date" />
-                    <TextInput v-model="form.priority_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="form.priority_date" class="mt-1" />
                     <InputError :message="form.errors.priority_date" class="mt-1" />
                 </div>
                 <div>
                     <InputLabel value="Expiry date" />
-                    <TextInput v-model="form.expiry_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="form.expiry_date" class="mt-1" />
                     <InputError :message="form.errors.expiry_date" class="mt-1" />
                 </div>
             </div>

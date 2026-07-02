@@ -5,9 +5,11 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import DateInput from '@/Components/DateInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -20,10 +22,11 @@ const generate = () =>
 const setStatus = (renewal, status) =>
     router.patch(route('renewals.update', renewal.id), { status }, { preserveScroll: true });
 
-const remove = (renewal) => {
-    if (!confirm(`Delete renewal cycle ${renewal.cycle}?`)) return;
-    router.delete(route('renewals.destroy', renewal.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (renewal) =>
+    confirmDelete(`Delete renewal cycle ${renewal.cycle}?`, () =>
+        router.delete(route('renewals.destroy', renewal.id), { preserveScroll: true }));
 
 // manual add
 const showAdd = ref(false);
@@ -97,12 +100,12 @@ const submit = () =>
             </div>
             <div>
                 <InputLabel value="Due date" />
-                <TextInput v-model="form.due_date" type="date" class="mt-1 w-full" />
+                <DateInput v-model="form.due_date" class="mt-1" />
                 <InputError :message="form.errors.due_date" class="mt-1" />
             </div>
             <div>
                 <InputLabel value="Grace date" />
-                <TextInput v-model="form.grace_date" type="date" class="mt-1 w-full" />
+                <DateInput v-model="form.grace_date" class="mt-1" />
                 <InputError :message="form.errors.grace_date" class="mt-1" />
             </div>
             <div>

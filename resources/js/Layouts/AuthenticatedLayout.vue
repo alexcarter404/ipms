@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import ConfirmDialog from 'primevue/confirmdialog';
 import FlashMessages from '@/Components/FlashMessages.vue';
 import GlobalSearch from '@/Components/GlobalSearch.vue';
 import NavLink from '@/Components/NavLink.vue';
@@ -213,6 +214,7 @@ const navigation = [
             <!-- Page Content -->
             <main>
                 <FlashMessages />
+                <ConfirmDialog :style="{ maxWidth: '28rem' }" />
                 <slot />
             </main>
         </div>

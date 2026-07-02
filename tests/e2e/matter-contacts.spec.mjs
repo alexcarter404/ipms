@@ -13,7 +13,7 @@ test.describe('Matter contacts', () => {
         await expect(page.getByText('Sarah Bennett')).toBeVisible();
         await expect(page.getByText('ip-docketing@acme.example')).toBeVisible();
 
-        await page.getByRole('button', { name: /Contacts \(/ }).click();
+        await page.getByRole('tab', { name: /Contacts \(/ }).click();
         const docketingRow = page.locator('tr', { hasText: 'Acme IP Docketing' });
         await expect(docketingRow.getByText('Mailbox / Docketing')).toBeVisible();
         await expect(docketingRow.getByText('Docketing', { exact: true })).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Matter contacts', () => {
         await expect(page.locator('tbody tr')).toHaveCount(1);
         await page.getByRole('link', { name: 'TM-2023-0001' }).click();
 
-        await page.getByRole('button', { name: /Contacts \(/ }).click();
+        await page.getByRole('tab', { name: /Contacts \(/ }).click();
         await page.getByRole('radio', { name: 'New contact' }).check();
         await field(page, 'Name').fill('NovaTech Invoices');
         await pickOption(page, page, 'Contact type', 'Mailbox / Docketing');
@@ -46,7 +46,7 @@ test.describe('Matter contacts', () => {
         await expect(page.locator('tbody tr')).toHaveCount(1);
         await page.getByRole('link', { name: 'P-2021-0001' }).click();
 
-        await page.getByRole('button', { name: /Comms \(/ }).click();
+        await page.getByRole('tab', { name: /Comms \(/ }).click();
         await page.getByRole('button', { name: 'Compose' }).click();
 
         const modal = page.locator('div').filter({ hasText: 'Compose Communication' }).last();

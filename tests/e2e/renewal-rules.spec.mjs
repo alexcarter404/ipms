@@ -52,10 +52,29 @@ test.describe('Renewal schedule rules', () => {
         await expect(row.getByText('Due at 2y from filing')).toBeVisible();
     });
 
+    test('deleting a rule asks for confirmation first', async ({ page }) => {
+        await page.goto('/renewal-rules');
+
+        const row = page.locator('tr', { hasText: 'Domain Name Renewals' });
+        await row.getByRole('button', { name: 'Delete' }).click();
+
+        // Confirm dialog appears; cancelling keeps the rule
+        const dialog = page.getByRole('alertdialog');
+        await expect(dialog.getByText(/Delete rule .Domain Name Renewals./)).toBeVisible();
+        await dialog.getByRole('button', { name: 'Cancel' }).click();
+        await expect(page.locator('tr', { hasText: 'Domain Name Renewals' })).toBeVisible();
+
+        // Accepting deletes it
+        await row.getByRole('button', { name: 'Delete' }).click();
+        await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
+        await expect(page.getByText('Renewal rule deleted.')).toBeVisible();
+        await expect(page.locator('tr', { hasText: 'Domain Name Renewals' })).toBeHidden();
+    });
+
     test('matter renewals tab names its governing rule', async ({ page }) => {
         await page.goto('/matters');
         await page.getByRole('link', { name: 'P-2021-0001' }).click();
-        await page.getByRole('button', { name: /Renewals \(/ }).click();
+        await page.getByRole('tab', { name: /Renewals \(/ }).click();
 
         await expect(page.getByText('Governed by')).toBeVisible();
         await expect(page.getByRole('link', { name: 'Patent Annuities (default)' })).toBeVisible();

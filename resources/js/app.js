@@ -5,6 +5,8 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import PrimeVue from 'primevue/config';
+import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
@@ -50,6 +52,8 @@ createInertiaApp({
                     },
                 },
             })
+            .use(ToastService)
+            .use(ConfirmationService)
             .mount(el);
     },
     progress: {

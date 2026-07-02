@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Pagination from '@/Components/Pagination.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { onUnmounted, reactive, watch } from 'vue';
 
@@ -23,6 +24,9 @@ const form = reactive({
     client_id: props.filters.client_id ?? '',
 });
 
+const pruned = () =>
+    Object.fromEntries(Object.entries(form).filter(([, v]) => v !== '' && v !== null));
+
 let timeout = null;
 watch(form, () => {
     clearTimeout(timeout);
@@ -36,8 +40,13 @@ watch(form, () => {
 
 onUnmounted(() => clearTimeout(timeout));
 
-const pruned = () =>
-    Object.fromEntries(Object.entries(form).filter(([, v]) => v !== '' && v !== null));
+const onPage = (event) => {
+    router.get(
+        route('matters.index'),
+        { ...pruned(), page: event.page + 1 },
+        { preserveState: true, replace: true }
+    );
+};
 
 const typeLabel = (value) => props.types.find((t) => t.value === value)?.label ?? value;
 </script>
@@ -79,65 +88,64 @@ const typeLabel = (value) => props.types.find((t) => t.value === value)?.label ?
                 />
             </div>
 
-            <!-- Table -->
-            <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                        <tr>
-                            <th class="px-4 py-3">Reference</th>
-                            <th class="px-4 py-3">Title</th>
-                            <th class="px-4 py-3">Type</th>
-                            <th class="px-4 py-3">Ctry</th>
-                            <th class="px-4 py-3">Client</th>
-                            <th class="px-4 py-3">App. No</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3">Attorney</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr
-                            v-for="matter in matters.data"
-                            :key="matter.id"
-                            class="hover:bg-gray-50"
-                        >
-                            <td class="whitespace-nowrap px-4 py-3">
-                                <Link
-                                    :href="route('matters.show', matter.id)"
-                                    class="font-medium text-indigo-600 hover:underline"
-                                >
-                                    {{ matter.reference }}
-                                </Link>
-                            </td>
-                            <td class="max-w-xs truncate px-4 py-3 text-gray-700">
-                                {{ matter.title }}
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                {{ typeLabel(matter.matter_type) }}
-                            </td>
-                            <td class="px-4 py-3 text-gray-600">{{ matter.country_code }}</td>
-                            <td class="max-w-[12rem] truncate px-4 py-3 text-gray-600">
-                                {{ matter.client?.name }}
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                {{ matter.application_no ?? '—' }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <StatusBadge :status="matter.status" />
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                {{ matter.responsible_user?.name ?? '—' }}
-                            </td>
-                        </tr>
-                        <tr v-if="!matters.data.length">
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                                No matters match your filters.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                :value="matters.data"
+                lazy
+                paginator
+                :rows="matters.per_page"
+                :total-records="matters.total"
+                :first="(matters.current_page - 1) * matters.per_page"
+                data-key="id"
+                size="small"
+                class="overflow-hidden rounded-lg shadow-sm"
+                @page="onPage"
+            >
+                <template #empty>
+                    <p class="py-4 text-center text-gray-500">No matters match your filters.</p>
+                </template>
 
-            <Pagination :links="matters.links" />
+                <Column header="Reference">
+                    <template #body="{ data }">
+                        <Link
+                            :href="route('matters.show', data.id)"
+                            class="whitespace-nowrap font-medium text-indigo-600 hover:underline"
+                        >
+                            {{ data.reference }}
+                        </Link>
+                    </template>
+                </Column>
+                <Column header="Title">
+                    <template #body="{ data }">
+                        <span class="block max-w-xs truncate text-gray-700">{{ data.title }}</span>
+                    </template>
+                </Column>
+                <Column header="Type">
+                    <template #body="{ data }">
+                        <span class="whitespace-nowrap text-gray-600">{{ typeLabel(data.matter_type) }}</span>
+                    </template>
+                </Column>
+                <Column field="country_code" header="Ctry" />
+                <Column header="Client">
+                    <template #body="{ data }">
+                        <span class="block max-w-[12rem] truncate text-gray-600">{{ data.client?.name }}</span>
+                    </template>
+                </Column>
+                <Column header="App. No">
+                    <template #body="{ data }">
+                        <span class="whitespace-nowrap text-gray-600">{{ data.application_no ?? '—' }}</span>
+                    </template>
+                </Column>
+                <Column header="Status">
+                    <template #body="{ data }">
+                        <StatusBadge :status="data.status" />
+                    </template>
+                </Column>
+                <Column header="Attorney">
+                    <template #body="{ data }">
+                        <span class="whitespace-nowrap text-gray-600">{{ data.responsible_user?.name ?? '—' }}</span>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
     </AuthenticatedLayout>
 </template>

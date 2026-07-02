@@ -6,6 +6,7 @@ import SelectInput from '@/Components/SelectInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -33,13 +34,14 @@ const submit = () => {
     });
 };
 
-const remove = (party) => {
-    if (!confirm(`Remove ${party.name} (${party.pivot.role}) from this matter?`)) return;
-    useForm({ role: party.pivot.role }).delete(
-        route('matters.parties.destroy', [props.matter.id, party.id]),
-        { preserveScroll: true }
-    );
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (party) =>
+    confirmDelete(`Remove ${party.name} (${party.pivot.role}) from this matter?`, () =>
+        useForm({ role: party.pivot.role }).delete(
+            route('matters.parties.destroy', [props.matter.id, party.id]),
+            { preserveScroll: true }
+        ), 'Remove');
 
 const grouped = () => {
     const groups = {};

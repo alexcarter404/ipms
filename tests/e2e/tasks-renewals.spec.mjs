@@ -57,7 +57,7 @@ test.describe('Renewals', () => {
         await expect(page.locator('tbody tr')).toHaveCount(1);
         await page.getByRole('link', { name: 'E2E-0001' }).click();
 
-        await page.getByRole('button', { name: /Renewals \(/ }).click();
+        await page.getByRole('tab', { name: /Renewals \(/ }).click();
         await page.getByRole('button', { name: 'Generate Schedule' }).click();
 
         await expect(page.getByText(/renewal\(s\) generated/)).toBeVisible();

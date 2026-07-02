@@ -8,9 +8,11 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import TextareaInput from '@/Components/TextareaInput.vue';
+import DateInput from '@/Components/DateInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -88,10 +90,11 @@ const applyWorkflow = () =>
 const setStatus = (task, status) =>
     router.patch(route('tasks.update', task.id), { status }, { preserveScroll: true });
 
-const removeTask = (task) => {
-    if (!confirm(`Delete task “${task.title}”?`)) return;
-    router.delete(route('tasks.destroy', task.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const removeTask = (task) =>
+    confirmDelete(`Delete task “${task.title}”?`, () =>
+        router.delete(route('tasks.destroy', task.id), { preserveScroll: true }));
 </script>
 
 <template>
@@ -203,12 +206,12 @@ const removeTask = (task) => {
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <InputLabel value="Due date" />
-                        <TextInput v-model="taskForm.due_date" type="date" class="mt-1 w-full" />
+                        <DateInput v-model="taskForm.due_date" class="mt-1" />
                         <InputError :message="taskForm.errors.due_date" class="mt-1" />
                     </div>
                     <div>
                         <InputLabel value="Internal date" />
-                        <TextInput v-model="taskForm.internal_date" type="date" class="mt-1 w-full" />
+                        <DateInput v-model="taskForm.internal_date" class="mt-1" />
                         <InputError :message="taskForm.errors.internal_date" class="mt-1" />
                     </div>
                 </div>
@@ -262,7 +265,7 @@ const removeTask = (task) => {
                 </div>
                 <div>
                     <InputLabel :value="defaultBaseDate ? 'Base date (override)' : 'Base date'" />
-                    <TextInput v-model="workflowForm.base_date" type="date" class="mt-1 w-full" />
+                    <DateInput v-model="workflowForm.base_date" class="mt-1" />
                     <InputError :message="workflowForm.errors.base_date" class="mt-1" />
                     <p v-if="!defaultBaseDate && selectedWorkflow" class="mt-1 text-xs text-amber-600">
                         The matter has no date for this trigger — enter one.

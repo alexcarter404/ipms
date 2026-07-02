@@ -8,6 +8,7 @@ import TextareaInput from '@/Components/TextareaInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     client: Object,
@@ -76,10 +77,11 @@ const submit = () => {
     }
 };
 
-const remove = (entity) => {
-    if (!confirm(`Delete entity “${entity.name}”?`)) return;
-    router.delete(route('entities.destroy', entity.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (entity) =>
+    confirmDelete(`Delete entity “${entity.name}”?`, () =>
+        router.delete(route('entities.destroy', entity.id), { preserveScroll: true }));
 </script>
 
 <template>

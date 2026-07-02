@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import Pagination from '@/Components/Pagination.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import EntitiesPanel from './Partials/EntitiesPanel.vue';
@@ -10,6 +11,7 @@ import SelectInput from '@/Components/SelectInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     client: Object,
@@ -48,10 +50,18 @@ const submitContact = () =>
             },
         });
 
-const removeContact = (contact) => {
-    if (!confirm(`Remove contact ${contact.name}?`)) return;
-    router.delete(route('contacts.destroy', contact.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const onPage = (event) =>
+    router.get(
+        route('clients.show', props.client.id),
+        { page: event.page + 1 },
+        { preserveState: true, preserveScroll: true, replace: true }
+    );
+
+const removeContact = (contact) =>
+    confirmDelete(`Remove contact ${contact.name}?`, () =>
+        router.delete(route('contacts.destroy', contact.id), { preserveScroll: true }), 'Remove');
 </script>
 
 <template>
@@ -202,47 +212,54 @@ const removeContact = (contact) => {
             <EntitiesPanel :client="client" :countries="countries" />
 
             <!-- Matters -->
-            <div class="space-y-4">
-                <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            <tr>
-                                <th class="px-4 py-3">Reference</th>
-                                <th class="px-4 py-3">Title</th>
-                                <th class="px-4 py-3">Type</th>
-                                <th class="px-4 py-3">Ctry</th>
-                                <th class="px-4 py-3">Status</th>
-                                <th class="px-4 py-3">Attorney</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="matter in matters.data" :key="matter.id" class="hover:bg-gray-50">
-                                <td class="whitespace-nowrap px-4 py-3">
-                                    <Link
-                                        :href="route('matters.show', matter.id)"
-                                        class="font-medium text-indigo-600 hover:underline"
-                                    >
-                                        {{ matter.reference }}
-                                    </Link>
-                                </td>
-                                <td class="max-w-xs truncate px-4 py-3 text-gray-700">{{ matter.title }}</td>
-                                <td class="px-4 py-3 capitalize text-gray-600">{{ matter.matter_type }}</td>
-                                <td class="px-4 py-3 text-gray-600">{{ matter.country_code }}</td>
-                                <td class="px-4 py-3"><StatusBadge :status="matter.status" /></td>
-                                <td class="px-4 py-3 text-gray-600">
-                                    {{ matter.responsible_user?.name ?? '—' }}
-                                </td>
-                            </tr>
-                            <tr v-if="!matters.data.length">
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                                    No matters for this client yet.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <Pagination :links="matters.links" />
-            </div>
+            <DataTable
+                :value="matters.data"
+                lazy
+                paginator
+                :rows="matters.per_page"
+                :total-records="matters.total"
+                :first="(matters.current_page - 1) * matters.per_page"
+                data-key="id"
+                size="small"
+                class="overflow-hidden rounded-lg shadow-sm"
+                @page="onPage"
+            >
+                <template #empty>
+                    <p class="py-4 text-center text-gray-500">No matters for this client yet.</p>
+                </template>
+
+                <Column header="Reference">
+                    <template #body="{ data }">
+                        <Link
+                            :href="route('matters.show', data.id)"
+                            class="whitespace-nowrap font-medium text-indigo-600 hover:underline"
+                        >
+                            {{ data.reference }}
+                        </Link>
+                    </template>
+                </Column>
+                <Column header="Title">
+                    <template #body="{ data }">
+                        <span class="block max-w-xs truncate text-gray-700">{{ data.title }}</span>
+                    </template>
+                </Column>
+                <Column header="Type">
+                    <template #body="{ data }">
+                        <span class="capitalize text-gray-600">{{ data.matter_type }}</span>
+                    </template>
+                </Column>
+                <Column field="country_code" header="Ctry" />
+                <Column header="Status">
+                    <template #body="{ data }">
+                        <StatusBadge :status="data.status" />
+                    </template>
+                </Column>
+                <Column header="Attorney">
+                    <template #body="{ data }">
+                        <span class="text-gray-600">{{ data.responsible_user?.name ?? '—' }}</span>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
     </AuthenticatedLayout>
 </template>

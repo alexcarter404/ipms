@@ -8,8 +8,12 @@ import ContactsPanel from './Partials/ContactsPanel.vue';
 import PartiesPanel from './Partials/PartiesPanel.vue';
 import RenewalsPanel from './Partials/RenewalsPanel.vue';
 import TasksPanel from './Partials/TasksPanel.vue';
+import Tab from 'primevue/tab';
+import TabList from 'primevue/tablist';
+import Tabs from 'primevue/tabs';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -64,10 +68,12 @@ const formatDate = (value) =>
           })
         : '—';
 
-const destroy = () => {
-    if (!confirm(`Delete matter ${props.matter.reference}? It can be restored from the database.`)) return;
-    router.delete(route('matters.destroy', props.matter.id));
-};
+const confirmDelete = useDeleteConfirm();
+
+const destroy = () =>
+    confirmDelete(`Delete matter ${props.matter.reference}? It can be restored from the database.`, () =>
+        router.delete(route('matters.destroy', props.matter.id))
+    );
 
 const details = computed(() => [
     { label: 'Client', value: props.matter.client?.name, link: props.matter.client ? route('clients.show', props.matter.client.id) : null },
@@ -133,23 +139,13 @@ const officialDates = computed(() => [
 
         <div class="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
             <!-- Tabs -->
-            <div class="border-b border-gray-200">
-                <nav class="-mb-px flex gap-6 overflow-x-auto">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.key"
-                        class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium"
-                        :class="
-                            activeTab === tab.key
-                                ? 'border-indigo-600 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                        "
-                        @click="activeTab = tab.key"
-                    >
+            <Tabs v-model:value="activeTab" :pt="{ root: { class: '!bg-transparent' } }">
+                <TabList :pt="{ tabList: { class: '!bg-transparent' } }">
+                    <Tab v-for="tab in tabs" :key="tab.key" :value="tab.key">
                         {{ tab.label }}
-                    </button>
-                </nav>
-            </div>
+                    </Tab>
+                </TabList>
+            </Tabs>
 
             <!-- Overview -->
             <div v-if="activeTab === 'overview'" class="grid gap-6 lg:grid-cols-2">

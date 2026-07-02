@@ -31,7 +31,7 @@ test.describe('Workflows', () => {
         await page.goto('/matters');
         await page.getByRole('link', { name: 'P-2021-0002' }).click();
 
-        await page.getByRole('button', { name: /Tasks \(/ }).click();
+        await page.getByRole('tab', { name: /Tasks \(/ }).click();
         await page.getByRole('button', { name: 'Apply Workflow' }).click();
 
         const modal = page.locator('div').filter({ hasText: 'Apply Workflow' }).last();
@@ -61,7 +61,7 @@ test.describe('Communication templates', () => {
         await page.goto('/matters');
         await page.getByRole('link', { name: 'P-2021-0001' }).click();
 
-        await page.getByRole('button', { name: /Comms \(/ }).click();
+        await page.getByRole('tab', { name: /Comms \(/ }).click();
         await page.getByRole('button', { name: 'Compose' }).click();
 
         const modal = page.locator('div').filter({ hasText: 'Compose Communication' }).last();

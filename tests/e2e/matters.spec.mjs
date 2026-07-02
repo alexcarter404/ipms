@@ -33,12 +33,12 @@ test.describe('Matters', () => {
         await expect(page.getByRole('link', { name: 'P-2021-0002' })).toBeVisible();
 
         // Parties tab shows seeded inventors/agents
-        await page.getByRole('button', { name: /Parties \(/ }).click();
+        await page.getByRole('tab', { name: /Parties \(/ }).click();
         await expect(page.getByRole('heading', { name: 'inventors' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'agents' })).toBeVisible();
 
         // Renewals tab shows generated schedule
-        await page.getByRole('button', { name: /Renewals \(/ }).click();
+        await page.getByRole('tab', { name: /Renewals \(/ }).click();
         await expect(page.getByRole('button', { name: 'Generate Schedule' })).toBeVisible();
         await expect(page.locator('table tbody tr').first()).toBeVisible();
     });
@@ -47,7 +47,7 @@ test.describe('Matters', () => {
         await page.goto('/matters');
         await page.getByRole('link', { name: 'TM-2023-0001' }).click();
 
-        await page.getByRole('button', { name: /Classes \(/ }).click();
+        await page.getByRole('tab', { name: /Classes \(/ }).click();
         await expect(page.getByText('Computer software; firewalls')).toBeVisible();
     });
 
@@ -62,6 +62,7 @@ test.describe('Matters', () => {
         await field(page, 'Client', 'select').click();
         await page.locator('.p-select-overlay [role="option"]').first().click();
         await field(page, 'Application date').fill('2026-05-01');
+        await field(page, 'Application date').press('Tab');
 
         await page.getByRole('button', { name: 'Create Matter' }).click();
 

@@ -10,6 +10,7 @@ import TextareaInput from '@/Components/TextareaInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -87,10 +88,11 @@ const submit = () =>
 const markSent = (comm) =>
     router.post(route('communications.send', comm.id), {}, { preserveScroll: true });
 
-const remove = (comm) => {
-    if (!confirm('Delete this draft?')) return;
-    router.delete(route('communications.destroy', comm.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (comm) =>
+    confirmDelete('Delete this draft?', () =>
+        router.delete(route('communications.destroy', comm.id), { preserveScroll: true }));
 
 const formatDateTime = (value) =>
     value ? new Date(value).toLocaleString() : '';

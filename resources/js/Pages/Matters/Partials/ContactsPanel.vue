@@ -7,6 +7,7 @@ import StatusBadge from '@/Components/StatusBadge.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -42,13 +43,14 @@ const submit = () => {
     });
 };
 
-const remove = (contact) => {
-    if (!confirm(`Unlink ${contact.name} (${contact.pivot.role}) from this matter?`)) return;
-    useForm({ role: contact.pivot.role }).delete(
-        route('matters.contacts.destroy', [props.matter.id, contact.id]),
-        { preserveScroll: true }
-    );
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (contact) =>
+    confirmDelete(`Unlink ${contact.name} (${contact.pivot.role}) from this matter?`, () =>
+        useForm({ role: contact.pivot.role }).delete(
+            route('matters.contacts.destroy', [props.matter.id, contact.id]),
+            { preserveScroll: true }
+        ), 'Unlink');
 
 const typeLabel = (value) =>
     props.contactTypes.find((t) => t.value === value)?.label ?? value;

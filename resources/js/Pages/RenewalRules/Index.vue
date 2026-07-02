@@ -1,16 +1,20 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 defineProps({
     rules: Array,
 });
 
-const destroy = (rule) => {
-    if (!confirm(`Delete rule “${rule.name}”? Existing renewals are kept.`)) return;
-    router.delete(route('renewal-rules.destroy', rule.id));
-};
+const confirmDelete = useDeleteConfirm();
+
+const destroy = (rule) =>
+    confirmDelete(`Delete rule “${rule.name}”? Existing renewals are kept.`, () =>
+        router.delete(route('renewal-rules.destroy', rule.id)));
 </script>
 
 <template>
@@ -46,70 +50,84 @@ const destroy = (rule) => {
         </template>
 
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                        <tr>
-                            <th class="px-4 py-3">Rule</th>
-                            <th class="px-4 py-3">Matter type</th>
-                            <th class="px-4 py-3">Jurisdiction</th>
-                            <th class="px-4 py-3">Schedule</th>
-                            <th class="px-4 py-3">Grace</th>
-                            <th class="px-4 py-3">Active</th>
-                            <th class="px-4 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="rule in rules" :key="rule.id" class="hover:bg-gray-50">
-                            <td class="px-4 py-3">
-                                <Link
-                                    :href="route('renewal-rules.edit', rule.id)"
-                                    class="font-medium text-indigo-600 hover:underline"
-                                >
-                                    {{ rule.name }}
-                                </Link>
-                                <div v-if="rule.notes" class="mt-0.5 max-w-md truncate text-xs text-gray-500">
-                                    {{ rule.notes }}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 capitalize text-gray-600">{{ rule.matter_type }}</td>
-                            <td class="px-4 py-3 text-gray-600">
-                                <template v-if="rule.country_code">
-                                    {{ rule.country_code }}
-                                    <span class="text-xs text-gray-400"> — {{ rule.country_name }}</span>
-                                </template>
-                                <span v-else class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                                    Any (default)
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-gray-600">{{ rule.summary }}</td>
-                            <td class="px-4 py-3 text-gray-600">{{ rule.grace_months }} mo</td>
-                            <td class="px-4 py-3">
-                                <StatusBadge
-                                    :status="rule.is_active ? 'completed' : 'cancelled'"
-                                    :label="rule.is_active ? 'Active' : 'Inactive'"
-                                />
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right text-xs">
-                                <Link
-                                    :href="route('renewal-rules.edit', rule.id)"
-                                    class="text-indigo-600 hover:underline"
-                                >
-                                    Edit
-                                </Link>
-                                <button class="ml-3 text-red-600 hover:underline" @click="destroy(rule)">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr v-if="!rules.length">
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                No rules configured — the scheduler cannot generate renewals without them.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                :value="rules"
+                data-key="id"
+                size="small"
+                class="overflow-hidden rounded-lg shadow-sm"
+            >
+                <template #empty>
+                    <p class="py-4 text-center text-gray-500">
+                        No rules configured — the scheduler cannot generate renewals without them.
+                    </p>
+                </template>
+
+                <Column field="name" header="Rule" sortable>
+                    <template #body="{ data }">
+                        <Link
+                            :href="route('renewal-rules.edit', data.id)"
+                            class="font-medium text-indigo-600 hover:underline"
+                        >
+                            {{ data.name }}
+                        </Link>
+                        <div v-if="data.notes" class="mt-0.5 max-w-md truncate text-xs text-gray-500">
+                            {{ data.notes }}
+                        </div>
+                    </template>
+                </Column>
+                <Column field="matter_type" header="Matter type" sortable>
+                    <template #body="{ data }">
+                        <span class="capitalize text-gray-600">{{ data.matter_type }}</span>
+                    </template>
+                </Column>
+                <Column field="country_code" header="Jurisdiction" sortable>
+                    <template #body="{ data }">
+                        <template v-if="data.country_code">
+                            {{ data.country_code }}
+                            <span class="text-xs text-gray-400"> — {{ data.country_name }}</span>
+                        </template>
+                        <span
+                            v-else
+                            class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+                        >
+                            Any (default)
+                        </span>
+                    </template>
+                </Column>
+                <Column header="Schedule">
+                    <template #body="{ data }">
+                        <span class="text-gray-600">{{ data.summary }}</span>
+                    </template>
+                </Column>
+                <Column field="grace_months" header="Grace" sortable>
+                    <template #body="{ data }">
+                        <span class="text-gray-600">{{ data.grace_months }} mo</span>
+                    </template>
+                </Column>
+                <Column field="is_active" header="Active" sortable>
+                    <template #body="{ data }">
+                        <StatusBadge
+                            :status="data.is_active ? 'completed' : 'cancelled'"
+                            :label="data.is_active ? 'Active' : 'Inactive'"
+                        />
+                    </template>
+                </Column>
+                <Column>
+                    <template #body="{ data }">
+                        <div class="whitespace-nowrap text-right text-xs">
+                            <Link
+                                :href="route('renewal-rules.edit', data.id)"
+                                class="text-indigo-600 hover:underline"
+                            >
+                                Edit
+                            </Link>
+                            <button class="ml-3 text-red-600 hover:underline" @click="destroy(data)">
+                                Delete
+                            </button>
+                        </div>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
     </AuthenticatedLayout>
 </template>

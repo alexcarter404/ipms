@@ -83,13 +83,20 @@ renewal/annuity management.
 ## UI components
 
 The design system is PrimeVue 4 (Aura preset, indigo primary to match the
-Tailwind palette) behind thin app-level wrappers in
-`resources/js/Components` — `TextInput`, `TextareaInput`, `SelectInput`,
-`Checkbox`, `Modal`, the button trio, `StatusBadge` (Tag) and
-`FlashMessages` (Message) all render PrimeVue components, so pages use a
-stable local API while theming stays centralised. `Pagination`
-(server-driven Inertia links), `DueDate` (domain-specific colouring) and
-`GlobalSearch` (grouped multi-entity results) remain custom.
+Tailwind palette), used both directly and behind thin app-level wrappers
+in `resources/js/Components`:
+
+- Structures: **DataTable** (all register pages, with lazy server-side
+  pagination driven by Laravel's paginator, and client-side sorting on
+  the settings lists), **Tabs** (matter page), **Toast** (flash
+  messages), **ConfirmDialog** (destructive actions via the
+  `useDeleteConfirm` composable), **Dialog** (modals)
+- Form primitives via wrappers with a stable local API: `TextInput`
+  (InputText), `TextareaInput`, `SelectInput` (Select), `DateInput`
+  (DatePicker with `YYYY-MM-DD` string model), `Checkbox`, the button
+  trio (Button severities), `StatusBadge` (Tag)
+- Still custom by design: `DueDate` (domain-specific due-date
+  colouring) and `GlobalSearch` (grouped multi-entity typeahead)
 
 ## Getting started
 
@@ -122,7 +129,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 40 tests driving the real app —
+**End-to-end UI tests** (Playwright, 41 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):

@@ -5,6 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextareaInput from '@/Components/TextareaInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { router, useForm } from '@inertiajs/vue3';
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
     matter: Object,
@@ -21,10 +22,11 @@ const submit = () =>
         onSuccess: () => form.reset(),
     });
 
-const remove = (cls) => {
-    if (!confirm(`Remove class ${cls.class_number}?`)) return;
-    router.delete(route('classes.destroy', cls.id), { preserveScroll: true });
-};
+const confirmDelete = useDeleteConfirm();
+
+const remove = (cls) =>
+    confirmDelete(`Remove class ${cls.class_number}?`, () =>
+        router.delete(route('classes.destroy', cls.id), { preserveScroll: true }), 'Remove');
 </script>
 
 <template>

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Pagination from '@/Components/Pagination.vue';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { onUnmounted, ref, watch } from 'vue';
 
@@ -11,19 +12,28 @@ const props = defineProps({
 
 const search = ref(props.filters.search ?? '');
 
+const params = () => (search.value ? { search: search.value } : {});
+
 let timeout = null;
-watch(search, (value) => {
+watch(search, () => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-        router.get(
-            route('clients.index'),
-            value ? { search: value } : {},
-            { preserveState: true, replace: true }
-        );
+        router.get(route('clients.index'), params(), {
+            preserveState: true,
+            replace: true,
+        });
     }, 300);
 });
 
 onUnmounted(() => clearTimeout(timeout));
+
+const onPage = (event) => {
+    router.get(
+        route('clients.index'),
+        { ...params(), page: event.page + 1 },
+        { preserveState: true, replace: true }
+    );
+};
 </script>
 
 <template>
@@ -52,46 +62,54 @@ onUnmounted(() => clearTimeout(timeout));
                 />
             </div>
 
-            <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                        <tr>
-                            <th class="px-4 py-3">Code</th>
-                            <th class="px-4 py-3">Name</th>
-                            <th class="px-4 py-3">Type</th>
-                            <th class="px-4 py-3">Country</th>
-                            <th class="px-4 py-3">Email</th>
-                            <th class="px-4 py-3 text-right">Matters</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="client in clients.data" :key="client.id" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap px-4 py-3">
-                                <Link
-                                    :href="route('clients.show', client.id)"
-                                    class="font-medium text-indigo-600 hover:underline"
-                                >
-                                    {{ client.code }}
-                                </Link>
-                            </td>
-                            <td class="px-4 py-3 text-gray-800">{{ client.name }}</td>
-                            <td class="px-4 py-3 capitalize text-gray-600">{{ client.type }}</td>
-                            <td class="px-4 py-3 text-gray-600">{{ client.country_code ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-600">{{ client.email ?? '—' }}</td>
-                            <td class="px-4 py-3 text-right font-medium text-gray-800">
-                                {{ client.matters_count }}
-                            </td>
-                        </tr>
-                        <tr v-if="!clients.data.length">
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                                No clients found.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                :value="clients.data"
+                lazy
+                paginator
+                :rows="clients.per_page"
+                :total-records="clients.total"
+                :first="(clients.current_page - 1) * clients.per_page"
+                data-key="id"
+                size="small"
+                class="overflow-hidden rounded-lg shadow-sm"
+                @page="onPage"
+            >
+                <template #empty>
+                    <p class="py-4 text-center text-gray-500">No clients found.</p>
+                </template>
 
-            <Pagination :links="clients.links" />
+                <Column header="Code">
+                    <template #body="{ data }">
+                        <Link
+                            :href="route('clients.show', data.id)"
+                            class="whitespace-nowrap font-medium text-indigo-600 hover:underline"
+                        >
+                            {{ data.code }}
+                        </Link>
+                    </template>
+                </Column>
+                <Column field="name" header="Name" />
+                <Column header="Type">
+                    <template #body="{ data }">
+                        <span class="capitalize text-gray-600">{{ data.type }}</span>
+                    </template>
+                </Column>
+                <Column header="Country">
+                    <template #body="{ data }">
+                        <span class="text-gray-600">{{ data.country_code ?? '—' }}</span>
+                    </template>
+                </Column>
+                <Column header="Email">
+                    <template #body="{ data }">
+                        <span class="text-gray-600">{{ data.email ?? '—' }}</span>
+                    </template>
+                </Column>
+                <Column header="Matters" class="text-right">
+                    <template #body="{ data }">
+                        <span class="font-medium text-gray-800">{{ data.matters_count }}</span>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
     </AuthenticatedLayout>
 </template>
