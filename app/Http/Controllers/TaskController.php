@@ -2,83 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TaskPriority;
+use App\Actions\Tasks\CreateTask;
+use App\Actions\Tasks\UpdateTask;
 use App\Enums\TaskStatus;
+use App\Http\Requests\TaskStoreRequest;
+use App\Http\Requests\TaskUpdateRequest;
 use App\Models\Matter;
 use App\Models\MatterTask;
-use App\Models\User;
+use App\Repositories\TaskRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TaskController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, TaskRepository $tasks): Response
     {
-        $tasks = MatterTask::query()
-            ->with(['matter:id,reference,title', 'assignee:id,name'])
-            ->when(
-                $request->input('status'),
-                fn ($q, $status) => $status === 'open' ? $q->open() : $q->where('status', $status),
-                fn ($q) => $q->open()
-            )
-            ->when($request->input('assignee') === 'me', fn ($q) => $q->where('assigned_to', $request->user()->id))
-            ->when($request->boolean('overdue'), fn ($q) => $q->whereDate('due_date', '<', now()))
-            ->when($request->input('search'), fn ($q, $term) => $q->where(
-                fn ($w) => $w->where('title', 'like', "%{$term}%")
-                    ->orWhereHas('matter', fn ($m) => $m->where('reference', 'like', "%{$term}%"))
-            ))
-            ->orderBy('due_date')
-            ->paginate(20)
-            ->withQueryString();
+        $filters = $request->only('status', 'assignee', 'search');
+        $filters['overdue'] = $request->boolean('overdue');
 
         return Inertia::render('Tasks/Index', [
-            'tasks' => $tasks,
+            'tasks' => $tasks->paginateFiltered($filters, $request->user()->id),
             'filters' => $request->only('status', 'assignee', 'overdue', 'search'),
             'statuses' => TaskStatus::options(),
         ]);
     }
 
-    public function store(Request $request, Matter $matter): RedirectResponse
+    public function store(TaskStoreRequest $request, Matter $matter, CreateTask $action): RedirectResponse
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['required', 'date'],
-            'internal_date' => ['nullable', 'date', 'before_or_equal:due_date'],
-            'priority' => ['required', Rule::enum(TaskPriority::class)],
-            'is_critical' => ['boolean'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
-        ]);
-
-        $matter->tasks()->create($data + [
-            'status' => TaskStatus::Pending,
-            'created_by' => $request->user()->id,
-        ]);
+        $action->handle($matter, $request->validated(), $request->user());
 
         return back()->with('success', 'Task created.');
     }
 
-    public function update(Request $request, MatterTask $task): RedirectResponse
+    public function update(TaskUpdateRequest $request, MatterTask $task, UpdateTask $action): RedirectResponse
     {
-        $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['sometimes', 'date'],
-            'internal_date' => ['nullable', 'date'],
-            'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
-            'status' => ['sometimes', Rule::enum(TaskStatus::class)],
-            'assigned_to' => ['nullable', 'exists:users,id'],
-        ]);
-
-        if (($data['status'] ?? null) === TaskStatus::Completed->value && $task->status !== TaskStatus::Completed) {
-            $data['completed_at'] = now();
-            $data['completed_by'] = $request->user()->id;
-        }
-
-        $task->update($data);
+        $action->handle($task, $request->validated(), $request->user());
 
         return back()->with('success', 'Task updated.');
     }

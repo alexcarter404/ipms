@@ -30,25 +30,6 @@ class RenewalRule extends Model
     }
 
     /**
-     * Resolve the rule for a matter: an exact (type, country) match wins
-     * over the type-wide default (country_code = null).
-     */
-    public static function resolveFor(MatterType $type, ?string $countryCode): ?self
-    {
-        return self::query()
-            ->where('is_active', true)
-            ->where('matter_type', $type)
-            ->where(function ($q) use ($countryCode) {
-                $q->whereNull('country_code');
-                if ($countryCode) {
-                    $q->orWhere('country_code', strtoupper($countryCode));
-                }
-            })
-            ->orderByRaw('country_code is null') // country-specific first
-            ->first();
-    }
-
-    /**
      * Compute the schedule from a base date.
      *
      * @return array<int, CarbonInterface> cycle number => due date

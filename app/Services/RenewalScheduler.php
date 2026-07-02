@@ -6,6 +6,7 @@ use App\Enums\RenewalStatus;
 use App\Models\Matter;
 use App\Models\Renewal;
 use App\Models\RenewalRule;
+use App\Repositories\RenewalRuleRepository;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,10 +20,14 @@ use Illuminate\Support\Collection;
  */
 class RenewalScheduler
 {
+    public function __construct(private RenewalRuleRepository $rules)
+    {
+    }
+
     /** The rule that would govern this matter's schedule, if any. */
     public function ruleFor(Matter $matter): ?RenewalRule
     {
-        return RenewalRule::resolveFor($matter->matter_type, $matter->country_code);
+        return $this->rules->resolveFor($matter->matter_type, $matter->country_code);
     }
 
     /**

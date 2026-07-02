@@ -2,31 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Clients\CreateClient;
+use App\Actions\Clients\DeleteClient;
+use App\Actions\Clients\UpdateClient;
 use App\Enums\ContactType;
+use App\Exceptions\DomainActionException;
+use App\Http\Requests\ClientRequest;
 use App\Models\Client;
+use App\Repositories\ClientRepository;
 use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ClientController extends Controller
 {
+    public function __construct(private ClientRepository $clients)
+    {
+    }
+
     public function index(Request $request): Response
     {
-        $clients = Client::query()
-            ->withCount('matters')
-            ->when($request->input('search'), fn ($q, $term) => $q->where(
-                fn ($w) => $w->where('name', 'like', "%{$term}%")
-                    ->orWhere('code', 'like', "%{$term}%")
-            ))
-            ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
-
         return Inertia::render('Clients/Index', [
-            'clients' => $clients,
+            'clients' => $this->clients->paginateSearch($request->input('search')),
             'filters' => $request->only('search'),
         ]);
     }
@@ -38,18 +37,9 @@ class ClientController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ClientRequest $request, CreateClient $action): RedirectResponse
     {
-        $client = Client::create($this->validated($request));
-
-        // Every client starts with a default legal entity; billing
-        // details and further entities are managed on the client page.
-        $client->entities()->create([
-            'name' => $client->name,
-            'country_code' => $client->country_code,
-            'billing_email' => $client->email,
-            'is_default' => true,
-        ]);
+        $client = $action->handle($request->validated());
 
         return redirect()->route('clients.show', $client)
             ->with('success', 'Client created.');
@@ -57,19 +47,11 @@ class ClientController extends Controller
 
     public function show(Client $client): Response
     {
-        $client->load([
-            'contacts' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('name'),
-            'entities' => fn ($q) => $q->withCount('matters'),
-        ]);
-
         return Inertia::render('Clients/Show', [
-            'client' => $client,
+            'client' => $this->clients->loadForDisplay($client),
             'countries' => Countries::options(),
             'contactTypes' => ContactType::options(),
-            'matters' => $client->matters()
-                ->with('responsibleUser:id,name')
-                ->latest()
-                ->paginate(10),
+            'matters' => $this->clients->paginateMatters($client),
         ]);
     }
 
@@ -83,35 +65,22 @@ class ClientController extends Controller
         ]);
     }
 
-    public function update(Request $request, Client $client): RedirectResponse
+    public function update(ClientRequest $request, Client $client, UpdateClient $action): RedirectResponse
     {
-        $client->update($this->validated($request, $client));
+        $action->handle($client, $request->validated());
 
         return redirect()->route('clients.show', $client)
             ->with('success', 'Client updated.');
     }
 
-    public function destroy(Client $client): RedirectResponse
+    public function destroy(Client $client, DeleteClient $action): RedirectResponse
     {
-        if ($client->matters()->exists()) {
-            return back()->with('error', 'Cannot delete a client with matters on record.');
+        try {
+            $action->handle($client);
+        } catch (DomainActionException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        $client->delete();
-
         return redirect()->route('clients.index')->with('success', 'Client deleted.');
-    }
-
-    private function validated(Request $request, ?Client $client = null): array
-    {
-        return $request->validate([
-            'code' => ['required', 'string', 'max:20', Rule::unique('clients')->ignore($client)->whereNull('deleted_at')],
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', Rule::in(['company', 'individual'])],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'country_code' => ['nullable', 'string', 'size:2'],
-            'notes' => ['nullable', 'string'],
-        ]);
     }
 }
