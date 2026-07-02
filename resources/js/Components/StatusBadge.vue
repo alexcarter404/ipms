@@ -1,4 +1,5 @@
 <script setup>
+import Tag from 'primevue/tag';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -6,45 +7,21 @@ const props = defineProps({
     label: { type: String, default: null },
 });
 
-const palette = {
-    // matter statuses
-    draft: 'bg-gray-100 text-gray-700',
-    pending_filing: 'bg-amber-100 text-amber-800',
-    filed: 'bg-blue-100 text-blue-800',
-    published: 'bg-sky-100 text-sky-800',
-    under_examination: 'bg-indigo-100 text-indigo-800',
-    office_action: 'bg-orange-100 text-orange-800',
-    accepted: 'bg-teal-100 text-teal-800',
-    granted: 'bg-green-100 text-green-800',
-    registered: 'bg-green-100 text-green-800',
-    opposed: 'bg-rose-100 text-rose-800',
-    abandoned: 'bg-gray-200 text-gray-600',
-    lapsed: 'bg-gray-200 text-gray-600',
-    expired: 'bg-gray-200 text-gray-600',
-    closed: 'bg-gray-200 text-gray-600',
-    // task statuses
-    pending: 'bg-amber-100 text-amber-800',
-    in_progress: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    cancelled: 'bg-gray-200 text-gray-600',
-    // renewal statuses
-    upcoming: 'bg-amber-100 text-amber-800',
-    reminder_sent: 'bg-sky-100 text-sky-800',
-    instructed: 'bg-indigo-100 text-indigo-800',
-    paid: 'bg-green-100 text-green-800',
-    waived: 'bg-gray-200 text-gray-600',
-    // communications
-    sent: 'bg-green-100 text-green-800',
-    // priorities
-    low: 'bg-gray-100 text-gray-600',
-    normal: 'bg-blue-50 text-blue-700',
-    high: 'bg-orange-100 text-orange-800',
-    critical: 'bg-red-100 text-red-800',
+// Map domain statuses onto PrimeVue Tag severities.
+const severities = {
+    success: ['granted', 'registered', 'accepted', 'completed', 'paid', 'sent'],
+    info: ['filed', 'published', 'in_progress', 'instructed', 'reminder_sent', 'under_examination', 'normal'],
+    warn: ['pending', 'pending_filing', 'upcoming', 'office_action', 'opposed', 'high'],
+    danger: ['critical'],
+    secondary: ['draft', 'abandoned', 'lapsed', 'expired', 'closed', 'cancelled', 'waived', 'low'],
 };
 
-const classes = computed(
-    () => palette[props.status] ?? 'bg-gray-100 text-gray-700'
-);
+const severity = computed(() => {
+    for (const [name, statuses] of Object.entries(severities)) {
+        if (statuses.includes(props.status)) return name;
+    }
+    return 'secondary';
+});
 
 const text = computed(
     () =>
@@ -57,10 +34,5 @@ const text = computed(
 </script>
 
 <template>
-    <span
-        class="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium"
-        :class="classes"
-    >
-        {{ text }}
-    </span>
+    <Tag :value="text" :severity="severity" class="whitespace-nowrap !text-xs !font-medium" />
 </template>

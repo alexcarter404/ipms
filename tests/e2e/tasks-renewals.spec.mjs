@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { pickOptionIn } from './helpers.mjs';
 
 test.describe('Tasks', () => {
     test('index lists open tasks and completes one', async ({ page }) => {
@@ -31,7 +32,7 @@ test.describe('Renewals', () => {
 
         // The seeded near-term renewals fall due within 90 days; the
         // filter narrows P-2021-0001 down to its single upcoming cycle.
-        await page.locator('select').nth(1).selectOption('90');
+        await pickOptionIn(page, page.locator('.p-select', { hasText: 'Any due date' }), 'Due within 90 days');
         await expect(page.locator('tbody tr', { hasText: 'P-2021-0001' })).toHaveCount(1);
         await expect(page.locator('tbody tr', { hasText: 'TM-2023-0001' })).toHaveCount(1);
     });

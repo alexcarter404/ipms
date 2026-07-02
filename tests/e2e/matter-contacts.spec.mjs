@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { field } from './helpers.mjs';
+import { field, pickOption } from './helpers.mjs';
 
 test.describe('Matter contacts', () => {
     test('contacts tab lists linked contacts with roles and types', async ({ page }) => {
@@ -29,9 +29,9 @@ test.describe('Matter contacts', () => {
         await page.getByRole('button', { name: /Contacts \(/ }).click();
         await page.getByRole('radio', { name: 'New contact' }).check();
         await field(page, 'Name').fill('NovaTech Invoices');
-        await field(page, 'Contact type', 'select').selectOption('mailbox');
+        await pickOption(page, page, 'Contact type', 'Mailbox / Docketing');
         await field(page, 'Email').fill('invoices@novatech.example');
-        await field(page, 'Role on matter', 'select').selectOption('billing');
+        await pickOption(page, page, 'Role on matter', 'Billing');
         await page.getByRole('button', { name: 'Link', exact: true }).click();
 
         await expect(page.getByText('Contact linked.')).toBeVisible();
@@ -55,9 +55,7 @@ test.describe('Matter contacts', () => {
         await expect(field(modal, 'Recipient email')).toHaveValue('sarah.bennett@acme.example');
 
         // Switching to the docketing mailbox updates the recipient
-        await field(modal, 'Send to matter contact', 'select').selectOption({
-            label: 'Acme IP Docketing (docketing) — ip-docketing@acme.example',
-        });
+        await pickOption(page, modal, 'Send to matter contact', 'Acme IP Docketing (docketing)');
         await expect(field(modal, 'Recipient email')).toHaveValue('ip-docketing@acme.example');
     });
 

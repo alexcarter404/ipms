@@ -1,4 +1,6 @@
 <script setup>
+import Textarea from 'primevue/textarea';
+
 const model = defineModel({ type: [String, null], default: '' });
 
 defineProps({
@@ -7,9 +9,5 @@ defineProps({
 </script>
 
 <template>
-    <textarea
-        v-model="model"
-        :rows="rows"
-        class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-    />
+    <Textarea v-model="model" :rows="rows" class="w-full" size="small" />
 </template>

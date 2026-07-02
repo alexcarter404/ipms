@@ -31,7 +31,9 @@ const preview = computed(() => {
         if (!points.length) return 'No renewals will be generated for this right.';
         return `Due ${points.map((m) => `${(m / 12).toFixed(1).replace(/\.0$/, '')}y`).join(', ')} after the ${anchorLabel.value}.`;
     }
-    const { start_cycle: s, end_cycle: e, interval_years: i } = props.form;
+    const s = Number(props.form.start_cycle);
+    const e = Number(props.form.end_cycle);
+    const i = Number(props.form.interval_years);
     if (!s || !e || !i) return '';
     const first = s * i;
     const last = e * i;

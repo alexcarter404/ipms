@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { field } from './helpers.mjs';
+import { field, pickOption, pickOptionIn } from './helpers.mjs';
 
 test.describe('Matters', () => {
     test('index lists seeded matters and filters by type', async ({ page }) => {
@@ -9,7 +9,7 @@ test.describe('Matters', () => {
         await expect(page.getByRole('link', { name: 'TM-2023-0001' })).toBeVisible();
 
         // Filter down to trade marks only
-        await page.locator('select').first().selectOption('trademark');
+        await pickOptionIn(page, page.locator('.p-select', { hasText: 'All types' }), 'Trade Mark');
         await expect(page.getByRole('link', { name: 'TM-2023-0001' })).toBeVisible();
         await expect(page.getByRole('link', { name: 'P-2021-0001' })).toBeHidden();
     });
@@ -55,11 +55,12 @@ test.describe('Matters', () => {
         await page.goto('/matters/create');
 
         await field(page, 'Reference').fill('E2E-0001');
-        await field(page, 'Type', 'select').selectOption('patent');
-        await field(page, 'Status', 'select').selectOption('filed');
+        await pickOption(page, page, 'Type', 'Patent');
+        await pickOption(page, page, 'Status', /^Filed$/);
         await field(page, 'Title').fill('Playwright-created invention');
-        await field(page, 'Jurisdiction', 'select').selectOption('GB');
-        await field(page, 'Client', 'select').selectOption({ index: 1 });
+        await pickOption(page, page, 'Jurisdiction', 'GB — United Kingdom');
+        await field(page, 'Client', 'select').click();
+        await page.locator('.p-select-overlay [role="option"]').first().click();
         await field(page, 'Application date').fill('2026-05-01');
 
         await page.getByRole('button', { name: 'Create Matter' }).click();

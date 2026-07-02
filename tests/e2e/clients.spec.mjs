@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { field } from './helpers.mjs';
+import { field, pickOption } from './helpers.mjs';
 
 test.describe('Clients', () => {
     test('index lists seeded clients and searches', async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('Clients', () => {
 
         await field(page, 'Code').fill('E2EC');
         await field(page, 'Name').fill('E2E Testing Corp');
-        await field(page, 'Type', 'select').selectOption('company');
+        await pickOption(page, page, 'Type', 'Company');
         await field(page, 'Email').fill('legal@e2e.example');
         await page.getByRole('button', { name: 'Create Client' }).click();
 

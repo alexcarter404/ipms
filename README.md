@@ -5,7 +5,7 @@ platforms (Clarivate Inprotech, Patricia, and similar): matter/docket
 management, deadline-driven workflows, templated client communications, and
 renewal/annuity management.
 
-**Stack:** Laravel · Vue 3 · Inertia.js · Tailwind CSS · MySQL
+**Stack:** Laravel · Vue 3 · Inertia.js · PrimeVue · Tailwind CSS · MySQL
 
 ## Features
 
@@ -79,6 +79,17 @@ renewal/annuity management.
 ### Dashboard
 - Active portfolio stats, overdue tasks, renewals due in 90 days,
   upcoming actions and renewals, recent matters
+
+## UI components
+
+The design system is PrimeVue 4 (Aura preset, indigo primary to match the
+Tailwind palette) behind thin app-level wrappers in
+`resources/js/Components` — `TextInput`, `TextareaInput`, `SelectInput`,
+`Checkbox`, `Modal`, the button trio, `StatusBadge` (Tag) and
+`FlashMessages` (Message) all render PrimeVue components, so pages use a
+stable local API while theming stays centralised. `Pagination`
+(server-driven Inertia links), `DueDate` (domain-specific colouring) and
+`GlobalSearch` (grouped multi-entity results) remain custom.
 
 ## Getting started
 

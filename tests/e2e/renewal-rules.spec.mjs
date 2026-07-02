@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { field } from './helpers.mjs';
+import { field, pickOption } from './helpers.mjs';
 
 test.describe('Renewal schedule rules', () => {
     test('rules page is reachable from Renewals and lists seeded templates', async ({ page }) => {
@@ -18,9 +18,9 @@ test.describe('Renewal schedule rules', () => {
         await page.goto('/renewal-rules/create');
 
         await field(page, 'Name *').fill('JP Patent Annuities');
-        await field(page, 'Matter type *', 'select').selectOption('patent');
-        await field(page, 'Jurisdiction', 'select').selectOption('JP');
-        await field(page, 'Anchor date *', 'select').selectOption('registration');
+        await pickOption(page, page, 'Matter type *', /^Patent$/);
+        await pickOption(page, page, 'Jurisdiction', 'JP — Japan');
+        await pickOption(page, page, 'Anchor date *', 'Registration / grant date');
         await field(page, 'First cycle *').fill('1');
         await field(page, 'Last cycle *').fill('20');
         await field(page, 'Interval (years) *').fill('1');
@@ -38,8 +38,8 @@ test.describe('Renewal schedule rules', () => {
         await page.goto('/renewal-rules/create');
 
         await field(page, 'Name *').fill('CA Patent Maintenance');
-        await field(page, 'Matter type *', 'select').selectOption('patent');
-        await field(page, 'Jurisdiction', 'select').selectOption('CA');
+        await pickOption(page, page, 'Matter type *', /^Patent$/);
+        await pickOption(page, page, 'Jurisdiction', 'CA — Canada');
         await page.getByRole('radio', { name: /Fixed offsets/ }).check();
 
         await page.getByRole('button', { name: 'Add Due Date' }).click();

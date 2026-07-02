@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { field } from './helpers.mjs';
+import { field, pickOption, pickOptionIn } from './helpers.mjs';
 
 test.describe('Client entities', () => {
     test('client page lists group entities with billing details', async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe('Client entities', () => {
 
         await page.getByRole('button', { name: 'Add entity' }).click();
         await field(page, 'Entity name *').fill('NovaTech Austria GmbH');
-        await field(page, 'Country', 'select').selectOption('AT');
+        await pickOption(page, page, 'Country', 'AT — Austria');
         await field(page, 'Billing email').fill('rechnungen@novatech.example');
         await field(page, 'Billing reference / PO').fill('AT-2026');
         await page.getByRole('button', { name: 'Add Entity' }).click();
@@ -58,8 +58,10 @@ test.describe('Client entities', () => {
         await page.getByRole('link', { name: 'Edit', exact: true }).click();
 
         const entitySelect = field(page, 'Billing entity', 'select');
-        await expect(entitySelect.getByRole('option', { name: /Acme Industries Ltd \(default\)/ })).toHaveCount(1);
-        await entitySelect.selectOption({ label: 'Acme Industries Inc' });
+        await entitySelect.click();
+        const overlay = page.locator('.p-select-overlay');
+        await expect(overlay.getByRole('option', { name: /Acme Industries Ltd \(default\)/ })).toHaveCount(1);
+        await overlay.getByRole('option', { name: 'Acme Industries Inc' }).click();
         await page.getByRole('button', { name: 'Save Changes' }).click();
 
         await expect(page.getByText('Matter updated.')).toBeVisible();

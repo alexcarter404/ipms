@@ -1,20 +1,30 @@
 <script setup>
+import Select from 'primevue/select';
+import { computed } from 'vue';
+
 const model = defineModel({ type: [String, Number, null], default: '' });
 
-defineProps({
+const props = defineProps({
     options: { type: Array, default: () => [] }, // [{value, label}]
     placeholder: { type: String, default: null },
+});
+
+// The app treats '' as "nothing selected"; PrimeVue uses null.
+const proxy = computed({
+    get: () => (model.value === '' ? null : model.value),
+    set: (value) => (model.value = value === null ? '' : value),
 });
 </script>
 
 <template>
-    <select
-        v-model="model"
-        class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-    >
-        <option v-if="placeholder !== null" value="">{{ placeholder }}</option>
-        <option v-for="opt in options" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-        </option>
-    </select>
+    <Select
+        v-model="proxy"
+        :options="options"
+        option-label="label"
+        option-value="value"
+        :placeholder="placeholder ?? undefined"
+        :show-clear="placeholder !== null && proxy !== null"
+        size="small"
+        class="w-full"
+    />
 </template>
