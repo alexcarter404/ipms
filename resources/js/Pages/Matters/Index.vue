@@ -4,7 +4,7 @@ import Pagination from '@/Components/Pagination.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive, watch } from 'vue';
+import { onUnmounted, reactive, watch } from 'vue';
 
 const props = defineProps({
     matters: Object,
@@ -33,6 +33,8 @@ watch(form, () => {
         });
     }, 300);
 });
+
+onUnmounted(() => clearTimeout(timeout));
 
 const pruned = () =>
     Object.fromEntries(Object.entries(form).filter(([, v]) => v !== '' && v !== null));

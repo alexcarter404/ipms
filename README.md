@@ -40,9 +40,18 @@ renewal/annuity management.
   editable, saved as draft, then marked sent (a permanent record)
 
 ### Renewals
-- One-click schedule generation per matter type:
-  patents (annuities years 2–20 from filing), trade marks (10-year terms),
-  designs (5-year terms), domains (annual)
+- Data-driven **schedule rules** (templates) keyed by matter type and
+  jurisdiction — a country-specific rule overrides the type-wide default.
+  Seeded with common conventions plus the well-known exceptions:
+  patents (annuities years 2–20 from filing), US patents (maintenance
+  fees at 3.5/7.5/11.5 years from grant), EP (annuities from year 3),
+  trade marks (10-year terms), US trade marks (§8 + §9 cadence from
+  registration), designs (5-year terms), US designs (no maintenance)
+- Rules define the anchor date (filing vs grant/registration), regular
+  cycles or fixed offsets, grace period, and default fees — manageable
+  in-app under Renewals → Schedule Rules
+- One-click schedule generation per matter from its governing rule
+  (idempotent — safe to re-run as rules improve)
 - Status pipeline: upcoming → reminder sent → instructed → paid,
   plus lapsed/waived, with instructed/paid timestamps and fee tracking
 - Renewals control centre with due-within windows (30/90/180/365 days)
@@ -74,7 +83,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 76 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 90 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, template rendering, and the dashboard):
 
@@ -82,7 +91,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 23 tests driving the real app —
+**End-to-end UI tests** (Playwright, 27 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):
@@ -107,13 +116,13 @@ Client ─┬─ Contact
                    ├─ Matter (parent/child, e.g. priority → national phase)
                    ├─ Party (pivot: role = applicant|inventor|agent|…)
                    ├─ MatterClass (Nice classes)
-                   ├─ Renewal (annuity/renewal cycles)
+                   ├─ Renewal (annuity/renewal cycles) ── RenewalRule (schedule templates)
                    ├─ MatterTask ── WorkflowStep ── Workflow
                    └─ Communication ── CommTemplate
 ```
 
 Key services (`app/Services`):
 
-- `RenewalScheduler` — generates type-specific renewal schedules (idempotent)
+- `RenewalScheduler` — generates schedules from the matching RenewalRule (idempotent)
 - `WorkflowRunner` — expands a workflow template into matter tasks
 - `TemplateRenderer` — resolves merge fields for communications

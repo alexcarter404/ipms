@@ -5,7 +5,7 @@ import Pagination from '@/Components/Pagination.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive, watch } from 'vue';
+import { onUnmounted, reactive, watch } from 'vue';
 
 const props = defineProps({
     tasks: Object,
@@ -32,6 +32,8 @@ watch(form, () => {
         router.get(route('tasks.index'), params, { preserveState: true, replace: true });
     }, 300);
 });
+
+onUnmounted(() => clearTimeout(timeout));
 
 const setStatus = (task, status) =>
     router.patch(route('tasks.update', task.id), { status }, { preserveScroll: true });

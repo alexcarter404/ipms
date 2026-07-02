@@ -6,11 +6,12 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     matter: Object,
+    renewalRule: { type: Object, default: null },
 });
 
 const generate = () =>
@@ -58,7 +59,24 @@ const submit = () =>
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm text-gray-600">
-                Renewal schedule for this {{ matter.matter_type }}.
+                <template v-if="renewalRule">
+                    Governed by
+                    <Link
+                        :href="route('renewal-rules.edit', renewalRule.id)"
+                        class="font-medium text-indigo-600 hover:underline"
+                    >
+                        {{ renewalRule.name }}
+                    </Link>
+                    <span class="text-gray-500"> — {{ renewalRule.summary }}</span>
+                </template>
+                <template v-else>
+                    No renewal rule matches this {{ matter.matter_type }} /
+                    {{ matter.country_code }} —
+                    <Link :href="route('renewal-rules.create')" class="text-indigo-600 hover:underline">
+                        add one
+                    </Link>
+                    to enable schedule generation.
+                </template>
             </p>
             <div class="flex gap-2">
                 <SecondaryButton @click="showAdd = !showAdd">Add Manually</SecondaryButton>

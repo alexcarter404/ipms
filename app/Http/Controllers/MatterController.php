@@ -14,6 +14,7 @@ use App\Models\Matter;
 use App\Models\Party;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Services\RenewalScheduler;
 use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,7 +67,7 @@ class MatterController extends Controller
             ->with('success', 'Matter created.');
     }
 
-    public function show(Matter $matter): Response
+    public function show(Matter $matter, RenewalScheduler $scheduler): Response
     {
         $matter->load([
             'client:id,name,code',
@@ -83,9 +84,16 @@ class MatterController extends Controller
             'communications.template:id,name',
         ]);
 
+        $renewalRule = $scheduler->ruleFor($matter);
+
         return Inertia::render('Matters/Show', [
             'matter' => $matter,
             'countryName' => Countries::name($matter->country_code),
+            'renewalRule' => $renewalRule ? [
+                'id' => $renewalRule->id,
+                'name' => $renewalRule->name,
+                'summary' => $renewalRule->summary(),
+            ] : null,
             'parties' => Party::orderBy('name')->get(['id', 'name']),
             'partyRoles' => PartyRole::options(),
             'workflows' => Workflow::where('is_active', true)

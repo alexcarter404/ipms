@@ -6,6 +6,7 @@ use App\Models\Matter;
 use App\Models\Renewal;
 use App\Models\User;
 use App\Services\RenewalScheduler;
+use Database\Seeders\RenewalRuleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,12 +19,14 @@ class RenewalTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(RenewalRuleSeeder::class);
         $this->user = User::factory()->create();
     }
 
     public function test_patent_schedule_generates_annuities_from_filing_date(): void
     {
         $matter = Matter::factory()->create([
+            'country_code' => 'GB',
             'application_date' => now()->subMonths(6),
         ]);
 
@@ -41,6 +44,7 @@ class RenewalTest extends TestCase
     public function test_trademark_schedule_generates_ten_year_cycles(): void
     {
         $matter = Matter::factory()->trademark()->create([
+            'country_code' => 'GB',
             'application_date' => now()->subYear(),
         ]);
 
@@ -56,7 +60,7 @@ class RenewalTest extends TestCase
 
     public function test_generation_is_idempotent(): void
     {
-        $matter = Matter::factory()->create(['application_date' => now()->subMonths(6)]);
+        $matter = Matter::factory()->create(['country_code' => 'GB', 'application_date' => now()->subMonths(6)]);
         $scheduler = app(RenewalScheduler::class);
 
         $scheduler->generate($matter);
@@ -69,6 +73,7 @@ class RenewalTest extends TestCase
     public function test_generation_skips_long_past_and_post_expiry_renewals(): void
     {
         $matter = Matter::factory()->create([
+            'country_code' => 'GB',
             'application_date' => now()->subYears(5),
             'expiry_date' => now()->addYears(3),
         ]);
@@ -81,7 +86,7 @@ class RenewalTest extends TestCase
 
     public function test_matter_without_base_date_generates_nothing(): void
     {
-        $matter = Matter::factory()->create(['application_date' => null]);
+        $matter = Matter::factory()->create(['country_code' => 'GB', 'application_date' => null]);
 
         $this->actingAs($this->user)
             ->from(route('matters.show', $matter))
@@ -93,7 +98,7 @@ class RenewalTest extends TestCase
 
     public function test_generate_endpoint_creates_schedule(): void
     {
-        $matter = Matter::factory()->create(['application_date' => now()->subMonths(6)]);
+        $matter = Matter::factory()->create(['country_code' => 'GB', 'application_date' => now()->subMonths(6)]);
 
         $this->actingAs($this->user)
             ->post(route('matters.renewals.generate', $matter))

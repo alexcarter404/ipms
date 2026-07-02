@@ -5,7 +5,7 @@ import Pagination from '@/Components/Pagination.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive, watch } from 'vue';
+import { onUnmounted, reactive, watch } from 'vue';
 
 const props = defineProps({
     renewals: Object,
@@ -31,6 +31,8 @@ watch(form, () => {
     }, 300);
 });
 
+onUnmounted(() => clearTimeout(timeout));
+
 const setStatus = (renewal, status) =>
     router.patch(route('renewals.update', renewal.id), { status }, { preserveScroll: true });
 </script>
@@ -40,7 +42,15 @@ const setStatus = (renewal, status) =>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Renewals</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">Renewals</h2>
+                <Link
+                    :href="route('renewal-rules.index')"
+                    class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
+                >
+                    Schedule Rules
+                </Link>
+            </div>
         </template>
 
         <div class="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">

@@ -151,7 +151,8 @@ class DatabaseSeeder extends Seeder
             $matter->parties()->attach($agents->random(), ['role' => 'agent']);
         }
 
-        // --- Renewals: generate schedules, then vary some statuses ---
+        // --- Renewals: seed schedule rules, generate, vary some statuses ---
+        $this->call(RenewalRuleSeeder::class);
         $scheduler = app(RenewalScheduler::class);
         foreach (Matter::all() as $matter) {
             $scheduler->generate($matter);

@@ -39,16 +39,26 @@ class RenewalController extends Controller
         ]);
     }
 
-    /** Generate the renewal schedule for a matter from its key dates. */
+    /** Generate the renewal schedule for a matter from its renewal rule. */
     public function generate(Matter $matter, RenewalScheduler $scheduler): RedirectResponse
     {
+        $rule = $scheduler->ruleFor($matter);
+
+        if (! $rule) {
+            return back()->with('error', "No renewal rule is configured for {$matter->matter_type->label()} matters in {$matter->country_code} — add one under Renewals → Schedule Rules.");
+        }
+
+        if (! $rule->baseDateFor($matter)) {
+            return back()->with('error', "The rule “{$rule->name}” anchors on the {$rule->baseDateLabel()}, which this matter does not have yet.");
+        }
+
         $created = $scheduler->generate($matter);
 
         if ($created->isEmpty()) {
-            return back()->with('error', 'No renewals generated — check the matter has a filing or registration date, and that a schedule applies to this matter type.');
+            return back()->with('error', "No renewals generated — the “{$rule->name}” schedule produced no upcoming cycles (they may already exist, be long past, or the rule defines no renewals for this right).");
         }
 
-        return back()->with('success', "{$created->count()} renewal(s) generated.");
+        return back()->with('success', "{$created->count()} renewal(s) generated using “{$rule->name}”.");
     }
 
     public function store(Request $request, Matter $matter): RedirectResponse

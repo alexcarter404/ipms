@@ -13,6 +13,7 @@ import { computed, ref } from 'vue';
 const props = defineProps({
     matter: Object,
     countryName: String,
+    renewalRule: { type: Object, default: null },
     parties: Array,
     partyRoles: Array,
     workflows: Array,
@@ -211,7 +212,11 @@ const officialDates = computed(() => [
                 :workflows="workflows"
                 :base-dates="baseDates"
             />
-            <RenewalsPanel v-else-if="activeTab === 'renewals'" :matter="matter" />
+            <RenewalsPanel
+                v-else-if="activeTab === 'renewals'"
+                :matter="matter"
+                :renewal-rule="renewalRule"
+            />
             <CommsPanel v-else-if="activeTab === 'comms'" :matter="matter" :templates="templates" />
         </div>
     </AuthenticatedLayout>

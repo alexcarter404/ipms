@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps({
     clients: Object,
@@ -22,6 +22,8 @@ watch(search, (value) => {
         );
     }, 300);
 });
+
+onUnmounted(() => clearTimeout(timeout));
 </script>
 
 <template>

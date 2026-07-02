@@ -11,6 +11,7 @@ use App\Http\Controllers\MatterController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RenewalController;
+use App\Http\Controllers\RenewalRuleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkflowApplicationController;
 use App\Http\Controllers\WorkflowController;
@@ -42,8 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 
-    // Renewals
+    // Renewals & schedule rules
     Route::get('renewals', [RenewalController::class, 'index'])->name('renewals.index');
+    Route::resource('renewal-rules', RenewalRuleController::class)
+        ->except(['show'])
+        ->parameters(['renewal-rules' => 'renewalRule']);
     Route::post('matters/{matter}/renewals', [RenewalController::class, 'store'])->name('matters.renewals.store');
     Route::post('matters/{matter}/renewals/generate', [RenewalController::class, 'generate'])->name('matters.renewals.generate');
     Route::patch('renewals/{renewal}', [RenewalController::class, 'update'])->name('renewals.update');

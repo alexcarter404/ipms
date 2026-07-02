@@ -52,6 +52,8 @@ test.describe('Renewals', () => {
     test('schedule can be generated for a new matter', async ({ page }) => {
         await page.goto('/matters');
         await page.getByPlaceholder('Search ref, title, number, client…').fill('E2E-0001');
+        // Wait for the debounced filter to apply before navigating away
+        await expect(page.locator('tbody tr')).toHaveCount(1);
         await page.getByRole('link', { name: 'E2E-0001' }).click();
 
         await page.getByRole('button', { name: /Renewals \(/ }).click();
