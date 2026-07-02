@@ -23,6 +23,7 @@ Route::redirect('/', '/dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/search', App\Http\Controllers\SearchController::class)->name('search');
 
     // Clients & contacts
     Route::resource('clients', ClientController::class);

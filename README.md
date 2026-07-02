@@ -69,6 +69,13 @@ renewal/annuity management.
   plus lapsed/waived, with instructed/paid timestamps and fee tracking
 - Renewals control centre with due-within windows (30/90/180/365 days)
 
+### Global Search
+- Typeahead search box in the nav (Ctrl/Cmd+K) that filters as you type
+- Searches matters (reference, title, official numbers), clients,
+  contacts (name/email), client entities, parties, tasks, workflows,
+  and communication templates — grouped results with match
+  highlighting, keyboard navigation, and direct links
+
 ### Dashboard
 - Active portfolio stats, overdue tasks, renewals due in 90 days,
   upcoming actions and renewals, recent matters
@@ -96,7 +103,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 112 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 120 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, template rendering, and the dashboard):
 
@@ -104,7 +111,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 35 tests driving the real app —
+**End-to-end UI tests** (Playwright, 40 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):

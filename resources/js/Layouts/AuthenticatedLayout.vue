@@ -4,6 +4,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
+import GlobalSearch from '@/Components/GlobalSearch.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
@@ -55,7 +56,9 @@ const navigation = [
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden sm:ms-6 sm:flex sm:items-center sm:gap-3">
+                            <GlobalSearch class="hidden md:block" />
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
@@ -153,6 +156,9 @@ const navigation = [
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
+                        <div class="px-4 pb-1 pt-2">
+                            <GlobalSearch class="max-w-none" />
+                        </div>
                         <ResponsiveNavLink
                             v-for="item in navigation"
                             :key="item.route"
