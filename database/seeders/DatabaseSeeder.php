@@ -76,6 +76,12 @@ class DatabaseSeeder extends Seeder
             'is_primary' => true,
         ]);
 
+        $acmeDocketing = $acme->contacts()->create([
+            'name' => 'Acme IP Docketing',
+            'type' => 'mailbox',
+            'email' => 'ip-docketing@acme.example',
+        ]);
+
         $others = Client::factory()->count(4)->create();
 
         // --- Parties ---
@@ -92,7 +98,6 @@ class DatabaseSeeder extends Seeder
             'reference' => 'P-2021-0001',
             'title' => 'Self-sealing valve assembly',
             'client_id' => $acme->id,
-            'contact_id' => $acmeContact->id,
             'family_id' => $family->id,
             'responsible_user_id' => $attorney->id,
             'country_code' => 'GB',
@@ -110,7 +115,6 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Self-sealing valve assembly',
                 'client_id' => $acme->id,
                 'client_entity_id' => $entityId,
-                'contact_id' => $acmeContact->id,
                 'family_id' => $family->id,
                 'parent_id' => $gbPriority->id,
                 'responsible_user_id' => $attorney->id,
@@ -128,7 +132,6 @@ class DatabaseSeeder extends Seeder
             'reference' => 'TM-2023-0001',
             'title' => 'NOVASHIELD',
             'client_id' => $nova->id,
-            'contact_id' => $novaContact->id,
             'responsible_user_id' => $admin->id,
             'country_code' => 'EU',
             'filing_route' => 'madrid',
@@ -161,6 +164,15 @@ class DatabaseSeeder extends Seeder
             'client_id' => $others->random()->id,
             'responsible_user_id' => fake()->randomElement([$admin->id, $attorney->id]),
         ])->create();
+
+        // --- Link contacts to matters (main correspondence + docketing) ---
+        foreach (Matter::where('client_id', $acme->id)->get() as $matter) {
+            $matter->contacts()->attach($acmeContact->id, ['role' => 'main']);
+            $matter->contacts()->attach($acmeDocketing->id, ['role' => 'docketing']);
+        }
+        foreach (Matter::where('client_id', $nova->id)->get() as $matter) {
+            $matter->contacts()->attach($novaContact->id, ['role' => 'main']);
+        }
 
         // --- Attach parties ---
         foreach (Matter::where('matter_type', MatterType::Patent)->get() as $matter) {

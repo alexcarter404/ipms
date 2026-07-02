@@ -14,7 +14,6 @@ const form = useForm({
     title: '',
     client_id: props.preselectedClientId ?? '',
     client_entity_id: '',
-    contact_id: null,
     family_id: '',
     parent_id: '',
     responsible_user_id: '',

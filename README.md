@@ -29,7 +29,13 @@ renewal/annuity management.
   explicitly chosen entity or fall back to the default
 - Entity billing details are available as `{{entity.*}}` merge fields
   in communication templates
-- Multiple named contacts per client; per-client matter portfolio view
+- Typed contacts: **people**, **shared mailboxes** (docketing inboxes,
+  generic addresses — email required), and **organisations**
+- Matters link to any number of contacts in roles — main correspondence,
+  docketing, billing, reporting — with the comm composer prefilled from
+  the main contact and a picker for the rest; `{{contact.*}}` and
+  `{{docketing.*}}` merge fields resolve per matter
+- Per-client matter portfolio view
 
 ### Dates, Actions & Workflow
 - Tasks with official due dates, soft internal deadlines, priorities,
@@ -90,7 +96,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 102 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 112 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, template rendering, and the dashboard):
 
@@ -98,7 +104,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 31 tests driving the real app —
+**End-to-end UI tests** (Playwright, 35 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):
@@ -118,9 +124,10 @@ PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e
 ## Domain model
 
 ```
-Client ─┬─ Contact
+Client ─┬─ Contact (person | mailbox | organisation)
         ├─ ClientEntity (legal entities; one default per client)
         └─ Matter ─┬─ ClientEntity (billing entity, falls back to default)
+                   ├─ Contact (pivot: role = main|docketing|billing|reporting|other)
                    ├─ Family (patent families)
                    ├─ Matter (parent/child, e.g. priority → national phase)
                    ├─ Party (pivot: role = applicant|inventor|agent|…)

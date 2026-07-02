@@ -6,6 +6,7 @@ import Pagination from '@/Components/Pagination.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import EntitiesPanel from './Partials/EntitiesPanel.vue';
+import SelectInput from '@/Components/SelectInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -13,13 +14,18 @@ import { ref } from 'vue';
 const props = defineProps({
     client: Object,
     countries: Array,
+    contactTypes: Array,
     matters: Object,
 });
+
+const typeLabel = (value) =>
+    props.contactTypes.find((t) => t.value === value)?.label ?? value;
 
 const showContactForm = ref(false);
 
 const contactForm = useForm({
     name: '',
+    type: 'person',
     email: '',
     phone: '',
     position: '',
@@ -128,6 +134,11 @@ const removeContact = (contact) => {
                             <InputError :message="contactForm.errors.name" class="mt-1" />
                         </div>
                         <div>
+                            <InputLabel value="Type *" />
+                            <SelectInput v-model="contactForm.type" :options="contactTypes" class="mt-1" />
+                            <InputError :message="contactForm.errors.type" class="mt-1" />
+                        </div>
+                        <div v-if="contactForm.type === 'person'">
                             <InputLabel value="Position" />
                             <TextInput v-model="contactForm.position" class="mt-1 w-full" />
                         </div>
@@ -161,6 +172,11 @@ const removeContact = (contact) => {
                                     v-if="contact.is_primary"
                                     class="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
                                     >Primary</span
+                                >
+                                <span
+                                    v-if="contact.type !== 'person'"
+                                    class="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800"
+                                    >{{ typeLabel(contact.type) }}</span
                                 >
                                 <div class="text-xs text-gray-500">
                                     {{ contact.position ?? '' }}

@@ -31,10 +31,12 @@ class TemplateRenderer
      */
     public function fields(Matter $matter): array
     {
-        $matter->loadMissing(['client', 'billingEntity', 'contact', 'responsibleUser']);
+        $matter->loadMissing(['client', 'billingEntity', 'contacts', 'responsibleUser']);
 
         $fmt = fn ($date) => $date?->format('j F Y') ?? '';
         $entity = $matter->effectiveBillingEntity();
+        $contact = $matter->mainContact();
+        $docketing = $matter->docketingContact();
 
         return [
             'matter.reference' => $matter->reference,
@@ -59,8 +61,10 @@ class TemplateRenderer
             'entity.billing_email' => $entity->billing_email ?? '',
             'entity.billing_address' => $entity?->effectiveBillingAddress() ?? '',
             'entity.billing_reference' => $entity->billing_reference ?? '',
-            'contact.name' => $matter->contact->name ?? '',
-            'contact.email' => $matter->contact->email ?? '',
+            'contact.name' => $contact->name ?? '',
+            'contact.email' => $contact->email ?? '',
+            'docketing.name' => $docketing->name ?? '',
+            'docketing.email' => $docketing->email ?? '',
             'attorney.name' => $matter->responsibleUser->name ?? '',
             'attorney.email' => $matter->responsibleUser->email ?? '',
             'today' => now()->format('j F Y'),
@@ -83,7 +87,7 @@ class TemplateRenderer
             'client.name', 'client.code',
             'entity.name', 'entity.vat_number', 'entity.billing_contact',
             'entity.billing_email', 'entity.billing_address', 'entity.billing_reference',
-            'contact.name', 'contact.email',
+            'contact.name', 'contact.email', 'docketing.name', 'docketing.email',
             'attorney.name', 'attorney.email', 'today',
         ];
     }

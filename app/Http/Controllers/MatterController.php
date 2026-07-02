@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContactType;
+use App\Enums\MatterContactRole;
 use App\Enums\MatterStatus;
 use App\Enums\MatterType;
 use App\Enums\PartyRole;
@@ -72,7 +74,7 @@ class MatterController extends Controller
         $matter->load([
             'client:id,name,code',
             'billingEntity:id,name,billing_email',
-            'contact:id,name,email',
+            'contacts',
             'family:id,reference,name',
             'parent:id,reference,title',
             'children:id,parent_id,reference,title,country_code,status',
@@ -104,6 +106,9 @@ class MatterController extends Controller
             ] : null,
             'parties' => Party::orderBy('name')->get(['id', 'name']),
             'partyRoles' => PartyRole::options(),
+            'clientContacts' => $matter->client->contacts()->orderBy('name')->get(),
+            'contactRoles' => MatterContactRole::options(),
+            'contactTypes' => ContactType::options(),
             'workflows' => Workflow::where('is_active', true)
                 ->where(fn ($q) => $q->whereNull('matter_type')->orWhere('matter_type', $matter->matter_type))
                 ->with('steps:id,workflow_id,title,offset_value,offset_unit')
@@ -181,7 +186,6 @@ class MatterController extends Controller
                 'nullable',
                 Rule::exists('client_entities', 'id')->where('client_id', $request->input('client_id')),
             ],
-            'contact_id' => ['nullable', 'exists:contacts,id'],
             'family_id' => ['nullable', 'exists:families,id'],
             'parent_id' => ['nullable', 'exists:matters,id', Rule::notIn([$matter?->id])],
             'responsible_user_id' => ['nullable', 'exists:users,id'],

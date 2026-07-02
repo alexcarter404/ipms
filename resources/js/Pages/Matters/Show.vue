@@ -4,6 +4,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import ClassesPanel from './Partials/ClassesPanel.vue';
 import CommsPanel from './Partials/CommsPanel.vue';
+import ContactsPanel from './Partials/ContactsPanel.vue';
 import PartiesPanel from './Partials/PartiesPanel.vue';
 import RenewalsPanel from './Partials/RenewalsPanel.vue';
 import TasksPanel from './Partials/TasksPanel.vue';
@@ -17,6 +18,9 @@ const props = defineProps({
     billingEntity: { type: Object, default: null },
     parties: Array,
     partyRoles: Array,
+    clientContacts: Array,
+    contactRoles: Array,
+    contactTypes: Array,
     workflows: Array,
     triggerEvents: Array,
     templates: Array,
@@ -35,6 +39,7 @@ const tabs = computed(() => {
 
     const list = [
         { key: 'overview', label: 'Overview' },
+        { key: 'contacts', label: `Contacts (${props.matter.contacts.length})` },
         { key: 'parties', label: `Parties (${props.matter.parties.length})` },
     ];
     if (['trademark', 'design'].includes(props.matter.matter_type)) {
@@ -66,7 +71,14 @@ const destroy = () => {
 
 const details = computed(() => [
     { label: 'Client', value: props.matter.client?.name, link: props.matter.client ? route('clients.show', props.matter.client.id) : null },
-    { label: 'Client contact', value: props.matter.contact?.name },
+    {
+        label: 'Main contact',
+        value: props.matter.contacts.find((c) => c.pivot.role === 'main')?.name,
+    },
+    {
+        label: 'Docketing',
+        value: props.matter.contacts.find((c) => c.pivot.role === 'docketing')?.email,
+    },
     {
         label: 'Billing entity',
         value: props.billingEntity
@@ -204,6 +216,13 @@ const officialDates = computed(() => [
                 </div>
             </div>
 
+            <ContactsPanel
+                v-else-if="activeTab === 'contacts'"
+                :matter="matter"
+                :client-contacts="clientContacts"
+                :contact-roles="contactRoles"
+                :contact-types="contactTypes"
+            />
             <PartiesPanel
                 v-else-if="activeTab === 'parties'"
                 :matter="matter"

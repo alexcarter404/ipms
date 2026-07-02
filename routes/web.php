@@ -8,6 +8,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\MatterClassController;
+use App\Http\Controllers\MatterContactController;
 use App\Http\Controllers\MatterController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\ProfileController;
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Matters
     Route::resource('matters', MatterController::class);
+    Route::post('matters/{matter}/contacts', [MatterContactController::class, 'store'])->name('matters.contacts.store');
+    Route::delete('matters/{matter}/contacts/{contact}', [MatterContactController::class, 'destroy'])->name('matters.contacts.destroy');
     Route::post('matters/{matter}/parties', [MatterPartyController::class, 'store'])->name('matters.parties.store');
     Route::delete('matters/{matter}/parties/{party}', [MatterPartyController::class, 'destroy'])->name('matters.parties.destroy');
     Route::post('matters/{matter}/classes', [MatterClassController::class, 'store'])->name('matters.classes.store');

@@ -29,10 +29,27 @@ const form = useForm({
     body: '',
 });
 
+const applyRecipient = (contact) => {
+    if (!contact) return;
+    form.recipient_name = contact.name;
+    form.recipient_email = contact.email ?? '';
+};
+
+const selectedRecipient = ref('');
+
+const pickRecipient = () => {
+    const contact = props.matter.contacts.find(
+        (c) => `${c.id}-${c.pivot.role}` === selectedRecipient.value
+    );
+    applyRecipient(contact);
+};
+
 const openComposer = () => {
     form.reset();
-    form.recipient_name = props.matter.contact?.name ?? props.matter.client?.name ?? '';
-    form.recipient_email = props.matter.contact?.email ?? '';
+    const main = props.matter.contacts.find((c) => c.pivot.role === 'main');
+    applyRecipient(main);
+    if (!main) form.recipient_name = props.matter.client?.name ?? '';
+    selectedRecipient.value = main ? `${main.id}-${main.pivot.role}` : '';
     showComposer.value = true;
 };
 
@@ -173,6 +190,19 @@ const formatDateTime = (value) =>
                                 { value: 'letter', label: 'Letter' },
                             ]"
                             class="mt-1"
+                        />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <InputLabel value="Send to matter contact" />
+                        <SelectInput
+                            v-model="selectedRecipient"
+                            :options="matter.contacts.map((c) => ({
+                                value: `${c.id}-${c.pivot.role}`,
+                                label: `${c.name} (${c.pivot.role})${c.email ? ' — ' + c.email : ''}`,
+                            }))"
+                            placeholder="Custom recipient"
+                            class="mt-1"
+                            @change="pickRecipient"
                         />
                     </div>
                     <div>

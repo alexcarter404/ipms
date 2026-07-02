@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContactType;
 use App\Models\Client;
 use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
@@ -64,6 +65,7 @@ class ClientController extends Controller
         return Inertia::render('Clients/Show', [
             'client' => $client,
             'countries' => Countries::options(),
+            'contactTypes' => ContactType::options(),
             'matters' => $client->matters()
                 ->with('responsibleUser:id,name')
                 ->latest()

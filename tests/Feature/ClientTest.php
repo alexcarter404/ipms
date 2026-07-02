@@ -112,6 +112,7 @@ class ClientTest extends TestCase
 
         $this->actingAs($this->user)->post(route('clients.contacts.store', $client), [
             'name' => 'Sarah Bennett',
+            'type' => 'person',
             'email' => 'sarah@example.com',
             'is_primary' => true,
         ]);

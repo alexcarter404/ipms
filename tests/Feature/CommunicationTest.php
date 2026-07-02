@@ -32,9 +32,9 @@ class CommunicationTest extends TestCase
             'reference' => 'P-2026-0042',
             'title' => 'Rocket skates',
             'client_id' => $client->id,
-            'contact_id' => $contact->id,
             'application_date' => '2026-01-15',
         ]);
+        $matter->contacts()->attach($contact->id, ['role' => 'main']);
 
         $template = CommTemplate::factory()->create([
             'subject' => '{{matter.reference}} update',
