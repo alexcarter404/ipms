@@ -162,8 +162,26 @@ Client ─┬─ Contact (person | mailbox | organisation)
                    └─ Communication ── CommTemplate
 ```
 
-Key services (`app/Services`):
+## Backend architecture
 
-- `RenewalScheduler` — generates schedules from the matching RenewalRule (idempotent)
-- `WorkflowRunner` — expands a workflow template into matter tasks
-- `TemplateRenderer` — resolves merge fields for communications
+Controllers are thin HTTP adapters; the domain lives below them, so a
+JSON API can reuse the same building blocks without touching web code:
+
+```
+Http/Controllers   validate (FormRequest) -> call action/repository -> respond
+Http/Requests      all validation rules (shared by web now, API later)
+Actions/           one class per state change (CreateClient, LinkContact,
+                   ApplyWorkflowToMatter, UpdateRenewal, SaveWorkflow, ...);
+                   business-rule violations raise DomainActionException
+Repositories/      all Eloquent queries: filtered pagination, option lists,
+                   typeahead search, dashboard counts
+Services/          domain services composing repositories:
+                   RenewalScheduler, WorkflowRunner, TemplateRenderer,
+                   SearchService, DashboardService
+Models/            relationships, casts, scopes, and per-model domain
+                   helpers (schedule computation, default-entity switch)
+```
+
+Web controllers turn `DomainActionException` into flash errors; an API
+controller would map the same exceptions to 422 responses and reuse the
+identical FormRequests, actions, and repositories.

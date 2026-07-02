@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Matters\SaveMatter;
 use App\Enums\ContactType;
 use App\Enums\MatterContactRole;
 use App\Enums\MatterStatus;
@@ -9,47 +10,40 @@ use App\Enums\MatterType;
 use App\Enums\PartyRole;
 use App\Enums\TaskPriority;
 use App\Enums\TriggerEvent;
-use App\Models\Client;
-use App\Models\CommTemplate;
-use App\Models\Family;
+use App\Http\Requests\MatterRequest;
 use App\Models\Matter;
-use App\Models\Party;
-use App\Models\User;
-use App\Models\Workflow;
+use App\Repositories\ClientRepository;
+use App\Repositories\CommTemplateRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\FamilyRepository;
+use App\Repositories\MatterRepository;
+use App\Repositories\PartyRepository;
+use App\Repositories\UserRepository;
+use App\Repositories\WorkflowRepository;
 use App\Services\RenewalScheduler;
 use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MatterController extends Controller
 {
-    public function index(Request $request): Response
+    public function __construct(private MatterRepository $matters)
     {
-        $matters = Matter::query()
-            ->with(['client:id,name', 'responsibleUser:id,name'])
-            ->search($request->input('search'))
-            ->when($request->input('type'), fn ($q, $type) => $q->where('matter_type', $type))
-            ->when($request->input('status'), fn ($q, $status) => $q->where('status', $status))
-            ->when($request->input('country'), fn ($q, $country) => $q->where('country_code', $country))
-            ->when($request->input('client_id'), fn ($q, $id) => $q->where('client_id', $id))
-            ->when(
-                $request->input('sort') === 'reference',
-                fn ($q) => $q->orderBy('reference'),
-                fn ($q) => $q->latest()
-            )
-            ->paginate(15)
-            ->withQueryString();
+    }
+
+    public function index(Request $request, ClientRepository $clients): Response
+    {
+        $filters = $request->only('search', 'type', 'status', 'country', 'client_id', 'sort');
 
         return Inertia::render('Matters/Index', [
-            'matters' => $matters,
-            'filters' => $request->only('search', 'type', 'status', 'country', 'client_id', 'sort'),
+            'matters' => $this->matters->paginateFiltered($filters),
+            'filters' => $filters,
             'types' => MatterType::options(),
             'statuses' => MatterStatus::options(),
             'countries' => Countries::options(),
-            'clients' => Client::orderBy('name')->get(['id', 'name']),
+            'clients' => $clients->options(),
         ]);
     }
 
@@ -61,63 +55,51 @@ class MatterController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(MatterRequest $request, SaveMatter $action): RedirectResponse
     {
-        $matter = Matter::create($this->validated($request));
+        $matter = $action->create($request->validated());
 
         return redirect()->route('matters.show', $matter)
             ->with('success', 'Matter created.');
     }
 
-    public function show(Matter $matter, RenewalScheduler $scheduler): Response
-    {
-        $matter->load([
-            'client:id,name,code',
-            'billingEntity:id,name,billing_email',
-            'contacts',
-            'family:id,reference,name',
-            'parent:id,reference,title',
-            'children:id,parent_id,reference,title,country_code,status',
-            'responsibleUser:id,name',
-            'parties',
-            'classes',
-            'renewals',
-            'tasks.assignee:id,name',
-            'communications.creator:id,name',
-            'communications.template:id,name',
-        ]);
+    public function show(
+        Matter $matter,
+        RenewalScheduler $scheduler,
+        PartyRepository $parties,
+        ContactRepository $contacts,
+        WorkflowRepository $workflows,
+        CommTemplateRepository $templates,
+        UserRepository $users,
+    ): Response {
+        $this->matters->loadForDisplay($matter);
 
         $renewalRule = $scheduler->ruleFor($matter);
         $billingEntity = $matter->effectiveBillingEntity();
 
         return Inertia::render('Matters/Show', [
+            'matter' => $matter,
+            'countryName' => Countries::name($matter->country_code),
             'billingEntity' => $billingEntity ? [
                 'id' => $billingEntity->id,
                 'name' => $billingEntity->name,
                 'billing_email' => $billingEntity->billing_email,
                 'is_fallback' => $matter->client_entity_id === null,
             ] : null,
-            'matter' => $matter,
-            'countryName' => Countries::name($matter->country_code),
             'renewalRule' => $renewalRule ? [
                 'id' => $renewalRule->id,
                 'name' => $renewalRule->name,
                 'summary' => $renewalRule->summary(),
             ] : null,
-            'parties' => Party::orderBy('name')->get(['id', 'name']),
+            'parties' => $parties->options(),
             'partyRoles' => PartyRole::options(),
-            'clientContacts' => $matter->client->contacts()->orderBy('name')->get(),
+            'clientContacts' => $contacts->forClient($matter->client),
             'contactRoles' => MatterContactRole::options(),
             'contactTypes' => ContactType::options(),
-            'workflows' => Workflow::where('is_active', true)
-                ->where(fn ($q) => $q->whereNull('matter_type')->orWhere('matter_type', $matter->matter_type))
-                ->with('steps:id,workflow_id,title,offset_value,offset_unit')
-                ->get(),
+            'workflows' => $workflows->activeForMatter($matter),
             'triggerEvents' => TriggerEvent::options(),
-            'templates' => CommTemplate::where('is_active', true)
-                ->where(fn ($q) => $q->whereNull('matter_type')->orWhere('matter_type', $matter->matter_type))
-                ->get(['id', 'name', 'channel']),
-            'users' => User::orderBy('name')->get(['id', 'name']),
+            'templates' => $templates->activeForMatter($matter),
+            'users' => $users->options(),
             'priorities' => TaskPriority::options(),
             'baseDates' => [
                 'filing' => $matter->application_date?->toDateString(),
@@ -137,9 +119,9 @@ class MatterController extends Controller
         ]);
     }
 
-    public function update(Request $request, Matter $matter): RedirectResponse
+    public function update(MatterRequest $request, Matter $matter, SaveMatter $action): RedirectResponse
     {
-        $matter->update($this->validated($request, $matter));
+        $action->update($matter, $request->validated());
 
         return redirect()->route('matters.show', $matter)
             ->with('success', 'Matter updated.');
@@ -158,12 +140,10 @@ class MatterController extends Controller
             'types' => MatterType::options(),
             'statuses' => MatterStatus::options(),
             'countries' => Countries::options(),
-            'clients' => Client::with('entities:id,client_id,name,is_default')
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']),
-            'families' => Family::orderBy('reference')->get(['id', 'reference', 'name']),
-            'users' => User::orderBy('name')->get(['id', 'name']),
-            'matters' => Matter::orderBy('reference')->get(['id', 'reference', 'title']),
+            'clients' => app(ClientRepository::class)->optionsWithEntities(),
+            'families' => app(FamilyRepository::class)->options(),
+            'users' => app(UserRepository::class)->options(),
+            'matters' => $this->matters->referenceOptions(),
             'filingRoutes' => [
                 ['value' => 'national', 'label' => 'National'],
                 ['value' => 'pct', 'label' => 'PCT'],
@@ -173,36 +153,5 @@ class MatterController extends Controller
                 ['value' => 'paris', 'label' => 'Paris Convention'],
             ],
         ];
-    }
-
-    private function validated(Request $request, ?Matter $matter = null): array
-    {
-        return $request->validate([
-            'reference' => ['required', 'string', 'max:30', Rule::unique('matters')->ignore($matter)->whereNull('deleted_at')],
-            'matter_type' => ['required', Rule::enum(MatterType::class)],
-            'title' => ['required', 'string', 'max:255'],
-            'client_id' => ['required', 'exists:clients,id'],
-            'client_entity_id' => [
-                'nullable',
-                Rule::exists('client_entities', 'id')->where('client_id', $request->input('client_id')),
-            ],
-            'family_id' => ['nullable', 'exists:families,id'],
-            'parent_id' => ['nullable', 'exists:matters,id', Rule::notIn([$matter?->id])],
-            'responsible_user_id' => ['nullable', 'exists:users,id'],
-            'country_code' => ['required', 'string', 'size:2'],
-            'filing_route' => ['nullable', 'string', 'max:20'],
-            'status' => ['required', Rule::enum(MatterStatus::class)],
-            'application_no' => ['nullable', 'string', 'max:50'],
-            'application_date' => ['nullable', 'date'],
-            'publication_no' => ['nullable', 'string', 'max:50'],
-            'publication_date' => ['nullable', 'date'],
-            'registration_no' => ['nullable', 'string', 'max:50'],
-            'registration_date' => ['nullable', 'date'],
-            'priority_no' => ['nullable', 'string', 'max:50'],
-            'priority_date' => ['nullable', 'date'],
-            'expiry_date' => ['nullable', 'date'],
-            'description' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
-        ]);
     }
 }

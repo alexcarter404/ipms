@@ -3,22 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MatterType;
+use App\Http\Requests\CommTemplateRequest;
+use App\Http\Requests\TemplatePreviewRequest;
 use App\Models\CommTemplate;
 use App\Models\Matter;
+use App\Repositories\CommTemplateRepository;
 use App\Services\TemplateRenderer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CommTemplateController extends Controller
 {
-    public function index(): Response
+    public function index(CommTemplateRepository $templates): Response
     {
         return Inertia::render('Templates/Index', [
-            'templates' => CommTemplate::withCount('communications')->orderBy('name')->get(),
+            'templates' => $templates->allWithUsage(),
         ]);
     }
 
@@ -30,9 +31,9 @@ class CommTemplateController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(CommTemplateRequest $request): RedirectResponse
     {
-        CommTemplate::create($this->validated($request));
+        CommTemplate::create($request->validated());
 
         return redirect()->route('templates.index')->with('success', 'Template created.');
     }
@@ -46,9 +47,9 @@ class CommTemplateController extends Controller
         ]);
     }
 
-    public function update(Request $request, CommTemplate $template): RedirectResponse
+    public function update(CommTemplateRequest $request, CommTemplate $template): RedirectResponse
     {
-        $template->update($this->validated($request));
+        $template->update($request->validated());
 
         return redirect()->route('templates.index')->with('success', 'Template updated.');
     }
@@ -61,12 +62,9 @@ class CommTemplateController extends Controller
     }
 
     /** Preview a template rendered against a matter (used by the comm composer). */
-    public function preview(Request $request, TemplateRenderer $renderer): JsonResponse
+    public function preview(TemplatePreviewRequest $request, TemplateRenderer $renderer): JsonResponse
     {
-        $data = $request->validate([
-            'template_id' => ['required', 'exists:comm_templates,id'],
-            'matter_id' => ['required', 'exists:matters,id'],
-        ]);
+        $data = $request->validated();
 
         $template = CommTemplate::findOrFail($data['template_id']);
         $matter = Matter::findOrFail($data['matter_id']);
@@ -74,17 +72,5 @@ class CommTemplateController extends Controller
         return response()->json(
             $renderer->render($template, $matter) + ['channel' => $template->channel]
         );
-    }
-
-    private function validated(Request $request): array
-    {
-        return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'channel' => ['required', Rule::in(['email', 'letter'])],
-            'matter_type' => ['nullable', Rule::enum(MatterType::class)],
-            'subject' => ['nullable', 'string', 'max:255'],
-            'body' => ['required', 'string'],
-            'is_active' => ['boolean'],
-        ]);
     }
 }

@@ -2,107 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Renewals\CreateRenewal;
+use App\Actions\Renewals\GenerateRenewalSchedule;
+use App\Actions\Renewals\UpdateRenewal;
 use App\Enums\RenewalStatus;
+use App\Exceptions\DomainActionException;
+use App\Http\Requests\RenewalStoreRequest;
+use App\Http\Requests\RenewalUpdateRequest;
 use App\Models\Matter;
 use App\Models\Renewal;
-use App\Services\RenewalScheduler;
+use App\Repositories\RenewalRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RenewalController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, RenewalRepository $renewals): Response
     {
-        $renewals = Renewal::query()
-            ->with('matter:id,reference,title,matter_type,country_code,client_id', 'matter.client:id,name')
-            ->when(
-                $request->input('status'),
-                fn ($q, $status) => $status === 'open' ? $q->open() : $q->where('status', $status),
-                fn ($q) => $q->open()
-            )
-            ->when($request->input('due_within'), fn ($q, $days) => $q->dueWithin((int) $days))
-            ->when($request->input('search'), fn ($q, $term) => $q->whereHas(
-                'matter',
-                fn ($m) => $m->where('reference', 'like', "%{$term}%")->orWhere('title', 'like', "%{$term}%")
-            ))
-            ->orderBy('due_date')
-            ->paginate(20)
-            ->withQueryString();
+        $filters = $request->only('status', 'due_within', 'search');
 
         return Inertia::render('Renewals/Index', [
-            'renewals' => $renewals,
-            'filters' => $request->only('status', 'due_within', 'search'),
+            'renewals' => $renewals->paginateFiltered($filters),
+            'filters' => $filters,
             'statuses' => RenewalStatus::options(),
         ]);
     }
 
-    /** Generate the renewal schedule for a matter from its renewal rule. */
-    public function generate(Matter $matter, RenewalScheduler $scheduler): RedirectResponse
+    public function generate(Matter $matter, GenerateRenewalSchedule $action): RedirectResponse
     {
-        $rule = $scheduler->ruleFor($matter);
-
-        if (! $rule) {
-            return back()->with('error', "No renewal rule is configured for {$matter->matter_type->label()} matters in {$matter->country_code} — add one under Renewals → Schedule Rules.");
+        try {
+            $created = $action->handle($matter);
+        } catch (DomainActionException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        if (! $rule->baseDateFor($matter)) {
-            return back()->with('error', "The rule “{$rule->name}” anchors on the {$rule->baseDateLabel()}, which this matter does not have yet.");
-        }
-
-        $created = $scheduler->generate($matter);
-
-        if ($created->isEmpty()) {
-            return back()->with('error', "No renewals generated — the “{$rule->name}” schedule produced no upcoming cycles (they may already exist, be long past, or the rule defines no renewals for this right).");
-        }
-
-        return back()->with('success', "{$created->count()} renewal(s) generated using “{$rule->name}”.");
+        return back()->with('success', "{$created->count()} renewal(s) generated using “{$action->ruleName($matter)}”.");
     }
 
-    public function store(Request $request, Matter $matter): RedirectResponse
+    public function store(RenewalStoreRequest $request, Matter $matter, CreateRenewal $action): RedirectResponse
     {
-        $data = $request->validate([
-            'cycle' => ['required', 'integer', 'min:1', Rule::unique('renewals')->where('matter_id', $matter->id)],
-            'due_date' => ['required', 'date'],
-            'grace_date' => ['nullable', 'date', 'after_or_equal:due_date'],
-            'official_fee' => ['nullable', 'numeric', 'min:0'],
-            'service_fee' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['required', 'string', 'size:3'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        $matter->renewals()->create($data + ['status' => RenewalStatus::Upcoming]);
+        $action->handle($matter, $request->validated());
 
         return back()->with('success', 'Renewal added.');
     }
 
-    public function update(Request $request, Renewal $renewal): RedirectResponse
+    public function update(RenewalUpdateRequest $request, Renewal $renewal, UpdateRenewal $action): RedirectResponse
     {
-        $data = $request->validate([
-            'status' => ['sometimes', Rule::enum(RenewalStatus::class)],
-            'due_date' => ['sometimes', 'date'],
-            'grace_date' => ['nullable', 'date'],
-            'official_fee' => ['nullable', 'numeric', 'min:0'],
-            'service_fee' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['sometimes', 'string', 'size:3'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        if (isset($data['status'])) {
-            $newStatus = RenewalStatus::from($data['status']);
-
-            if ($newStatus === RenewalStatus::Instructed && $renewal->status !== RenewalStatus::Instructed) {
-                $data['instructed_at'] = now();
-            }
-
-            if ($newStatus === RenewalStatus::Paid && $renewal->status !== RenewalStatus::Paid) {
-                $data['paid_at'] = now();
-            }
-        }
-
-        $renewal->update($data);
+        $action->handle($renewal, $request->validated());
 
         return back()->with('success', 'Renewal updated.');
     }
