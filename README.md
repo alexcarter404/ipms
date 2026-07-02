@@ -69,6 +69,17 @@ renewal/annuity management.
   plus lapsed/waived, with instructed/paid timestamps and fee tracking
 - Renewals control centre with due-within windows (30/90/180/365 days)
 
+### Authentication & Security
+- Session auth powered end-to-end by **Laravel Fortify** (headless),
+  rendered through the app's Inertia pages: login, registration,
+  password reset, email verification, password confirmation
+- **Two-factor authentication** (TOTP): QR-code enrolment with setup
+  key, code confirmation, single-use recovery codes with regeneration,
+  and a login challenge step — all guarded by fresh password
+  confirmation and rate-limited, with TOTP replay protection
+- 2FA secrets and recovery codes are encrypted at rest and never
+  exposed through Inertia page props
+
 ### Global Search
 - Typeahead search box in the nav (Ctrl/Cmd+K) that filters as you type
 - Searches matters (reference, title, official numbers), clients,
@@ -121,7 +132,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 120 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 134 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, template rendering, and the dashboard):
 
@@ -129,7 +140,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 41 tests driving the real app —
+**End-to-end UI tests** (Playwright, 42 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):
