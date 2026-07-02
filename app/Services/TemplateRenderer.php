@@ -31,9 +31,10 @@ class TemplateRenderer
      */
     public function fields(Matter $matter): array
     {
-        $matter->loadMissing(['client', 'contact', 'responsibleUser']);
+        $matter->loadMissing(['client', 'billingEntity', 'contact', 'responsibleUser']);
 
         $fmt = fn ($date) => $date?->format('j F Y') ?? '';
+        $entity = $matter->effectiveBillingEntity();
 
         return [
             'matter.reference' => $matter->reference,
@@ -52,6 +53,12 @@ class TemplateRenderer
             'matter.next_renewal_date' => $fmt($matter->renewals()->open()->orderBy('due_date')->first()?->due_date),
             'client.name' => $matter->client->name ?? '',
             'client.code' => $matter->client->code ?? '',
+            'entity.name' => $entity->name ?? '',
+            'entity.vat_number' => $entity->vat_number ?? '',
+            'entity.billing_contact' => $entity->billing_contact_name ?? '',
+            'entity.billing_email' => $entity->billing_email ?? '',
+            'entity.billing_address' => $entity?->effectiveBillingAddress() ?? '',
+            'entity.billing_reference' => $entity->billing_reference ?? '',
             'contact.name' => $matter->contact->name ?? '',
             'contact.email' => $matter->contact->email ?? '',
             'attorney.name' => $matter->responsibleUser->name ?? '',
@@ -73,7 +80,10 @@ class TemplateRenderer
             'matter.publication_no', 'matter.publication_date',
             'matter.registration_no', 'matter.registration_date',
             'matter.priority_date', 'matter.expiry_date', 'matter.next_renewal_date',
-            'client.name', 'client.code', 'contact.name', 'contact.email',
+            'client.name', 'client.code',
+            'entity.name', 'entity.vat_number', 'entity.billing_contact',
+            'entity.billing_email', 'entity.billing_address', 'entity.billing_reference',
+            'contact.name', 'contact.email',
             'attorney.name', 'attorney.email', 'today',
         ];
     }

@@ -13,6 +13,7 @@ const form = useForm({
     matter_type: 'patent',
     title: '',
     client_id: props.preselectedClientId ?? '',
+    client_entity_id: '',
     contact_id: null,
     family_id: '',
     parent_id: '',

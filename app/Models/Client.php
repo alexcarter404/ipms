@@ -12,13 +12,25 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'code', 'name', 'type', 'email', 'phone', 'address',
-        'country_code', 'vat_number', 'notes',
+        'code', 'name', 'type', 'email', 'phone', 'country_code', 'notes',
     ];
 
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);
+    }
+
+    public function entities(): HasMany
+    {
+        return $this->hasMany(ClientEntity::class)
+            ->orderByDesc('is_default')
+            ->orderBy('name');
+    }
+
+    public function defaultEntity(): ?ClientEntity
+    {
+        return $this->entities()->where('is_default', true)->first()
+            ?? $this->entities()->first();
     }
 
     public function matters(): HasMany

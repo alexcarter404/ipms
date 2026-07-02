@@ -13,9 +13,7 @@ const form = useForm({
     type: 'company',
     email: '',
     phone: '',
-    address: '',
     country_code: '',
-    vat_number: '',
     notes: '',
 });
 

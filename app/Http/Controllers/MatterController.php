@@ -71,6 +71,7 @@ class MatterController extends Controller
     {
         $matter->load([
             'client:id,name,code',
+            'billingEntity:id,name,billing_email',
             'contact:id,name,email',
             'family:id,reference,name',
             'parent:id,reference,title',
@@ -85,8 +86,15 @@ class MatterController extends Controller
         ]);
 
         $renewalRule = $scheduler->ruleFor($matter);
+        $billingEntity = $matter->effectiveBillingEntity();
 
         return Inertia::render('Matters/Show', [
+            'billingEntity' => $billingEntity ? [
+                'id' => $billingEntity->id,
+                'name' => $billingEntity->name,
+                'billing_email' => $billingEntity->billing_email,
+                'is_fallback' => $matter->client_entity_id === null,
+            ] : null,
             'matter' => $matter,
             'countryName' => Countries::name($matter->country_code),
             'renewalRule' => $renewalRule ? [
@@ -145,7 +153,9 @@ class MatterController extends Controller
             'types' => MatterType::options(),
             'statuses' => MatterStatus::options(),
             'countries' => Countries::options(),
-            'clients' => Client::orderBy('name')->get(['id', 'name', 'code']),
+            'clients' => Client::with('entities:id,client_id,name,is_default')
+                ->orderBy('name')
+                ->get(['id', 'name', 'code']),
             'families' => Family::orderBy('reference')->get(['id', 'reference', 'name']),
             'users' => User::orderBy('name')->get(['id', 'name']),
             'matters' => Matter::orderBy('reference')->get(['id', 'reference', 'title']),
@@ -167,6 +177,10 @@ class MatterController extends Controller
             'matter_type' => ['required', Rule::enum(MatterType::class)],
             'title' => ['required', 'string', 'max:255'],
             'client_id' => ['required', 'exists:clients,id'],
+            'client_entity_id' => [
+                'nullable',
+                Rule::exists('client_entities', 'id')->where('client_id', $request->input('client_id')),
+            ],
             'contact_id' => ['nullable', 'exists:contacts,id'],
             'family_id' => ['nullable', 'exists:families,id'],
             'parent_id' => ['nullable', 'exists:matters,id', Rule::notIn([$matter?->id])],

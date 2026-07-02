@@ -41,16 +41,29 @@ class ClientController extends Controller
     {
         $client = Client::create($this->validated($request));
 
+        // Every client starts with a default legal entity; billing
+        // details and further entities are managed on the client page.
+        $client->entities()->create([
+            'name' => $client->name,
+            'country_code' => $client->country_code,
+            'billing_email' => $client->email,
+            'is_default' => true,
+        ]);
+
         return redirect()->route('clients.show', $client)
             ->with('success', 'Client created.');
     }
 
     public function show(Client $client): Response
     {
-        $client->load(['contacts' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('name')]);
+        $client->load([
+            'contacts' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('name'),
+            'entities' => fn ($q) => $q->withCount('matters'),
+        ]);
 
         return Inertia::render('Clients/Show', [
             'client' => $client,
+            'countries' => Countries::options(),
             'matters' => $client->matters()
                 ->with('responsibleUser:id,name')
                 ->latest()
@@ -95,9 +108,7 @@ class ClientController extends Controller
             'type' => ['required', Rule::in(['company', 'individual'])],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'address' => ['nullable', 'string'],
             'country_code' => ['nullable', 'string', 'size:2'],
-            'vat_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string'],
         ]);
     }

@@ -5,12 +5,14 @@ import InputLabel from '@/Components/InputLabel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import EntitiesPanel from './Partials/EntitiesPanel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     client: Object,
+    countries: Array,
     matters: Object,
 });
 
@@ -94,16 +96,6 @@ const removeContact = (contact) => {
                         <div class="flex justify-between gap-4">
                             <dt class="text-gray-500">Phone</dt>
                             <dd class="font-medium text-gray-800">{{ client.phone ?? '—' }}</dd>
-                        </div>
-                        <div class="flex justify-between gap-4">
-                            <dt class="text-gray-500">VAT</dt>
-                            <dd class="font-medium text-gray-800">{{ client.vat_number ?? '—' }}</dd>
-                        </div>
-                        <div v-if="client.address">
-                            <dt class="text-gray-500">Address</dt>
-                            <dd class="mt-1 whitespace-pre-wrap font-medium text-gray-800">
-                                {{ client.address }}
-                            </dd>
                         </div>
                         <div v-if="client.notes">
                             <dt class="text-gray-500">Notes</dt>
@@ -190,6 +182,8 @@ const removeContact = (contact) => {
                     </ul>
                 </div>
             </div>
+
+            <EntitiesPanel :client="client" :countries="countries" />
 
             <!-- Matters -->
             <div class="space-y-4">

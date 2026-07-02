@@ -57,16 +57,6 @@ const emit = defineEmits(['submit']);
                     <SelectInput v-model="form.country_code" :options="countries" placeholder="—" class="mt-1" />
                     <InputError :message="form.errors.country_code" class="mt-1" />
                 </div>
-                <div>
-                    <InputLabel value="VAT number" />
-                    <TextInput v-model="form.vat_number" class="mt-1 w-full" />
-                    <InputError :message="form.errors.vat_number" class="mt-1" />
-                </div>
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <InputLabel value="Address" />
-                    <TextareaInput v-model="form.address" class="mt-1" rows="2" />
-                    <InputError :message="form.errors.address" class="mt-1" />
-                </div>
                 <div class="sm:col-span-2 lg:col-span-3">
                     <InputLabel value="Notes" />
                     <TextareaInput v-model="form.notes" class="mt-1" rows="3" />

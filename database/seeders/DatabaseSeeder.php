@@ -38,6 +38,25 @@ class DatabaseSeeder extends Seeder
             'name' => 'Acme Industries Ltd',
             'country_code' => 'GB',
         ]);
+        $acmeGb = $acme->entities()->where('is_default', true)->first();
+        $acmeGb->update([
+            'registration_no' => '01234567',
+            'vat_number' => 'GB123456789',
+            'address' => "1 Innovation Way\nCambridge CB1 2AB\nUnited Kingdom",
+            'billing_contact_name' => 'Accounts Payable',
+            'billing_email' => 'ap@acme.example',
+            'billing_reference' => 'PO-IP-2026',
+        ]);
+        $acmeUs = $acme->entities()->create([
+            'name' => 'Acme Industries Inc',
+            'registration_no' => 'DE 556-8821',
+            'country_code' => 'US',
+            'address' => "2000 Liberty Plaza\nWilmington, DE 19801\nUSA",
+            'billing_contact_name' => 'US Accounts Team',
+            'billing_email' => 'us-invoices@acme.example',
+            'billing_address' => "PO Box 4410\nWilmington, DE 19801\nUSA",
+        ]);
+
         $acmeContact = $acme->contacts()->create([
             'name' => 'Sarah Bennett',
             'email' => 'sarah.bennett@acme.example',
@@ -83,13 +102,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         foreach ([
-            ['EP', 'EP21789012.3', 'ep'],
-            ['US', '17/456,789', 'pct'],
-        ] as $i => [$country, $appNo, $route]) {
+            ['EP', 'EP21789012.3', 'ep', null],
+            ['US', '17/456,789', 'pct', $acmeUs->id],
+        ] as $i => [$country, $appNo, $route, $entityId]) {
             Matter::factory()->create([
                 'reference' => 'P-2021-000'.($i + 2),
                 'title' => 'Self-sealing valve assembly',
                 'client_id' => $acme->id,
+                'client_entity_id' => $entityId,
                 'contact_id' => $acmeContact->id,
                 'family_id' => $family->id,
                 'parent_id' => $gbPriority->id,

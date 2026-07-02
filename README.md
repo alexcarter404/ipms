@@ -20,9 +20,16 @@ renewal/annuity management.
 - Search + filter register across reference, title, numbers, client, type,
   status, and jurisdiction
 
-### Clients & Contacts
-- Client records with codes, billing details, and multiple named contacts
-- Per-client matter portfolio view
+### Clients, Entities & Contacts
+- Clients are groups that can contain multiple **legal entities**, each
+  with its own registered details (company number, VAT, registered
+  address) and billing particulars (billing contact, billing email,
+  separate billing address, PO/reference to quote on invoices)
+- Exactly one **default entity** per client; matters are billed to an
+  explicitly chosen entity or fall back to the default
+- Entity billing details are available as `{{entity.*}}` merge fields
+  in communication templates
+- Multiple named contacts per client; per-client matter portfolio view
 
 ### Dates, Actions & Workflow
 - Tasks with official due dates, soft internal deadlines, priorities,
@@ -83,7 +90,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 90 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 102 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, template rendering, and the dashboard):
 
@@ -91,7 +98,7 @@ workflow application, template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 27 tests driving the real app —
+**End-to-end UI tests** (Playwright, 31 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, and template-driven communication composition):
@@ -112,7 +119,9 @@ PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e
 
 ```
 Client ─┬─ Contact
-        └─ Matter ─┬─ Family (patent families)
+        ├─ ClientEntity (legal entities; one default per client)
+        └─ Matter ─┬─ ClientEntity (billing entity, falls back to default)
+                   ├─ Family (patent families)
                    ├─ Matter (parent/child, e.g. priority → national phase)
                    ├─ Party (pivot: role = applicant|inventor|agent|…)
                    ├─ MatterClass (Nice classes)

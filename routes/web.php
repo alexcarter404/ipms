@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientEntityController;
 use App\Http\Controllers\CommTemplateController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ContactController;
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Clients & contacts
     Route::resource('clients', ClientController::class);
     Route::post('clients/{client}/contacts', [ContactController::class, 'store'])->name('clients.contacts.store');
+    Route::post('clients/{client}/entities', [ClientEntityController::class, 'store'])->name('clients.entities.store');
+    Route::patch('entities/{entity}', [ClientEntityController::class, 'update'])->name('entities.update');
+    Route::delete('entities/{entity}', [ClientEntityController::class, 'destroy'])->name('entities.destroy');
     Route::patch('contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
     Route::delete('contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
 

@@ -14,6 +14,7 @@ const props = defineProps({
     matter: Object,
     countryName: String,
     renewalRule: { type: Object, default: null },
+    billingEntity: { type: Object, default: null },
     parties: Array,
     partyRoles: Array,
     workflows: Array,
@@ -66,6 +67,12 @@ const destroy = () => {
 const details = computed(() => [
     { label: 'Client', value: props.matter.client?.name, link: props.matter.client ? route('clients.show', props.matter.client.id) : null },
     { label: 'Client contact', value: props.matter.contact?.name },
+    {
+        label: 'Billing entity',
+        value: props.billingEntity
+            ? props.billingEntity.name + (props.billingEntity.is_fallback ? ' (client default)' : '')
+            : null,
+    },
     { label: 'Jurisdiction', value: props.countryName },
     { label: 'Filing route', value: props.matter.filing_route?.toUpperCase() },
     { label: 'Responsible attorney', value: props.matter.responsible_user?.name },

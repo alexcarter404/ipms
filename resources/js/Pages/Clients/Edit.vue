@@ -14,9 +14,7 @@ const form = useForm({
     type: props.client.type,
     email: props.client.email ?? '',
     phone: props.client.phone ?? '',
-    address: props.client.address ?? '',
     country_code: props.client.country_code ?? '',
-    vat_number: props.client.vat_number ?? '',
     notes: props.client.notes ?? '',
 });
 

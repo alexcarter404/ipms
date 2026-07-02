@@ -7,6 +7,8 @@ import TextareaInput from '@/Components/TextareaInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link } from '@inertiajs/vue3';
 
+import { computed, watch } from 'vue';
+
 const props = defineProps({
     form: Object, // Inertia useForm instance
     options: Object,
@@ -14,6 +16,27 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['submit']);
+
+// Entities belonging to the selected client; billing defaults to the
+// client's default entity when none is chosen.
+const clientEntities = computed(() => {
+    const client = props.options.clients.find(
+        (c) => c.id === Number(props.form.client_id)
+    );
+    return client?.entities ?? [];
+});
+
+watch(
+    () => props.form.client_id,
+    () => {
+        if (
+            props.form.client_entity_id &&
+            !clientEntities.value.some((e) => e.id === Number(props.form.client_entity_id))
+        ) {
+            props.form.client_entity_id = '';
+        }
+    }
+);
 </script>
 
 <template>
@@ -81,6 +104,22 @@ const emit = defineEmits(['submit']);
                     <p class="mt-1 text-xs text-gray-500">
                         Missing a client?
                         <Link :href="route('clients.create')" class="text-indigo-600 hover:underline">Create one</Link>
+                    </p>
+                </div>
+                <div>
+                    <InputLabel value="Billing entity" />
+                    <SelectInput
+                        v-model="form.client_entity_id"
+                        :options="clientEntities.map((e) => ({
+                            value: e.id,
+                            label: e.is_default ? `${e.name} (default)` : e.name,
+                        }))"
+                        placeholder="Client default"
+                        class="mt-1"
+                    />
+                    <InputError :message="form.errors.client_entity_id" class="mt-1" />
+                    <p class="mt-1 text-xs text-gray-500">
+                        Which entity in the client group is billed for this matter.
                     </p>
                 </div>
                 <div>

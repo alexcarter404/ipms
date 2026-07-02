@@ -17,8 +17,8 @@ class Matter extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'reference', 'matter_type', 'title', 'client_id', 'contact_id',
-        'family_id', 'parent_id', 'responsible_user_id', 'country_code',
+        'reference', 'matter_type', 'title', 'client_id', 'client_entity_id',
+        'contact_id', 'family_id', 'parent_id', 'responsible_user_id', 'country_code',
         'filing_route', 'status', 'application_no', 'application_date',
         'publication_no', 'publication_date', 'registration_no',
         'registration_date', 'priority_no', 'priority_date', 'expiry_date',
@@ -41,6 +41,17 @@ class Matter extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function billingEntity(): BelongsTo
+    {
+        return $this->belongsTo(ClientEntity::class, 'client_entity_id');
+    }
+
+    /** The entity billed for this matter — explicit, or the client's default. */
+    public function effectiveBillingEntity(): ?ClientEntity
+    {
+        return $this->billingEntity ?? $this->client?->defaultEntity();
     }
 
     public function contact(): BelongsTo
