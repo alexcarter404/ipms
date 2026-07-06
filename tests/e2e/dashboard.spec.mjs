@@ -7,6 +7,8 @@ test.describe('Dashboard', () => {
         await expect(page.getByText('Active Matters')).toBeVisible();
         await expect(page.getByText('Open Tasks')).toBeVisible();
         await expect(page.getByText('Renewals due 90d')).toBeVisible();
+        // WIP tile is scoped to the logged-in user's portfolio
+        await expect(page.getByText('My WIP (GBP)')).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Upcoming Actions' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Upcoming Renewals' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Active Portfolio' })).toBeVisible();

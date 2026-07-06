@@ -34,6 +34,7 @@ const props = defineProps({
     baseDates: Object,
     billingAgreement: { type: Object, default: null },
     billingAgreementSource: { type: String, default: null },
+    billingBudget: { type: Object, default: null },
     billing: Object,
     billingOptions: Object,
 });
@@ -250,6 +251,7 @@ const officialDates = computed(() => [
                 :matter="matter"
                 :agreement="billingAgreement"
                 :agreement-source="billingAgreementSource"
+                :budget="billingBudget"
                 :billing="billing"
                 :options="billingOptions"
                 :users="users"
