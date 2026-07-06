@@ -19,6 +19,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FamilyController;
+use App\Http\Controllers\MailroomController;
 use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
 use App\Http\Controllers\MatterController;
@@ -111,6 +112,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit log: roll a record back/forward across an update entry
     Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
+
+    // Mailroom: inbound email capture onto matters
+    Route::get('mailroom', [MailroomController::class, 'index'])->name('mailroom.index');
+    Route::post('mailroom/ingest', [MailroomController::class, 'ingest'])->name('mailroom.ingest');
+    Route::patch('mailroom/{communication}/assign', [MailroomController::class, 'assign'])->name('mailroom.assign');
 
     // Documents: uploads, office-filed and template-generated files
     Route::post('matters/{matter}/documents', [DocumentController::class, 'store'])->name('matters.documents.store');

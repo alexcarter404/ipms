@@ -187,6 +187,19 @@ renewal/annuity management.
   computed fee sheet; offices without a dialect send the canonical
   package as-is
 
+### Email — Mailroom & Delivery
+- **Real email delivery**: marking an email communication sent
+  dispatches it through Laravel Mail on the firm letterhead (letters
+  are recorded as sent without delivery)
+- **Inbound mailbox capture**: the docketing mailbox lands in the
+  Mailroom (`mail:ingest`, scheduled) — emails are matched to matters
+  by reference in the subject or any normalised official number in the
+  text; matched mail files itself as an inbound communication with its
+  **attachments filed as documents**, unmatched mail waits in a review
+  queue for one-click filing
+- **Daily reminder digests** (`reminders:digest`, weekday mornings):
+  each user gets their due/overdue tasks and upcoming renewals by email
+
 ### Documents
 - **Files on the docket** per matter: user uploads, documents
   **auto-filed from office exchange messages** (an inbound office
@@ -281,7 +294,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 245 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 254 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -293,7 +306,7 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 62 tests driving the real app —
+**End-to-end UI tests** (Playwright, 64 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

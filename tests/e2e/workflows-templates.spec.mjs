@@ -78,7 +78,7 @@ test.describe('Communication templates', () => {
         // Draft appears in the log and can be marked sent
         const entry = page.locator('div.rounded-lg', { hasText: 'Application filed' }).first();
         await entry.getByRole('button', { name: 'Mark Sent' }).click();
-        await expect(page.getByText('Communication marked as sent.')).toBeVisible();
+        await expect(page.getByText(/Email sent to .*acme\.example\./)).toBeVisible();
     });
 
     test('new template can be created', async ({ page }) => {

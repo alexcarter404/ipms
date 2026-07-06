@@ -13,14 +13,21 @@ class Communication extends Model implements Auditable
     use HasFactory;
 
     protected $fillable = [
-        'matter_id', 'comm_template_id', 'channel', 'recipient_name',
-        'recipient_email', 'subject', 'body', 'status', 'sent_at', 'created_by',
+        'matter_id', 'comm_template_id', 'channel', 'direction', 'from_name',
+        'from_email', 'recipient_name', 'recipient_email', 'subject', 'body',
+        'status', 'sent_at', 'received_at', 'external_id', 'attachments',
+        'created_by',
     ];
+
+    // Raw attachment payloads are plumbing, not history
+    protected $auditExclude = ['attachments'];
 
     protected function casts(): array
     {
         return [
             'sent_at' => 'datetime',
+            'received_at' => 'datetime',
+            'attachments' => 'array',
         ];
     }
 

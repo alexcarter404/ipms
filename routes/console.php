@@ -13,3 +13,9 @@ Schedule::command('billing:sync-rates')->weekdays()->dailyAt('16:30');
 
 // Pull inbound messages from IP office exchanges.
 Schedule::command('ipo:poll')->hourly();
+
+// Capture inbound email from the docketing mailbox drop.
+Schedule::command('mail:ingest')->everyFifteenMinutes();
+
+// The morning docket: due tasks and renewals per user.
+Schedule::command('reminders:digest')->weekdays()->dailyAt('07:00');
