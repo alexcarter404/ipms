@@ -11,7 +11,7 @@ import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
@@ -19,6 +19,24 @@ const props = defineProps({
     invoice: Object,
     paymentMethods: Array,
 });
+
+// Consolidated invoices (no single matter) render their lines grouped
+// by the matter each line bills.
+const lineGroups = computed(() => {
+    const groups = [];
+    let current = null;
+    for (const line of props.invoice.lines) {
+        const key = line.matter_id ?? 'general';
+        if (!current || current.key !== key) {
+            current = { key, matter: line.matter, lines: [] };
+            groups.push(current);
+        }
+        current.lines.push(line);
+    }
+    return groups;
+});
+
+const isConsolidated = computed(() => props.invoice.matter_id === null);
 
 const money = (amount) =>
     new Intl.NumberFormat(undefined, {
@@ -136,7 +154,9 @@ const recordPayment = () =>
                                 >
                                     {{ invoice.matter.reference }}
                                 </Link>
-                                <span v-else>—</span>
+                                <span v-else class="text-gray-700">
+                                    Consolidated — {{ lineGroups.filter((g) => g.matter).length }} matter(s)
+                                </span>
                             </dd>
                         </div>
                         <div class="flex justify-between">
@@ -171,12 +191,22 @@ const recordPayment = () =>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr v-for="line in invoice.lines" :key="line.id">
-                            <td class="px-4 py-3 text-gray-700">{{ line.description }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ Number(line.quantity) }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ money(line.unit_amount) }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right font-medium text-gray-800">{{ money(line.line_total) }}</td>
-                        </tr>
+                        <template v-for="group in lineGroups" :key="group.key">
+                            <tr v-if="isConsolidated && group.matter" class="bg-gray-50">
+                                <td colspan="4" class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    <Link :href="route('matters.show', group.matter.id)" class="text-indigo-600 hover:underline">
+                                        {{ group.matter.reference }}
+                                    </Link>
+                                    <span class="ml-2 font-normal normal-case text-gray-500">{{ group.matter.title }}</span>
+                                </td>
+                            </tr>
+                            <tr v-for="line in group.lines" :key="line.id">
+                                <td class="px-4 py-3 text-gray-700">{{ line.description }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ Number(line.quantity) }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ money(line.unit_amount) }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-right font-medium text-gray-800">{{ money(line.line_total) }}</td>
+                            </tr>
+                        </template>
                     </tbody>
                     <tfoot class="text-sm">
                         <tr class="border-t border-gray-200">

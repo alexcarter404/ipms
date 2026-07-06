@@ -31,7 +31,8 @@ class MatterRepository
     {
         return $matter->load([
             'client:id,name,code',
-            'billingEntity:id,name,billing_email',
+            // Full entity: billingCurrency()/tax fall back to its columns
+            'billingEntity.billingAgreement',
             'contacts',
             'family:id,reference,name',
             'parent:id,reference,title',

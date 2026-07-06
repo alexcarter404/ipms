@@ -20,6 +20,7 @@ const props = defineProps({
     matters: Object,
     billingCurrencies: Array,
     taxRates: Array,
+    agreementTypes: Array,
 });
 
 const typeLabel = (value) =>
@@ -216,6 +217,7 @@ const removeContact = (contact) =>
                 :countries="countries"
                 :billing-currencies="billingCurrencies"
                 :tax-rates="taxRates"
+                :agreement-types="agreementTypes"
             />
 
             <!-- Matters -->

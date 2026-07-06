@@ -129,6 +129,16 @@ class Matter extends Model
         return $this->hasOne(BillingAgreement::class);
     }
 
+    /**
+     * The fee agreement governing this matter: its own override, or the
+     * default handed down from its billing entity.
+     */
+    public function effectiveBillingAgreement(): ?BillingAgreement
+    {
+        return $this->billingAgreement
+            ?? $this->effectiveBillingEntity()?->billingAgreement;
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class)->orderByDesc('work_date');
@@ -152,7 +162,7 @@ class Matter extends Model
     /** The currency this matter is billed in: agreement > entity > firm base. */
     public function billingCurrency(): string
     {
-        return $this->billingAgreement?->currency_code
+        return $this->effectiveBillingAgreement()?->currency_code
             ?? $this->effectiveBillingEntity()?->currency_code
             ?? config('billing.base_currency');
     }

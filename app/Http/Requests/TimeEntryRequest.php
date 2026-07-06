@@ -12,7 +12,7 @@ class TimeEntryRequest extends FormRequest
         // Task-based billing: the matter's agreement can demand an
         // activity code on every line.
         $requiresCode = (bool) $this->route('matter')
-            ?->billingAgreement?->requires_task_codes;
+            ?->effectiveBillingAgreement()?->requires_task_codes;
 
         return [
             'user_id' => ['required', 'exists:users,id'],

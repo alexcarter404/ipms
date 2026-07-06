@@ -58,6 +58,12 @@ const shortDate = (value) =>
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Invoices</h2>
                 <div class="flex gap-2">
                     <Link
+                        :href="route('billing.wip')"
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                    >
+                        WIP
+                    </Link>
+                    <Link
                         :href="route('quotes.index')"
                         class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
                     >
@@ -118,7 +124,7 @@ const shortDate = (value) =>
                 </Column>
                 <Column header="Matter">
                     <template #body="{ data }">
-                        <span class="whitespace-nowrap text-gray-600">{{ data.matter?.reference ?? '—' }}</span>
+                        <span class="whitespace-nowrap text-gray-600">{{ data.matter?.reference ?? 'Consolidated' }}</span>
                     </template>
                 </Column>
                 <Column header="Issued">

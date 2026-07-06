@@ -16,6 +16,7 @@ import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 const props = defineProps({
     matter: Object,
     agreement: { type: Object, default: null },
+    agreementSource: { type: String, default: null }, // 'matter' | 'entity' | null
     billing: Object,
     options: Object,
     users: Array,
@@ -62,6 +63,9 @@ const agreementForm = useForm({
 
 const addStage = () => agreementForm.stages.push({ id: null, description: '', amount: '' });
 const removeStage = (index) => agreementForm.stages.splice(index, 1);
+
+const removeOverride = () =>
+    router.delete(route('matters.agreement.destroy', props.matter.id), { preserveScroll: true });
 
 const saveAgreement = () =>
     agreementForm
@@ -183,11 +187,35 @@ const raiseStage = (stage) =>
         <div class="grid gap-6 lg:grid-cols-2">
             <!-- Fee agreement -->
             <div class="rounded-lg bg-white p-6 shadow-sm">
-                <div class="mb-3 flex items-center justify-between">
-                    <h3 class="font-semibold text-gray-800">Fee Agreement</h3>
-                    <SecondaryButton @click="showAgreement = true">
-                        {{ agreement ? 'Edit Agreement' : 'Set Agreement' }}
-                    </SecondaryButton>
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <h3 class="flex items-center gap-2 font-semibold text-gray-800">
+                        Fee Agreement
+                        <span
+                            v-if="agreementSource === 'entity'"
+                            class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                            title="Handed down from the billing entity's default agreement"
+                        >
+                            Inherited from entity
+                        </span>
+                    </h3>
+                    <div class="flex gap-2">
+                        <button
+                            v-if="agreementSource === 'matter'"
+                            class="text-xs text-gray-500 hover:underline"
+                            @click="removeOverride"
+                        >
+                            Remove override
+                        </button>
+                        <SecondaryButton @click="showAgreement = true">
+                            {{
+                                agreementSource === 'matter'
+                                    ? 'Edit Agreement'
+                                    : agreementSource === 'entity'
+                                      ? 'Override for Matter'
+                                      : 'Set Agreement'
+                            }}
+                        </SecondaryButton>
+                    </div>
                 </div>
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between">

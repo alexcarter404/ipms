@@ -33,6 +33,7 @@ const props = defineProps({
     priorities: Array,
     baseDates: Object,
     billingAgreement: { type: Object, default: null },
+    billingAgreementSource: { type: String, default: null },
     billing: Object,
     billingOptions: Object,
 });
@@ -248,6 +249,7 @@ const officialDates = computed(() => [
                 v-else-if="activeTab === 'billing'"
                 :matter="matter"
                 :agreement="billingAgreement"
+                :agreement-source="billingAgreementSource"
                 :billing="billing"
                 :options="billingOptions"
                 :users="users"

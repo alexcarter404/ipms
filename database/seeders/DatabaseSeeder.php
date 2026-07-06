@@ -330,6 +330,10 @@ class DatabaseSeeder extends Seeder
         RateCard::create(['user_id' => $attorney->id, 'currency_code' => 'GBP', 'hourly_rate' => 260, 'effective_from' => now()->subYears(2)]);
 
         // --- Billing agreements across the fee-arrangement spectrum ---
+        // Entity-level default: everything billed to Acme's US arm is
+        // blended-hourly unless a matter overrides it.
+        $acmeUs->billingAgreement()->create(['type' => 'blended', 'blended_rate' => 300]);
+
         $gbPriority->billingAgreement()->create([
             'type' => 'hourly', 'increment_minutes' => 6,
             'default_markup_pct' => 10, 'requires_task_codes' => true,
