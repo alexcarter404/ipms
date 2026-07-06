@@ -38,6 +38,7 @@ class ProcessOfficeMessage
         private TemplateRenderer $renderer,
         private AddDisbursement $disbursements,
         private AcknowledgeSubmission $acknowledge,
+        private \App\Actions\Documents\StoreDocument $documents,
     ) {
     }
 
@@ -68,6 +69,7 @@ class ProcessOfficeMessage
             $this->completeTasks($event, $matter, $log);
             $this->applyWorkflows($event, $matter, $eventDate, $log);
             $this->addOfficialFees($message, $matter, $log);
+            $this->fileDocuments($message, $matter, $log);
             $this->draftCommunications($event, $matter, $log);
 
             if ($event === OfficeEventType::RenewalReminder) {
@@ -223,6 +225,32 @@ class ProcessOfficeMessage
                 $fee['currency'], number_format((float) $fee['amount'], 2),
                 $disbursement->currency_code, number_format((float) $disbursement->amount, 2)
             );
+        }
+    }
+
+    /** Documents riding on the message (base64 in the exchange payload) are filed on the docket. */
+    private function fileDocuments(OfficeMessage $message, Matter $matter, array &$log): void
+    {
+        foreach ($message->payload['documents'] ?? [] as $doc) {
+            if (empty($doc['name']) || empty($doc['content_base64'])) {
+                continue;
+            }
+
+            $content = base64_decode($doc['content_base64'], true);
+            if ($content === false) {
+                continue;
+            }
+
+            $document = $this->documents->fromContent($matter, $doc['name'], $content, [
+                'title' => $doc['title'] ?? pathinfo($doc['name'], PATHINFO_FILENAME),
+                'category' => \App\Enums\DocumentCategory::tryFrom($doc['category'] ?? '')
+                    ?? \App\Enums\DocumentCategory::OfficeAction,
+                'source' => 'office',
+                'mime' => $doc['mime'] ?? null,
+                'linked_type' => OfficeMessage::class,
+                'linked_id' => $message->id,
+            ]);
+            $log[] = "Filed document “{$document->title}” from the office message";
         }
     }
 

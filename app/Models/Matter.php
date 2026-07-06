@@ -171,6 +171,11 @@ class Matter extends Model implements Auditable
         return $this->hasMany(OfficeSubmission::class)->latest();
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class)->latest();
+    }
+
     /** The currency this matter is billed in: agreement > entity > firm base. */
     public function billingCurrency(): string
     {

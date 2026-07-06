@@ -17,6 +17,7 @@ use App\Http\Controllers\CommTemplateController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
@@ -110,6 +111,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit log: roll a record back/forward across an update entry
     Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
+
+    // Documents: uploads, office-filed and template-generated files
+    Route::post('matters/{matter}/documents', [DocumentController::class, 'store'])->name('matters.documents.store');
+    Route::post('matters/{matter}/documents/generate', [DocumentController::class, 'generate'])->name('matters.documents.generate');
+    Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::post('documents/{document}/replace', [DocumentController::class, 'replace'])->name('documents.replace');
+    Route::patch('documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
+    Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
     // Billing: budgets
     Route::get('billing/budgets', [BudgetController::class, 'index'])->name('budgets.index');

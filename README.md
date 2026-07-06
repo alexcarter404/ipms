@@ -187,6 +187,20 @@ renewal/annuity management.
   computed fee sheet; offices without a dialect send the canonical
   package as-is
 
+### Documents
+- **Files on the docket** per matter: user uploads, documents
+  **auto-filed from office exchange messages** (an inbound office
+  action carries its PDF and lands on the matter with the message
+  linked), and **PDFs generated from communication templates** (merge
+  fields resolved against the matter, rendered on the firm letterhead
+  via dompdf)
+- Categories (office action, filed document, receipt, correspondence,
+  evidence, generated), rename/recategorise, and download with the
+  original filename
+- **Versioning**: replacing a document files a new version and keeps
+  the superseded one on record; the panel shows current versions and
+  every change is in the audit trail
+
 ### Application Auditing
 - **Every model is audited** via `owen-it/laravel-auditing`: creates,
   updates, deletes and restores are recorded with the acting user, the
@@ -267,7 +281,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 238 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 245 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -279,12 +293,13 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 60 tests driving the real app —
+**End-to-end UI tests** (Playwright, 62 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
 (log time → invoice → payment), quotes, billing settings, the office
-exchange (inbox review, processing, outbound submissions), audit history
+exchange (inbox review, processing, outbound submissions), documents
+(upload, template-generated PDFs, office auto-filing), audit history
 timelines with state restore, and
 template-driven communication composition):
 
