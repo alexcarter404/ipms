@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Currencies;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ClientEntityRequest extends FormRequest
 {
@@ -18,6 +20,8 @@ class ClientEntityRequest extends FormRequest
             'billing_email' => ['nullable', 'email', 'max:255'],
             'billing_address' => ['nullable', 'string'],
             'billing_reference' => ['nullable', 'string', 'max:100'],
+            'currency_code' => ['nullable', Rule::in(Currencies::codes())],
+            'tax_rate_id' => ['nullable', 'exists:tax_rates,id'],
             'is_default' => ['boolean'],
             'notes' => ['nullable', 'string'],
         ];

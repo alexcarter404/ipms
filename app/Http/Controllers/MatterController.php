@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Matters\SaveMatter;
+use App\Enums\AgreementType;
+use App\Enums\ChargeType;
 use App\Enums\ContactType;
 use App\Enums\MatterContactRole;
 use App\Enums\MatterStatus;
@@ -17,11 +19,14 @@ use App\Repositories\CommTemplateRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\PartyRepository;
+use App\Repositories\BillingSettingsRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\WipRepository;
 use App\Repositories\WorkflowRepository;
 use App\Services\MatterFormOptions;
 use App\Services\RenewalScheduler;
 use App\Support\Countries;
+use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -71,6 +76,8 @@ class MatterController extends Controller
         WorkflowRepository $workflows,
         CommTemplateRepository $templates,
         UserRepository $users,
+        WipRepository $wip,
+        BillingSettingsRepository $billingSettings,
     ): Response {
         $this->matters->loadForDisplay($matter);
 
@@ -107,6 +114,17 @@ class MatterController extends Controller
                 'grant' => $matter->registration_date?->toDateString(),
                 'registration' => $matter->registration_date?->toDateString(),
                 'priority' => $matter->priority_date?->toDateString(),
+            ],
+            'billingAgreement' => $matter->billingAgreement?->load('stages.charge'),
+            'billing' => array_merge($wip->forMatter($matter), [
+                'wip' => $wip->totals($matter),
+                'currency' => $matter->billingCurrency(),
+            ]),
+            'billingOptions' => [
+                'agreementTypes' => AgreementType::options(),
+                'chargeTypes' => ChargeType::options(),
+                'activityCodes' => $billingSettings->activityCodeOptions(),
+                'currencies' => Currencies::options(),
             ],
         ]);
     }

@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+
+class InvoiceLine extends Model
+{
+    protected $fillable = [
+        'invoice_id', 'matter_id', 'billable_type', 'billable_id',
+        'description', 'quantity', 'unit_amount', 'line_total', 'sort_order',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'decimal:2',
+            'unit_amount' => 'decimal:2',
+            'line_total' => 'decimal:2',
+        ];
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function matter(): BelongsTo
+    {
+        return $this->belongsTo(Matter::class);
+    }
+
+    /** The WIP item this line bills (a TimeEntry, Disbursement, or Charge). */
+    public function billable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+}

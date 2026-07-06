@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import BillingPanel from './Partials/BillingPanel.vue';
 import ClassesPanel from './Partials/ClassesPanel.vue';
 import CommsPanel from './Partials/CommsPanel.vue';
 import ContactsPanel from './Partials/ContactsPanel.vue';
@@ -31,6 +32,9 @@ const props = defineProps({
     users: Array,
     priorities: Array,
     baseDates: Object,
+    billingAgreement: { type: Object, default: null },
+    billing: Object,
+    billingOptions: Object,
 });
 
 const tabs = computed(() => {
@@ -52,6 +56,7 @@ const tabs = computed(() => {
     list.push(
         { key: 'tasks', label: `Tasks (${openTasks})` },
         { key: 'renewals', label: `Renewals (${openRenewals})` },
+        { key: 'billing', label: 'Billing' },
         { key: 'comms', label: `Comms (${props.matter.communications.length})` }
     );
     return list;
@@ -238,6 +243,14 @@ const officialDates = computed(() => [
                 v-else-if="activeTab === 'renewals'"
                 :matter="matter"
                 :renewal-rule="renewalRule"
+            />
+            <BillingPanel
+                v-else-if="activeTab === 'billing'"
+                :matter="matter"
+                :agreement="billingAgreement"
+                :billing="billing"
+                :options="billingOptions"
+                :users="users"
             />
             <CommsPanel v-else-if="activeTab === 'comms'" :matter="matter" :templates="templates" />
         </div>

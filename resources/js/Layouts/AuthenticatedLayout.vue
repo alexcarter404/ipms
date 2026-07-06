@@ -18,9 +18,13 @@ const navigation = [
     { name: 'Clients', route: 'clients.index', current: 'clients.*' },
     { name: 'Tasks', route: 'tasks.index', current: 'tasks.*' },
     { name: 'Renewals', route: 'renewals.index', current: 'renewals.*' },
+    { name: 'Billing', route: 'invoices.index', current: ['invoices.*', 'quotes.*', 'billing.*'] },
     { name: 'Workflows', route: 'workflows.index', current: 'workflows.*' },
     { name: 'Templates', route: 'templates.index', current: 'templates.*' },
 ];
+
+const isCurrent = (patterns) =>
+    [].concat(patterns).some((pattern) => route().current(pattern));
 </script>
 
 <template>
@@ -50,7 +54,7 @@ const navigation = [
                                     v-for="item in navigation"
                                     :key="item.route"
                                     :href="route(item.route)"
-                                    :active="route().current(item.current)"
+                                    :active="isCurrent(item.current)"
                                 >
                                     {{ item.name }}
                                 </NavLink>
@@ -164,7 +168,7 @@ const navigation = [
                             v-for="item in navigation"
                             :key="item.route"
                             :href="route(item.route)"
-                            :active="route().current(item.current)"
+                            :active="isCurrent(item.current)"
                         >
                             {{ item.name }}
                         </ResponsiveNavLink>

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Matter extends Model
@@ -121,6 +122,39 @@ class Matter extends Model
     public function communications(): HasMany
     {
         return $this->hasMany(Communication::class)->latest();
+    }
+
+    public function billingAgreement(): HasOne
+    {
+        return $this->hasOne(BillingAgreement::class);
+    }
+
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TimeEntry::class)->orderByDesc('work_date');
+    }
+
+    public function disbursements(): HasMany
+    {
+        return $this->hasMany(Disbursement::class)->orderByDesc('date');
+    }
+
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class)->orderByDesc('date');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->latest();
+    }
+
+    /** The currency this matter is billed in: agreement > entity > firm base. */
+    public function billingCurrency(): string
+    {
+        return $this->billingAgreement?->currency_code
+            ?? $this->effectiveBillingEntity()?->currency_code
+            ?? config('billing.base_currency');
     }
 
     public function scopeActive(Builder $query): Builder
