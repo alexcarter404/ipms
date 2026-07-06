@@ -23,9 +23,9 @@ class Quote extends Model implements Auditable
             'status' => QuoteStatus::class,
             'valid_until' => 'date',
             'tax_pct' => 'decimal:2',
-            'subtotal' => 'decimal:2',
-            'tax_amount' => 'decimal:2',
-            'total' => 'decimal:2',
+            'subtotal' => \App\Casts\Money::class,
+            'tax_amount' => \App\Casts\Money::class,
+            'total' => \App\Casts\Money::class,
         ];
     }
 

@@ -7,6 +7,7 @@ use App\Enums\BillableStatus;
 use App\Models\ClientEntity;
 use App\Models\Matter;
 use App\Services\ExchangeRateService;
+use App\Support\MoneyMinor;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -183,11 +184,11 @@ class WipRepository
     {
         $billsTime = ($matter->effectiveBillingAgreement()?->type ?? AgreementType::Hourly)->billsTime();
 
-        return round(
-            ($billsTime ? (float) ($matter->wip_time ?? 0) : 0)
-            + (float) ($matter->wip_disbursements ?? 0)
-            + (float) ($matter->wip_charges ?? 0),
-            2
+        // withSum aliases carry raw minor units — sum as integers, convert once
+        return MoneyMinor::fromMinor(
+            ($billsTime ? (int) ($matter->wip_time ?? 0) : 0)
+            + (int) ($matter->wip_disbursements ?? 0)
+            + (int) ($matter->wip_charges ?? 0)
         );
     }
 
@@ -196,23 +197,24 @@ class WipRepository
     {
         $billsTime = ($matter->effectiveBillingAgreement()?->type ?? AgreementType::Hourly)->billsTime();
 
-        return round(
-            ($billsTime ? (float) ($matter->wip_time_base ?? 0) : 0)
-            + (float) ($matter->wip_disbursements_base ?? 0)
-            + (float) ($matter->wip_charges_base ?? 0),
-            2
+        return MoneyMinor::fromMinor(
+            ($billsTime ? (int) ($matter->wip_time_base ?? 0) : 0)
+            + (int) ($matter->wip_disbursements_base ?? 0)
+            + (int) ($matter->wip_charges_base ?? 0)
         );
     }
 
     /** @return array{time: float, disbursements: float, charges: float, total: float, currency: string} */
     public function totals(Matter $matter): array
     {
-        $time = (float) $matter->timeEntries()->billable()->sum('amount');
-        $disbursements = (float) $matter->disbursements()->billable()->sum('amount');
-        $charges = (float) $matter->charges()->billable()->sum('amount');
-        $baseTotal = (float) $matter->timeEntries()->billable()->sum('base_amount')
-            + (float) $matter->disbursements()->billable()->sum('base_amount')
-            + (float) $matter->charges()->billable()->sum('base_amount');
+        $time = MoneyMinor::fromMinor($matter->timeEntries()->billable()->sum('amount'));
+        $disbursements = MoneyMinor::fromMinor($matter->disbursements()->billable()->sum('amount'));
+        $charges = MoneyMinor::fromMinor($matter->charges()->billable()->sum('amount'));
+        $baseTotal = MoneyMinor::fromMinor(
+            (int) $matter->timeEntries()->billable()->sum('base_amount')
+            + (int) $matter->disbursements()->billable()->sum('base_amount')
+            + (int) $matter->charges()->billable()->sum('base_amount')
+        );
 
         return [
             'time' => $time,

@@ -125,7 +125,9 @@ class RenewalRuleTest extends TestCase
 
     public function test_rule_default_fees_flow_into_generated_renewals(): void
     {
-        RenewalRule::where('name', 'Patent Annuities (default)')->update([
+        // Instance update, not a query-builder bulk update: money values
+        // must pass through the Money cast to land as minor units.
+        RenewalRule::firstWhere('name', 'Patent Annuities (default)')->update([
             'default_official_fee' => 150,
             'default_service_fee' => 75,
             'currency' => 'GBP',
@@ -140,8 +142,8 @@ class RenewalRuleTest extends TestCase
         app(RenewalScheduler::class)->generate($matter);
 
         $renewal = $matter->renewals()->orderBy('cycle')->first();
-        $this->assertSame('150.00', $renewal->official_fee);
-        $this->assertSame('75.00', $renewal->service_fee);
+        $this->assertSame(150.0, $renewal->official_fee);
+        $this->assertSame(75.0, $renewal->service_fee);
         $this->assertSame('GBP', $renewal->currency);
         $this->assertSame(
             $renewal->due_date->copy()->addMonths(3)->toDateString(),

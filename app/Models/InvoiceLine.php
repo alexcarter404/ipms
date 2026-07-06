@@ -19,8 +19,8 @@ class InvoiceLine extends Model implements Auditable
     {
         return [
             'quantity' => 'decimal:2',
-            'unit_amount' => 'decimal:2',
-            'line_total' => 'decimal:2',
+            'unit_amount' => \App\Casts\Money::class,
+            'line_total' => \App\Casts\Money::class,
         ];
     }
 

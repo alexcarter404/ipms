@@ -58,9 +58,9 @@ class BillingInvoiceTest extends TestCase
         $invoice = Invoice::first();
         $this->assertSame('draft', $invoice->status->value);
         $this->assertSame(2, $invoice->lines()->count());
-        $this->assertSame('150.00', $invoice->subtotal);
-        $this->assertSame('30.00', $invoice->tax_amount);   // 20% VAT snapshot
-        $this->assertSame('180.00', $invoice->total);
+        $this->assertSame(150.0, $invoice->subtotal);
+        $this->assertSame(30.0, $invoice->tax_amount);   // 20% VAT snapshot
+        $this->assertSame(180.0, $invoice->total);
         $this->assertSame('UK VAT', $invoice->tax_name);
 
         // The WIP is locked to the invoice
@@ -87,7 +87,7 @@ class BillingInvoiceTest extends TestCase
 
         $invoice = Invoice::first();
         $this->assertSame(1, $invoice->lines()->count());
-        $this->assertSame('2000.00', $invoice->subtotal);
+        $this->assertSame(2000.0, $invoice->subtotal);
         $this->assertSame('billable', $matter->timeEntries()->first()->status->value);
     }
 
@@ -103,8 +103,8 @@ class BillingInvoiceTest extends TestCase
         $invoice = Invoice::first();
         $adjustment = $invoice->lines()->where('line_total', '<', 0)->first();
         $this->assertNotNull($adjustment);
-        $this->assertSame('-50.00', $adjustment->line_total);
-        $this->assertSame('150.00', $invoice->subtotal); // capped exactly
+        $this->assertSame(-50.0, $adjustment->line_total);
+        $this->assertSame(150.0, $invoice->subtotal); // capped exactly
     }
 
     public function test_issuing_assigns_a_sequential_number_and_terms(): void

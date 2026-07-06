@@ -24,9 +24,9 @@ class Invoice extends Model implements Auditable
             'issued_at' => 'date',
             'due_at' => 'date',
             'tax_pct' => 'decimal:2',
-            'subtotal' => 'decimal:2',
-            'tax_amount' => 'decimal:2',
-            'total' => 'decimal:2',
+            'subtotal' => \App\Casts\Money::class,
+            'tax_amount' => \App\Casts\Money::class,
+            'total' => \App\Casts\Money::class,
         ];
     }
 
@@ -57,7 +57,7 @@ class Invoice extends Model implements Auditable
 
     public function amountPaid(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return \App\Support\MoneyMinor::fromMinor($this->payments()->sum('amount'));
     }
 
     public function balance(): float

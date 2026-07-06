@@ -26,8 +26,8 @@ class Renewal extends Model implements Auditable
             'status' => RenewalStatus::class,
             'due_date' => 'date',
             'grace_date' => 'date',
-            'official_fee' => 'decimal:2',
-            'service_fee' => 'decimal:2',
+            'official_fee' => \App\Casts\Money::class,
+            'service_fee' => \App\Casts\Money::class,
             'instructed_at' => 'datetime',
             'paid_at' => 'datetime',
         ];

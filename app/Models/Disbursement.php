@@ -21,10 +21,10 @@ class Disbursement extends Model implements Auditable
     {
         return [
             'date' => 'date',
-            'cost_amount' => 'decimal:2',
+            'cost_amount' => \App\Casts\Money::class,
             'markup_pct' => 'decimal:2',
-            'amount' => 'decimal:2',
-            'base_amount' => 'decimal:2',
+            'amount' => \App\Casts\Money::class,
+            'base_amount' => \App\Casts\Money::class,
             'status' => BillableStatus::class,
         ];
     }

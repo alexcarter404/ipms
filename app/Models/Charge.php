@@ -26,8 +26,8 @@ class Charge extends Model implements Auditable
         return [
             'type' => ChargeType::class,
             'date' => 'date',
-            'amount' => 'decimal:2',
-            'base_amount' => 'decimal:2',
+            'amount' => \App\Casts\Money::class,
+            'base_amount' => \App\Casts\Money::class,
             'status' => BillableStatus::class,
         ];
     }

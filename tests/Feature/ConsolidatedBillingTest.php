@@ -58,8 +58,8 @@ class ConsolidatedBillingTest extends TestCase
 
         $invoice = Invoice::first();
         $this->assertNull($invoice->matter_id); // consolidated
-        $this->assertSame('300.00', $invoice->subtotal);
-        $this->assertSame('360.00', $invoice->total); // +20% VAT
+        $this->assertSame(300.0, $invoice->subtotal);
+        $this->assertSame(360.0, $invoice->total); // +20% VAT
         $this->assertSame(
             [$first->id, $second->id],
             $invoice->lines->pluck('matter_id')->unique()->sort()->values()->all()
@@ -103,7 +103,7 @@ class ConsolidatedBillingTest extends TestCase
 
         $invoice = Invoice::first();
         $this->assertSame('EUR', $invoice->currency_code);
-        $this->assertSame('125.00', $invoice->subtotal); // 100 GBP × 1.25
+        $this->assertSame(125.0, $invoice->subtotal); // 100 GBP × 1.25
     }
 
     public function test_an_entity_with_no_unbilled_work_cannot_be_billed(): void

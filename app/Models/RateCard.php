@@ -26,7 +26,7 @@ class RateCard extends Model implements Auditable
         return [
             'role' => TimekeeperRole::class,
             'matter_type' => MatterType::class,
-            'hourly_rate' => 'decimal:2',
+            'hourly_rate' => \App\Casts\Money::class,
             'effective_from' => 'date',
         ];
     }

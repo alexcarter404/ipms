@@ -52,9 +52,11 @@ class DashboardService
         );
 
         return round(
-            (float) TimeEntry::billable()->tap($mine)->sum('base_amount')
-            + (float) Disbursement::billable()->tap($mine)->sum('base_amount')
-            + (float) Charge::billable()->tap($mine)->sum('base_amount'),
+            \App\Support\MoneyMinor::fromMinor(
+                (int) TimeEntry::billable()->tap($mine)->sum('base_amount')
+                + (int) Disbursement::billable()->tap($mine)->sum('base_amount')
+                + (int) Charge::billable()->tap($mine)->sum('base_amount')
+            ),
             2
         );
     }

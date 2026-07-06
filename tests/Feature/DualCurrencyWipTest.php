@@ -43,9 +43,9 @@ class DualCurrencyWipTest extends TestCase
         ]);
 
         $entry = $matter->timeEntries()->first();
-        $this->assertSame('360.00', $entry->amount);      // 300 GBP → EUR at 1.20
+        $this->assertSame(360.0, $entry->amount);      // 300 GBP → EUR at 1.20
         $this->assertSame('EUR', $entry->currency_code);
-        $this->assertSame('300.00', $entry->base_amount); // back at the same day's rate
+        $this->assertSame(300.0, $entry->base_amount); // back at the same day's rate
     }
 
     public function test_disbursements_and_charges_store_base_amounts(): void
@@ -61,8 +61,8 @@ class DualCurrencyWipTest extends TestCase
             'description' => 'Fixed fee', 'amount' => 600,
         ]);
 
-        $this->assertSame('100.00', $matter->disbursements()->first()->base_amount); // 120 EUR / 1.2
-        $this->assertSame('500.00', $matter->charges()->first()->base_amount);       // 600 EUR / 1.2
+        $this->assertSame(100.0, $matter->disbursements()->first()->base_amount); // 120 EUR / 1.2
+        $this->assertSame(500.0, $matter->charges()->first()->base_amount);       // 600 EUR / 1.2
     }
 
     public function test_base_amounts_are_frozen_against_later_fx_moves(): void
@@ -77,7 +77,7 @@ class DualCurrencyWipTest extends TestCase
         // The rate moves after capture — stored values must not.
         ExchangeRate::create(['currency_code' => 'EUR', 'rate' => 2.00, 'rate_date' => '2026-06-02']);
 
-        $this->assertSame('500.00', $matter->charges()->first()->base_amount);
+        $this->assertSame(500.0, $matter->charges()->first()->base_amount);
 
         $this->actingAs($this->user)
             ->get(route('billing.wip'))

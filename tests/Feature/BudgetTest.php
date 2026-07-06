@@ -36,8 +36,8 @@ class BudgetTest extends TestCase
         $budget = Budget::first();
         $this->assertSame($this->user->id, $budget->created_by);
         $this->assertSame('GBP', $budget->currency_code); // matter billing ccy default
-        $this->assertSame('1500.00', $budget->amount);
-        $this->assertSame('1500.00', $budget->base_amount);
+        $this->assertSame(1500.0, $budget->amount);
+        $this->assertSame(1500.0, $budget->base_amount);
         $this->assertNotNull($budget->created_at);
     }
 
@@ -81,7 +81,7 @@ class BudgetTest extends TestCase
             ->assertSessionHas('success');
 
         $budget->refresh();
-        $this->assertSame('1250.00', $budget->amount);
+        $this->assertSame(1250.0, $budget->amount);
         $this->assertSame($originalCreator, $budget->created_by); // creator preserved
         $this->assertTrue($budget->updated_at->gt($budget->created_at));
     }
@@ -94,7 +94,7 @@ class BudgetTest extends TestCase
             'amount' => 1250, 'currency_code' => 'EUR',
         ]);
 
-        $this->assertSame('1000.00', Budget::first()->base_amount);
+        $this->assertSame(1000.0, Budget::first()->base_amount);
     }
 
     public function test_the_budget_dashboard_defaults_to_my_portfolio(): void

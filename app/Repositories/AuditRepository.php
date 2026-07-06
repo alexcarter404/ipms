@@ -126,9 +126,25 @@ class AuditRepository
         return null;
     }
 
+    /**
+     * Money columns audit as raw integer minor units; show them in the
+     * major units the reader expects.
+     *
+     * @var array<class-string, list<string>>
+     */
+    private const MONEY_FIELDS = [
+        TimeEntry::class => ['rate', 'amount', 'base_amount'],
+        Disbursement::class => ['cost_amount', 'amount', 'base_amount'],
+        Charge::class => ['amount', 'base_amount'],
+        Budget::class => ['amount', 'base_amount'],
+        Renewal::class => ['official_fee', 'service_fee'],
+    ];
+
     /** @return list<array{field: string, old: mixed, new: mixed}> */
     private function changes(Audit $audit): array
     {
+        $moneyFields = self::MONEY_FIELDS[$audit->auditable_type] ?? [];
+
         return collect($audit->getModified())
             // Bookkeeping columns say nothing a reader needs
             ->reject(fn ($change, $field) => $field === 'id'
@@ -136,17 +152,21 @@ class AuditRepository
                 || str_ends_with($field, '_by'))
             ->map(fn ($change, $field) => [
                 'field' => str_replace('_', ' ', $field),
-                'old' => $this->displayValue($change['old'] ?? null),
-                'new' => $this->displayValue($change['new'] ?? null),
+                'old' => $this->displayValue($change['old'] ?? null, in_array($field, $moneyFields, true)),
+                'new' => $this->displayValue($change['new'] ?? null, in_array($field, $moneyFields, true)),
             ])
             ->values()
             ->all();
     }
 
-    private function displayValue(mixed $value): ?string
+    private function displayValue(mixed $value, bool $isMoney = false): ?string
     {
         if ($value === null) {
             return null;
+        }
+
+        if ($isMoney && is_numeric($value)) {
+            return number_format(\App\Support\MoneyMinor::toMajor($value), 2, '.', '');
         }
 
         if (is_bool($value)) {

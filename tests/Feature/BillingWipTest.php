@@ -48,7 +48,7 @@ class BillingWipTest extends TestCase
         $entry = $matter->timeEntries()->first();
         $this->assertSame(50, $entry->minutes);
         $this->assertSame(54, $entry->billed_minutes); // next 6-minute block
-        $this->assertSame('180.00', $entry->amount);   // 0.9h × 200
+        $this->assertSame(180.0, $entry->amount);   // 0.9h × 200
     }
 
     public function test_fifteen_minute_blocks_are_supported(): void
@@ -80,7 +80,7 @@ class BillingWipTest extends TestCase
             'minutes' => 60,
         ]);
 
-        $this->assertSame('350.00', $matter->timeEntries()->first()->rate);
+        $this->assertSame(350.0, $matter->timeEntries()->first()->rate);
     }
 
     public function test_blended_agreements_apply_one_rate_to_every_timekeeper(): void
@@ -94,7 +94,7 @@ class BillingWipTest extends TestCase
             'minutes' => 60,
         ]);
 
-        $this->assertSame('225.00', $matter->timeEntries()->first()->rate);
+        $this->assertSame(225.0, $matter->timeEntries()->first()->rate);
     }
 
     public function test_rate_cards_convert_into_the_billing_currency(): void
@@ -113,7 +113,7 @@ class BillingWipTest extends TestCase
 
         $entry = $matter->timeEntries()->first();
         $this->assertSame('EUR', $entry->currency_code);
-        $this->assertSame('360.00', $entry->rate); // 300 GBP × 1.20
+        $this->assertSame(360.0, $entry->rate); // 300 GBP × 1.20
     }
 
     public function test_time_cannot_be_logged_without_any_rate_card(): void
@@ -165,7 +165,7 @@ class BillingWipTest extends TestCase
 
         $disbursement = $matter->disbursements()->first();
         // 120 EUR × 1.2 markup = 144 EUR → GBP at 1.20 = 120.00
-        $this->assertSame('120.00', $disbursement->amount);
+        $this->assertSame(120.0, $disbursement->amount);
         $this->assertSame('GBP', $disbursement->currency_code);
     }
 
@@ -180,7 +180,7 @@ class BillingWipTest extends TestCase
             'cost_currency' => 'GBP',
         ]);
 
-        $this->assertSame('55.00', $matter->disbursements()->first()->amount);
+        $this->assertSame(55.0, $matter->disbursements()->first()->amount);
     }
 
     public function test_a_stage_payment_is_raised_once_per_milestone(): void
@@ -194,7 +194,7 @@ class BillingWipTest extends TestCase
             ->assertSessionHas('success');
 
         $charge = $matter->charges()->first();
-        $this->assertSame('1500.00', $charge->amount);
+        $this->assertSame(1500.0, $charge->amount);
         $this->assertSame('stage_payment', $charge->type->value);
 
         // A second raise is refused

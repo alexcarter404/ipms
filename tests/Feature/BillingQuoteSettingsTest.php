@@ -47,9 +47,9 @@ class BillingQuoteSettingsTest extends TestCase
 
         $quote = Quote::first();
         $this->assertSame('Q-'.now()->year.'-0001', $quote->quote_no);
-        $this->assertSame('3000.00', $quote->subtotal); // 2400 + 2×300
-        $this->assertSame('600.00', $quote->tax_amount);
-        $this->assertSame('3600.00', $quote->total);
+        $this->assertSame(3000.0, $quote->subtotal); // 2400 + 2×300
+        $this->assertSame(600.0, $quote->tax_amount);
+        $this->assertSame(3600.0, $quote->total);
         $this->assertSame(2, $quote->lines()->count());
     }
 
