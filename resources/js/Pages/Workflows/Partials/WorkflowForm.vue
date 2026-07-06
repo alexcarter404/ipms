@@ -14,6 +14,7 @@ const props = defineProps({
     types: Array,
     triggerEvents: Array,
     contractFields: { type: Array, default: () => [] },
+    officeEvents: { type: Array, default: () => [] },
     submitLabel: { type: String, default: 'Save' },
 });
 
@@ -28,6 +29,7 @@ const addStep = () =>
         offset_unit: 'months',
         is_critical: false,
         required_fields: [],
+        completed_by_event: '',
     });
 
 const removeStep = (index) => props.form.steps.splice(index, 1);
@@ -125,7 +127,20 @@ const move = (index, delta) => {
                         <InputLabel value="Description" />
                         <TextInput v-model="step.description" class="mt-1 w-full" />
                     </div>
-                    <div class="sm:col-span-6">
+                    <div class="sm:col-span-3">
+                        <InputLabel value="Auto-complete on office event" />
+                        <SelectInput
+                            v-model="step.completed_by_event"
+                            :options="officeEvents"
+                            placeholder="Never"
+                            class="mt-1"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            Tasks from this step complete themselves when the
+                            office reports this event.
+                        </p>
+                    </div>
+                    <div class="sm:col-span-3">
                         <InputLabel value="Required data at this stage" />
                         <MultiSelect
                             v-model="step.required_fields"

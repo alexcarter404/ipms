@@ -8,6 +8,7 @@ const props = defineProps({
     types: Array,
     triggerEvents: Array,
     contractFields: Array,
+    officeEvents: Array,
 });
 
 const form = useForm({
@@ -24,6 +25,7 @@ const form = useForm({
         offset_unit: s.offset_unit,
         is_critical: s.is_critical,
         required_fields: s.required_fields ?? [],
+        completed_by_event: s.completed_by_event ?? '',
     })),
 });
 
@@ -49,6 +51,7 @@ const submit = () =>
                 :types="types"
                 :trigger-events="triggerEvents"
                 :contract-fields="contractFields"
+                :office-events="officeEvents"
                 submit-label="Save Changes"
                 @submit="submit"
             />

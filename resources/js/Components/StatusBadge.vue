@@ -9,11 +9,11 @@ const props = defineProps({
 
 // Map domain statuses onto PrimeVue Tag severities.
 const severities = {
-    success: ['granted', 'registered', 'accepted', 'completed', 'paid', 'sent'],
-    info: ['filed', 'published', 'in_progress', 'instructed', 'reminder_sent', 'under_examination', 'normal', 'billable', 'issued'],
-    warn: ['pending', 'pending_filing', 'upcoming', 'office_action', 'opposed', 'high'],
+    success: ['granted', 'registered', 'accepted', 'completed', 'paid', 'sent', 'processed', 'grant', 'registration'],
+    info: ['filed', 'published', 'in_progress', 'instructed', 'reminder_sent', 'under_examination', 'normal', 'billable', 'issued', 'matched', 'publication', 'renewal_reminder', 'time'],
+    warn: ['pending', 'pending_filing', 'upcoming', 'office_action', 'opposed', 'high', 'needs_review'],
     danger: ['critical', 'declined', 'void'],
-    secondary: ['draft', 'abandoned', 'lapsed', 'expired', 'closed', 'cancelled', 'waived', 'low', 'billed', 'written_off', 'non_billable'],
+    secondary: ['draft', 'abandoned', 'lapsed', 'expired', 'closed', 'cancelled', 'waived', 'low', 'billed', 'written_off', 'non_billable', 'dismissed', 'disbursement', 'charge'],
 };
 
 const severity = computed(() => {

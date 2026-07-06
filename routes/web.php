@@ -20,6 +20,7 @@ use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
 use App\Http\Controllers\MatterController;
+use App\Http\Controllers\OfficeMessageController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\MatterTakeOnController;
 use App\Http\Controllers\ProfileController;
@@ -94,6 +95,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('charges/{charge}', [ChargeController::class, 'update'])->name('charges.update');
     Route::post('agreement-stages/{stage}/charge', [ChargeController::class, 'raiseStage'])->name('agreement-stages.charge');
     Route::delete('charges/{charge}', [ChargeController::class, 'destroy'])->name('charges.destroy');
+
+    // Integrations: IP office exchange
+    Route::get('integrations', [OfficeMessageController::class, 'index'])->name('integrations.index');
+    Route::post('integrations/poll', [OfficeMessageController::class, 'poll'])->name('integrations.poll');
+    Route::patch('office-messages/{officeMessage}/assign', [OfficeMessageController::class, 'assign'])->name('office-messages.assign');
+    Route::post('office-messages/{officeMessage}/process', [OfficeMessageController::class, 'process'])->name('office-messages.process');
+    Route::post('office-messages/{officeMessage}/dismiss', [OfficeMessageController::class, 'dismiss'])->name('office-messages.dismiss');
 
     // Billing: budgets
     Route::get('billing/budgets', [BudgetController::class, 'index'])->name('budgets.index');

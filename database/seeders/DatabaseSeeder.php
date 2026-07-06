@@ -23,7 +23,9 @@ use App\Models\RateCard;
 use App\Models\TaxRate;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Models\OfficeMessage;
 use App\Services\InvoiceBuilder;
+use App\Services\Integrations\IngestOfficeMessages;
 use App\Services\Invoicing\InvoicingProvider;
 use App\Services\RenewalScheduler;
 use Illuminate\Database\Seeder;
@@ -414,6 +416,67 @@ class DatabaseSeeder extends Seeder
         app(InvoicingProvider::class)->recordPayment($invoice, [
             'date' => now()->subDays(2)->toDateString(),
             'amount' => 2000, 'method' => 'bank_transfer', 'reference' => 'SEPA 8842190',
+        ]);
+
+        // --- IP office exchange ---
+        CommTemplate::create([
+            'name' => 'Office Action Report',
+            'channel' => 'email',
+            'matter_type' => null,
+            'subject' => '{{matter.reference}} — Official communication received',
+            'body' => "Dear {{contact.name}},\n\nRe: {{matter.title}} ({{matter.reference}})\n\nWe write to report an official communication issued by the office. We are reviewing it and will follow with our recommendations and the response deadline shortly.\n\nKind regards,\n{{attorney.name}}",
+            'is_active' => true,
+            'auto_event' => 'office_action',
+        ]);
+
+        // A grant reported by the office completes the examination step.
+        $filingWf->steps()->where('title', 'Request examination')
+            ->update(['completed_by_event' => 'grant']);
+
+        // Ingested + auto-processed: a USPTO office action on P-2021-0003
+        // (matched by application number; applies the OA response
+        // workflow and drafts the report to the client).
+        app(IngestOfficeMessages::class)->ingest('uspto', [[
+            'external_id' => 'USPTO-2026-88121',
+            'event_type' => 'office_action',
+            'application_no' => '17/456,789',
+            'event_date' => now()->subDays(6)->toDateString(),
+            'summary' => 'Non-final Office Action issued in respect of claims 1–14.',
+        ]]);
+
+        // Matched but waiting for a human to hit Process: an EPO grant
+        // with official fees in the payload.
+        OfficeMessage::create([
+            'office' => 'epo',
+            'external_id' => 'EPO-2026-55210',
+            'event_type' => 'grant',
+            'application_no' => 'EP21789012.3',
+            'registration_no' => 'EP3456789',
+            'event_date' => now()->subDays(2)->toDateString(),
+            'summary' => 'Decision to grant a European patent (Art. 97(1) EPC).',
+            'payload' => [
+                'registration_no' => 'EP3456789',
+                'registration_date' => now()->subDays(2)->toDateString(),
+                'fees' => [
+                    ['description' => 'Grant and publishing fee', 'amount' => 960, 'currency' => 'EUR'],
+                ],
+            ],
+            'matter_id' => Matter::firstWhere('reference', 'P-2021-0002')->id,
+            'status' => 'matched',
+            'received_at' => now()->subDay(),
+        ]);
+
+        // Unmatched: number not on the docket — needs review.
+        OfficeMessage::create([
+            'office' => 'epo',
+            'external_id' => 'EPO-2026-55388',
+            'event_type' => 'publication',
+            'application_no' => 'EP99123456.7',
+            'event_date' => now()->subDays(3)->toDateString(),
+            'summary' => 'Publication of the application under Art. 93 EPC.',
+            'payload' => ['publication_no' => 'EP4499123'],
+            'status' => 'needs_review',
+            'received_at' => now()->subDays(2),
         ]);
     }
 }

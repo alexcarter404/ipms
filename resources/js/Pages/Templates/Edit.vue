@@ -6,6 +6,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 const props = defineProps({
     template: Object,
     types: Array,
+    officeEvents: Array,
     mergeFields: Array,
 });
 
@@ -16,6 +17,7 @@ const form = useForm({
     subject: props.template.subject ?? '',
     body: props.template.body,
     is_active: props.template.is_active,
+    auto_event: props.template.auto_event ?? '',
 });
 
 const submit = () =>
@@ -24,6 +26,7 @@ const submit = () =>
             ...d,
             matter_type: d.matter_type || null,
             subject: d.subject || null,
+            auto_event: d.auto_event || null,
         }))
         .patch(route('templates.update', props.template.id));
 </script>
@@ -40,6 +43,7 @@ const submit = () =>
 
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <TemplateForm
+                :office-events="officeEvents"
                 :form="form"
                 :types="types"
                 :merge-fields="mergeFields"

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\MatterType;
+use App\Enums\OfficeEventType;
 use App\Support\ContractFields;
 use App\Enums\TriggerEvent;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,20 @@ use Illuminate\Validation\Rule;
 
 class WorkflowRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        // Selects submit '' for "no event" — normalise to null.
+        $steps = collect($this->input('steps', []))->map(function ($step) {
+            if (($step['completed_by_event'] ?? null) === '') {
+                $step['completed_by_event'] = null;
+            }
+
+            return $step;
+        })->all();
+
+        $this->merge(['steps' => $steps]);
+    }
+
     public function rules(): array
     {
         return [
@@ -27,6 +42,7 @@ class WorkflowRequest extends FormRequest
             'steps.*.is_critical' => ['boolean'],
             'steps.*.required_fields' => ['nullable', 'array'],
             'steps.*.required_fields.*' => [Rule::in(ContractFields::keys())],
+            'steps.*.completed_by_event' => ['nullable', Rule::enum(OfficeEventType::class)],
         ];
     }
 }

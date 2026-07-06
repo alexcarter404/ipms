@@ -12,7 +12,7 @@ class CommTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'channel', 'matter_type', 'subject', 'body', 'is_active',
+        'name', 'channel', 'matter_type', 'subject', 'body', 'is_active', 'auto_event',
     ];
 
     protected function casts(): array

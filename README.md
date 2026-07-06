@@ -141,6 +141,31 @@ renewal/annuity management.
   interface, so an external driver (Xero, QuickBooks, Stripe) can take
   over the last mile later without touching the WIP layer
 
+### IPO Integrations — Office Exchange
+- **Connector seam per office** (EPO, UK IPO, USPTO, WIPO, EUIPO):
+  a file-drop driver reads JSON exchange batches from
+  `storage/app/ipo-inbox` (the classic SFTP pattern), and an **API
+  driver built on Saloon** (`OfficeExchangeConnector` + request
+  classes) covers REST exchanges — set `driver: api` with a base URL
+  and token per office; the ingestion pipeline is identical either way
+- **Idempotent ingestion** (deduped on the office's message id) with
+  **matter matching** by normalised application/registration numbers —
+  only an unambiguous match is automated; anything else waits in the
+  inbox for review
+- **Automation pipeline** per event (publication, grant, registration,
+  office action, renewal reminder), fully audit-logged per message:
+  copies official numbers/dates onto the matter, moves its status,
+  **auto-completes tasks** whose workflow step is marked "completed by
+  this office event", **auto-applies event-triggered workflows** (an
+  office action fans out its response deadline chain from the event
+  date), **records official fees as disbursements** at cost (marked up
+  and currency-converted), and **auto-drafts communication templates**
+  flagged for the event — drafts only, never sent
+- **Integrations inbox**: review queue with office/status filters,
+  payload + automation audit per message, assign-matter for unmatched
+  messages, process/dismiss, and Poll Now (also scheduled hourly via
+  `ipo:poll`)
+
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
   rendered through the app's Inertia pages: login, registration,
@@ -204,7 +229,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 208 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 219 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -214,7 +239,7 @@ template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 53 tests driving the real app —
+**End-to-end UI tests** (Playwright, 56 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
