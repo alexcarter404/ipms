@@ -8,13 +8,23 @@ use App\Enums\RenewalStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TriggerEvent;
+use App\Actions\Billing\AddCharge;
+use App\Actions\Billing\AddDisbursement;
+use App\Actions\Billing\LogTime;
+use App\Actions\Billing\RaiseStageCharge;
+use App\Models\ActivityCode;
 use App\Models\Client;
 use App\Models\CommTemplate;
+use App\Models\ExchangeRate;
 use App\Models\Family;
 use App\Models\Matter;
 use App\Models\Party;
+use App\Models\RateCard;
+use App\Models\TaxRate;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Services\InvoiceBuilder;
+use App\Services\Invoicing\InvoicingProvider;
 use App\Services\RenewalScheduler;
 use Illuminate\Database\Seeder;
 
@@ -282,6 +292,94 @@ class DatabaseSeeder extends Seeder
             'subject' => 'Registration Certificate — {{matter.title}}',
             'body' => "{{today}}\n\n{{client.name}}\n\nDear {{contact.name}},\n\nRe: {{matter.title}} — {{matter.country}} registration no. {{matter.registration_no}}\n\nWe are pleased to enclose the certificate of registration for the above trade mark, registered on {{matter.registration_date}}.\n\nThe registration will next fall due for renewal on {{matter.next_renewal_date}}.\n\nYours sincerely,\n{{attorney.name}}",
             'is_active' => true,
+        ]);
+
+        // --- Billing: tax, FX, activity codes, rate cards ---
+        $vat = TaxRate::create([
+            'name' => 'UK VAT (standard)', 'rate' => 20, 'country_code' => 'GB', 'is_default' => true,
+        ]);
+        $zeroRated = TaxRate::create(['name' => 'Zero-rated (export)', 'rate' => 0]);
+
+        foreach ([
+            'EUR' => 1.1700, 'USD' => 1.2700, 'JPY' => 199.50, 'CNY' => 9.0500,
+            'CHF' => 1.1200, 'AUD' => 1.9300, 'CAD' => 1.7400,
+        ] as $code => $rate) {
+            ExchangeRate::create(['currency_code' => $code, 'rate' => $rate, 'rate_date' => now()->toDateString()]);
+        }
+
+        $codes = collect([
+            ['P100', 'Case assessment & strategy'],
+            ['P200', 'Drafting & filing'],
+            ['P300', 'Prosecution & office action response'],
+            ['P400', 'Oppositions & appeals'],
+            ['C100', 'Client communication & reporting'],
+            ['C200', 'Foreign counsel liaison'],
+            ['R100', 'Renewals administration'],
+            ['G100', 'General case administration'],
+        ])->mapWithKeys(fn ($row) => [
+            $row[0] => ActivityCode::create(['code' => $row[0], 'description' => $row[1]]),
+        ]);
+
+        $acmeGb->update(['currency_code' => 'GBP', 'tax_rate_id' => $vat->id]);
+        $acmeUs->update(['currency_code' => 'USD', 'tax_rate_id' => $zeroRated->id]);
+        $nova->entities()->where('is_default', true)->first()
+            ->update(['currency_code' => 'EUR', 'tax_rate_id' => $zeroRated->id]);
+
+        RateCard::create(['currency_code' => 'GBP', 'hourly_rate' => 250, 'effective_from' => now()->subYears(2)]);
+        RateCard::create(['user_id' => $admin->id, 'currency_code' => 'GBP', 'hourly_rate' => 320, 'effective_from' => now()->subYears(2)]);
+        RateCard::create(['user_id' => $attorney->id, 'currency_code' => 'GBP', 'hourly_rate' => 260, 'effective_from' => now()->subYears(2)]);
+
+        // --- Billing agreements across the fee-arrangement spectrum ---
+        $gbPriority->billingAgreement()->create([
+            'type' => 'hourly', 'increment_minutes' => 6,
+            'default_markup_pct' => 10, 'requires_task_codes' => true,
+        ]);
+        Matter::firstWhere('reference', 'P-2021-0002')->billingAgreement()->create([
+            'type' => 'capped', 'increment_minutes' => 6, 'cap_amount' => 8000,
+        ]);
+        $tm->billingAgreement()->create(['type' => 'fixed', 'fixed_amount' => 3500]);
+        $designAgreement = Matter::firstWhere('reference', 'D-2024-0001')
+            ->billingAgreement()->create(['type' => 'stage']);
+        $designAgreement->stages()->createMany([
+            ['description' => 'Design search & clearance', 'amount' => 1200, 'sort_order' => 0],
+            ['description' => 'Preparation & filing', 'amount' => 1800, 'sort_order' => 1],
+            ['description' => 'Registration formalities', 'amount' => 900, 'sort_order' => 2],
+        ]);
+        app(RaiseStageCharge::class)->handle($designAgreement->stages()->first());
+
+        // --- WIP: time, a marked-up disbursement, a fixed fee ---
+        $logTime = app(LogTime::class);
+        $logTime->handle($gbPriority, [
+            'user_id' => $admin->id, 'work_date' => now()->subDays(9)->toDateString(),
+            'minutes' => 95, 'activity_code_id' => $codes['P300']->id,
+            'narrative' => 'Review examination report; prepare response strategy',
+        ]);
+        $logTime->handle($gbPriority, [
+            'user_id' => $attorney->id, 'work_date' => now()->subDays(4)->toDateString(),
+            'minutes' => 30, 'activity_code_id' => $codes['C100']->id,
+            'narrative' => 'Report filing receipt to client with next steps',
+        ]);
+        app(AddDisbursement::class)->handle($gbPriority, [
+            'date' => now()->subDays(7)->toDateString(),
+            'description' => 'EPO examination fee', 'supplier' => 'EPO',
+            'cost_amount' => 620, 'cost_currency' => 'EUR',
+        ]);
+
+        // --- An issued invoice with a part-payment (trade mark, EUR) ---
+        app(AddCharge::class)->handle($tm, [
+            'type' => 'fixed_fee', 'date' => now()->subDays(20)->toDateString(),
+            'description' => 'Fixed fee — trade mark registration (agreed scope)', 'amount' => 3500,
+        ]);
+        app(AddDisbursement::class)->handle($tm, [
+            'date' => now()->subDays(18)->toDateString(),
+            'description' => 'EUIPO registration certificate fee', 'supplier' => 'EUIPO',
+            'cost_amount' => 120, 'cost_currency' => 'EUR',
+        ]);
+        $invoice = app(InvoiceBuilder::class)->draft($tm);
+        app(InvoicingProvider::class)->issue($invoice);
+        app(InvoicingProvider::class)->recordPayment($invoice, [
+            'date' => now()->subDays(2)->toDateString(),
+            'amount' => 2000, 'method' => 'bank_transfer', 'reference' => 'SEPA 8842190',
         ]);
     }
 }

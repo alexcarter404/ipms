@@ -77,6 +77,35 @@ renewal/annuity management.
   plus lapsed/waived, with instructed/paid timestamps and fee tracking
 - Renewals control centre with due-within windows (30/90/180/365 days)
 
+### Billing
+- **Fee agreements per matter** covering the full arrangement spectrum:
+  hourly (configurable 6/15-minute increments), blended hourly (one
+  rate for every timekeeper), capped fee (hourly with a ceiling —
+  invoices get an automatic cap-adjustment line), fixed/flat fee, and
+  stage payments (milestones raised as charges when reached)
+- **Task-based billing**: an agreement can require a task (activity)
+  code on every time entry; UTBMS-style codes are seeded and manageable
+- **Time recording** with automatic rounding to the agreement increment
+  and rate resolution from **rate cards** — most specific wins:
+  timekeeper + client, timekeeper, client, then the firm-wide default —
+  converted into the matter's billing currency
+- **Disbursements** captured at cost in any currency, marked up
+  (per-item or agreement default) and converted to the billing currency
+- **Multi-currency**: billing currency set per client entity (or
+  overridden per agreement); daily exchange rates against the firm's
+  base currency, synced from an ECB-backed provider
+  (`billing:sync-rates`, scheduled weekdays) or maintained by hand
+- **Tax rates** (e.g. UK VAT, zero-rated export) assigned per entity
+  and snapshotted onto each invoice
+- **Quoting**: numbered quotes with lines, live totals and tax, and a
+  draft → sent → accepted/declined pipeline
+- **Invoicing**: one click gathers a matter's unbilled WIP onto a draft
+  invoice for its billing entity; issue assigns a sequential number and
+  payment terms; record part/full payments; void or delete releases the
+  WIP for rebilling. Invoicing sits behind an `InvoicingProvider`
+  interface, so an external driver (Xero, QuickBooks, Stripe) can take
+  over the last mile later without touching the WIP layer
+
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
   rendered through the app's Inertia pages: login, registration,
@@ -140,20 +169,22 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 143 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 172 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
-workflow application, stage contracts + matter take-on, template
-rendering, and the dashboard):
+workflow application, stage contracts + matter take-on, billing (time
+rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
+template rendering, and the dashboard):
 
 ```bash
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 45 tests driving the real app —
+**End-to-end UI tests** (Playwright, 48 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
-workflows, matter take-on with stage contracts, and template-driven
-communication composition):
+workflows, matter take-on with stage contracts, the billing journey
+(log time → invoice → payment), quotes, billing settings, and
+template-driven communication composition):
 
 ```bash
 npm run test:e2e
@@ -180,7 +211,15 @@ Client ─┬─ Contact (person | mailbox | organisation)
                    ├─ MatterClass (Nice classes)
                    ├─ Renewal (annuity/renewal cycles) ── RenewalRule (schedule templates)
                    ├─ MatterTask ── WorkflowStep ── Workflow
-                   └─ Communication ── CommTemplate
+                   ├─ Communication ── CommTemplate
+                   └─ BillingAgreement ─┬─ BillingAgreementStage
+                                        ├─ TimeEntry (rate via RateCard)
+                                        ├─ Disbursement (markup + FX)
+                                        ├─ Charge (fixed fee | stage payment)
+                                        └─ Invoice ─┬─ InvoiceLine (bills WIP items)
+                                                    └─ Payment
+Quote ── QuoteLine (client / entity / matter, tax snapshot)
+TaxRate · ExchangeRate · ActivityCode · RateCard   (billing reference data)
 ```
 
 ## Backend architecture
@@ -198,7 +237,10 @@ Repositories/      all Eloquent queries: filtered pagination, option lists,
                    typeahead search, dashboard counts
 Services/          domain services composing repositories:
                    RenewalScheduler, WorkflowRunner, TemplateRenderer,
-                   SearchService, DashboardService
+                   SearchService, DashboardService, ExchangeRateService,
+                   RateResolver, InvoiceBuilder; Invoicing/ holds the
+                   InvoicingProvider seam (internal driver today, an
+                   external Xero/Stripe driver later)
 Models/            relationships, casts, scopes, and per-model domain
                    helpers (schedule computation, default-entity switch)
 ```

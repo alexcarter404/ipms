@@ -18,6 +18,8 @@ const props = defineProps({
     countries: Array,
     contactTypes: Array,
     matters: Object,
+    billingCurrencies: Array,
+    taxRates: Array,
 });
 
 const typeLabel = (value) =>
@@ -209,7 +211,12 @@ const removeContact = (contact) =>
                 </div>
             </div>
 
-            <EntitiesPanel :client="client" :countries="countries" />
+            <EntitiesPanel
+                :client="client"
+                :countries="countries"
+                :billing-currencies="billingCurrencies"
+                :tax-rates="taxRates"
+            />
 
             <!-- Matters -->
             <DataTable

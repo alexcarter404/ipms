@@ -1,7 +1,15 @@
 <?php
 
+use App\Http\Controllers\BillingAgreementController;
+use App\Http\Controllers\BillingSettingsController;
+use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientEntityController;
+use App\Http\Controllers\DisbursementController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\CommTemplateController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ContactController;
@@ -67,6 +75,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Workflows
     Route::resource('workflows', WorkflowController::class)->except(['show']);
     Route::post('matters/{matter}/apply-workflow', [WorkflowApplicationController::class, 'store'])->name('matters.workflows.apply');
+
+    // Billing: agreements & WIP (time, disbursements, charges)
+    Route::post('matters/{matter}/agreement', [BillingAgreementController::class, 'save'])->name('matters.agreement.save');
+    Route::post('matters/{matter}/time', [TimeEntryController::class, 'store'])->name('matters.time.store');
+    Route::patch('time-entries/{timeEntry}/status', [TimeEntryController::class, 'updateStatus'])->name('time-entries.status');
+    Route::delete('time-entries/{timeEntry}', [TimeEntryController::class, 'destroy'])->name('time-entries.destroy');
+    Route::post('matters/{matter}/disbursements', [DisbursementController::class, 'store'])->name('matters.disbursements.store');
+    Route::patch('disbursements/{disbursement}/status', [DisbursementController::class, 'updateStatus'])->name('disbursements.status');
+    Route::delete('disbursements/{disbursement}', [DisbursementController::class, 'destroy'])->name('disbursements.destroy');
+    Route::post('matters/{matter}/charges', [ChargeController::class, 'store'])->name('matters.charges.store');
+    Route::post('agreement-stages/{stage}/charge', [ChargeController::class, 'raiseStage'])->name('agreement-stages.charge');
+    Route::delete('charges/{charge}', [ChargeController::class, 'destroy'])->name('charges.destroy');
+
+    // Billing: invoices & payments
+    Route::get('billing/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::post('matters/{matter}/invoices', [InvoiceController::class, 'store'])->name('matters.invoices.store');
+    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::post('invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
+    Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+    Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+    Route::post('invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('invoices.payments.store');
+
+    // Billing: quotes
+    Route::resource('quotes', QuoteController::class)->except(['show']);
+    Route::patch('quotes/{quote}/status', [QuoteController::class, 'transition'])->name('quotes.status');
+
+    // Billing: settings (exchange rates, tax rates, activity codes, rate cards)
+    Route::get('billing/settings', [BillingSettingsController::class, 'edit'])->name('billing.settings');
+    Route::post('billing/sync-rates', [BillingSettingsController::class, 'syncRates'])->name('billing.sync-rates');
+    Route::post('billing/exchange-rates', [BillingSettingsController::class, 'saveExchangeRate'])->name('billing.exchange-rates.save');
+    Route::post('billing/tax-rates', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.store');
+    Route::patch('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.update');
+    Route::delete('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'deleteTaxRate'])->name('billing.tax-rates.destroy');
+    Route::post('billing/activity-codes', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.store');
+    Route::patch('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.update');
+    Route::delete('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'deleteActivityCode'])->name('billing.activity-codes.destroy');
+    Route::post('billing/rate-cards', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.store');
+    Route::patch('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.update');
+    Route::delete('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'deleteRateCard'])->name('billing.rate-cards.destroy');
 
     // Communication templates & communications
     Route::resource('templates', CommTemplateController::class, ['parameters' => ['templates' => 'template']])->except(['show']);

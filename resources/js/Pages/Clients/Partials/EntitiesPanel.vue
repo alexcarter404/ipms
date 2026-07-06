@@ -13,6 +13,8 @@ import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 const props = defineProps({
     client: Object,
     countries: Array,
+    billingCurrencies: { type: Array, default: () => [] },
+    taxRates: { type: Array, default: () => [] },
 });
 
 const editing = ref(null); // null = closed, 'new' = create, id = edit
@@ -27,6 +29,8 @@ const blank = {
     billing_email: '',
     billing_address: '',
     billing_reference: '',
+    currency_code: 'GBP',
+    tax_rate_id: '',
     is_default: false,
     notes: '',
 };
@@ -51,6 +55,8 @@ const openEdit = (entity) => {
         billing_email: entity.billing_email ?? '',
         billing_address: entity.billing_address ?? '',
         billing_reference: entity.billing_reference ?? '',
+        currency_code: entity.currency_code ?? 'GBP',
+        tax_rate_id: entity.tax_rate_id ?? '',
         is_default: entity.is_default,
         notes: entity.notes ?? '',
     });
@@ -116,6 +122,9 @@ const remove = (entity) =>
                             >
                             <span v-if="entity.country_code" class="ml-1 text-xs text-gray-500">
                                 {{ entity.country_code }}
+                            </span>
+                            <span v-if="entity.currency_code" class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+                                {{ entity.currency_code }}
                             </span>
                         </div>
                         <div class="mt-0.5 text-xs text-gray-500">
@@ -195,6 +204,16 @@ const remove = (entity) =>
                         <InputLabel value="Billing reference / PO" />
                         <TextInput v-model="form.billing_reference" class="mt-1 w-full" />
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <InputLabel value="Billing currency" />
+                            <SelectInput v-model="form.currency_code" :options="billingCurrencies" class="mt-1" />
+                        </div>
+                        <div>
+                            <InputLabel value="Tax treatment" />
+                            <SelectInput v-model="form.tax_rate_id" :options="taxRates" placeholder="No tax" class="mt-1" />
+                        </div>
+                    </div>
                     <label v-if="!entity.is_default" class="flex items-center gap-2 text-sm text-gray-600">
                         <input v-model="form.is_default" type="checkbox" class="rounded text-indigo-600" />
                         Make default entity
@@ -252,6 +271,16 @@ const remove = (entity) =>
             <div>
                 <InputLabel value="Billing reference / PO" />
                 <TextInput v-model="form.billing_reference" class="mt-1 w-full" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <InputLabel value="Billing currency" />
+                    <SelectInput v-model="form.currency_code" :options="billingCurrencies" class="mt-1" />
+                </div>
+                <div>
+                    <InputLabel value="Tax treatment" />
+                    <SelectInput v-model="form.tax_rate_id" :options="taxRates" placeholder="No tax" class="mt-1" />
+                </div>
             </div>
             <label class="flex items-center gap-2 text-sm text-gray-600">
                 <input v-model="form.is_default" type="checkbox" class="rounded text-indigo-600" />

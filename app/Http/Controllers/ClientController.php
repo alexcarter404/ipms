@@ -9,8 +9,10 @@ use App\Enums\ContactType;
 use App\Exceptions\DomainActionException;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
+use App\Repositories\BillingSettingsRepository;
 use App\Repositories\ClientRepository;
 use App\Support\Countries;
+use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,13 +47,15 @@ class ClientController extends Controller
             ->with('success', 'Client created.');
     }
 
-    public function show(Client $client): Response
+    public function show(Client $client, BillingSettingsRepository $billingSettings): Response
     {
         return Inertia::render('Clients/Show', [
             'client' => $this->clients->loadForDisplay($client),
             'countries' => Countries::options(),
             'contactTypes' => ContactType::options(),
             'matters' => $this->clients->paginateMatters($client),
+            'billingCurrencies' => Currencies::options(),
+            'taxRates' => $billingSettings->taxRateOptions(),
         ]);
     }
 
