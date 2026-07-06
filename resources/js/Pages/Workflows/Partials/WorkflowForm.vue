@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import MultiSelect from 'primevue/multiselect';
 import SelectInput from '@/Components/SelectInput.vue';
 import TextareaInput from '@/Components/TextareaInput.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -12,6 +13,7 @@ const props = defineProps({
     form: Object,
     types: Array,
     triggerEvents: Array,
+    contractFields: { type: Array, default: () => [] },
     submitLabel: { type: String, default: 'Save' },
 });
 
@@ -25,6 +27,7 @@ const addStep = () =>
         offset_value: 0,
         offset_unit: 'months',
         is_critical: false,
+        required_fields: [],
     });
 
 const removeStep = (index) => props.form.steps.splice(index, 1);
@@ -118,9 +121,25 @@ const move = (index, delta) => {
                             <button type="button" class="rounded border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50" @click="removeStep(i)">✕</button>
                         </div>
                     </div>
-                    <div class="sm:col-span-12">
+                    <div class="sm:col-span-6">
                         <InputLabel value="Description" />
                         <TextInput v-model="step.description" class="mt-1 w-full" />
+                    </div>
+                    <div class="sm:col-span-6">
+                        <InputLabel value="Required data at this stage" />
+                        <MultiSelect
+                            v-model="step.required_fields"
+                            :options="contractFields"
+                            option-label="label"
+                            option-value="value"
+                            display="chip"
+                            placeholder="None — no data contract"
+                            size="small"
+                            class="mt-1 w-full"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            Matters taken on at (or beyond) this stage must have these fields.
+                        </p>
                     </div>
                 </div>
             </div>

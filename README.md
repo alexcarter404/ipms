@@ -44,6 +44,14 @@ renewal/annuity management.
   (filing, publication, grant, registration, office action, or a manual date)
 - Applying a workflow to a matter fans out its steps into tasks with due
   dates offset from the trigger date
+- **Stage data contracts**: each workflow step can declare the matter
+  fields it requires (application number, priority date, responsible
+  attorney, …) in the builder
+- **Matter take-on**: open a matter part-way through a workflow — pick the
+  entry stage, and the cumulative contract of that stage and all earlier
+  ones becomes required (shown as a live checklist); tasks are created
+  from the entry stage onward, anchored on the trigger date (or an
+  explicit base date for manually-triggered workflows)
 - Global task list with my-tasks / overdue / status filters
 
 ### Templated Communications
@@ -132,18 +140,20 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 134 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 143 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
-workflow application, template rendering, and the dashboard):
+workflow application, stage contracts + matter take-on, template
+rendering, and the dashboard):
 
 ```bash
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 42 tests driving the real app —
+**End-to-end UI tests** (Playwright, 45 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
-workflows, and template-driven communication composition):
+workflows, matter take-on with stage contracts, and template-driven
+communication composition):
 
 ```bash
 npm run test:e2e

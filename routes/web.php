@@ -11,6 +11,7 @@ use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
 use App\Http\Controllers\MatterController;
 use App\Http\Controllers\MatterPartyController;
+use App\Http\Controllers\MatterTakeOnController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RenewalController;
 use App\Http\Controllers\RenewalRuleController;
@@ -34,7 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
     Route::delete('contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
 
-    // Matters
+    // Matters (take-on routes precede the resource so 'take-on' isn't captured as {matter})
+    Route::get('matters/take-on', [MatterTakeOnController::class, 'create'])->name('matters.take-on');
+    Route::post('matters/take-on', [MatterTakeOnController::class, 'store'])->name('matters.take-on.store');
     Route::resource('matters', MatterController::class);
     Route::post('matters/{matter}/contacts', [MatterContactController::class, 'store'])->name('matters.contacts.store');
     Route::delete('matters/{matter}/contacts/{contact}', [MatterContactController::class, 'destroy'])->name('matters.contacts.destroy');

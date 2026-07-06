@@ -40,6 +40,18 @@ enum TriggerEvent: string
         };
     }
 
+    /** The matter column this trigger's base date comes from, if any. */
+    public function dateField(): ?string
+    {
+        return match ($this) {
+            self::Filing => 'application_date',
+            self::Publication => 'publication_date',
+            self::Grant, self::Registration => 'registration_date',
+            self::Priority => 'priority_date',
+            self::OfficeAction, self::Manual => null,
+        };
+    }
+
     public static function options(): array
     {
         return array_map(

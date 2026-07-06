@@ -60,12 +60,20 @@ const typeLabel = (value) => props.types.find((t) => t.value === value)?.label ?
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     Matters
                 </h2>
-                <Link
-                    :href="route('matters.create')"
-                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-                >
-                    New Matter
-                </Link>
+                <div class="flex gap-2">
+                    <Link
+                        :href="route('matters.take-on')"
+                        class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
+                    >
+                        Take-On
+                    </Link>
+                    <Link
+                        :href="route('matters.create')"
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                    >
+                        New Matter
+                    </Link>
+                </div>
             </div>
         </template>
 

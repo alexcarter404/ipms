@@ -207,10 +207,10 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
         $filingWf->steps()->createMany([
-            ['title' => 'Report filing to client', 'offset_value' => 7, 'offset_unit' => 'days', 'sort_order' => 0],
-            ['title' => 'File priority documents', 'offset_value' => 3, 'offset_unit' => 'months', 'sort_order' => 1],
-            ['title' => 'Request examination', 'offset_value' => 12, 'offset_unit' => 'months', 'is_critical' => true, 'sort_order' => 2],
-            ['title' => 'Foreign filing decision (Paris deadline)', 'offset_value' => 12, 'offset_unit' => 'months', 'is_critical' => true, 'sort_order' => 3],
+            ['title' => 'Report filing to client', 'offset_value' => 7, 'offset_unit' => 'days', 'sort_order' => 0, 'required_fields' => ['application_no', 'application_date']],
+            ['title' => 'File priority documents', 'offset_value' => 3, 'offset_unit' => 'months', 'sort_order' => 1, 'required_fields' => ['priority_no', 'priority_date']],
+            ['title' => 'Request examination', 'offset_value' => 12, 'offset_unit' => 'months', 'is_critical' => true, 'sort_order' => 2, 'required_fields' => ['responsible_user_id']],
+            ['title' => 'Foreign filing decision (Paris deadline)', 'offset_value' => 12, 'offset_unit' => 'months', 'is_critical' => true, 'sort_order' => 3, 'required_fields' => []],
         ]);
 
         $oaWf = Workflow::create([
@@ -234,8 +234,8 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
         $tmWf->steps()->createMany([
-            ['title' => 'Send registration certificate to client', 'offset_value' => 14, 'offset_unit' => 'days', 'sort_order' => 0],
-            ['title' => 'Diarise proof-of-use deadline', 'offset_value' => 5, 'offset_unit' => 'years', 'sort_order' => 1],
+            ['title' => 'Send registration certificate to client', 'offset_value' => 14, 'offset_unit' => 'days', 'sort_order' => 0, 'required_fields' => ['registration_no', 'registration_date']],
+            ['title' => 'Diarise proof-of-use deadline', 'offset_value' => 5, 'offset_unit' => 'years', 'sort_order' => 1, 'required_fields' => []],
         ]);
 
         // --- Tasks: a few standalone ones, some overdue ---

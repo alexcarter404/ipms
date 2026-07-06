@@ -13,13 +13,14 @@ class WorkflowStep extends Model
 
     protected $fillable = [
         'workflow_id', 'title', 'description', 'offset_value',
-        'offset_unit', 'is_critical', 'sort_order',
+        'offset_unit', 'is_critical', 'required_fields', 'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
             'is_critical' => 'boolean',
+            'required_fields' => 'array',
         ];
     }
 

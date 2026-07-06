@@ -7,6 +7,7 @@ use App\Enums\TaskStatus;
 use App\Models\Matter;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Models\WorkflowStep;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
@@ -19,11 +20,15 @@ class WorkflowRunner
     /**
      * @return Collection<int, \App\Models\MatterTask>
      */
-    public function apply(Workflow $workflow, Matter $matter, CarbonInterface $baseDate, ?User $actor = null, ?int $assigneeId = null): Collection
+    public function apply(Workflow $workflow, Matter $matter, CarbonInterface $baseDate, ?User $actor = null, ?int $assigneeId = null, ?WorkflowStep $startAt = null): Collection
     {
         $created = collect();
 
-        foreach ($workflow->steps as $step) {
+        $steps = $startAt
+            ? $workflow->steps->filter(fn (WorkflowStep $step) => $step->sort_order >= $startAt->sort_order)
+            : $workflow->steps;
+
+        foreach ($steps as $step) {
             $created->push($matter->tasks()->create([
                 'workflow_step_id' => $step->id,
                 'title' => $step->title,

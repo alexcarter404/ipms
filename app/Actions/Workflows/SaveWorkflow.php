@@ -39,6 +39,7 @@ class SaveWorkflow
                 'offset_value' => $step['offset_value'],
                 'offset_unit' => $step['offset_unit'],
                 'is_critical' => $step['is_critical'] ?? false,
+                'required_fields' => array_values($step['required_fields'] ?? []),
                 'sort_order' => $i,
             ];
 

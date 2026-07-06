@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\MatterType;
+use App\Support\ContractFields;
 use App\Enums\TriggerEvent;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,8 @@ class WorkflowRequest extends FormRequest
             'steps.*.offset_value' => ['required', 'integer', 'between:-3650,36500'],
             'steps.*.offset_unit' => ['required', Rule::in(['days', 'weeks', 'months', 'years'])],
             'steps.*.is_critical' => ['boolean'],
+            'steps.*.required_fields' => ['nullable', 'array'],
+            'steps.*.required_fields.*' => [Rule::in(ContractFields::keys())],
         ];
     }
 }
