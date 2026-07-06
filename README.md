@@ -191,10 +191,12 @@ renewal/annuity management.
   billing items, budgets and office submissions) and an audit panel on
   the client screen (client, entities, contacts) — who, when, and each
   field's old → new value
-- **Roll back / roll forward**: any update entry can be transitioned
-  using the package's `transitionTo`, restoring the record to the state
-  before or after that change. Transitions are saved through the model,
-  so the time-travel itself lands in the audit trail
+- **Restore any captured state**: every created/updated entry in the
+  timeline captures the state it left the record in, and a single
+  Restore action applies those values via the package's `transitionTo`
+  — pick the point in history you want, no back/forward bookkeeping.
+  Restores are saved through the model, so the time-travel itself
+  lands in the audit trail
 
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
@@ -265,7 +267,7 @@ workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
 office integrations (ingestion, matching, automation, outbound
 submissions + EPO payload transformation, receipts), template
-rendering, application auditing with audit-trail rollback, and the dashboard):
+rendering, application auditing with audit-trail state restore, and the dashboard):
 
 ```bash
 php artisan test
@@ -277,7 +279,7 @@ renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
 (log time → invoice → payment), quotes, billing settings, the office
 exchange (inbox review, processing, outbound submissions), audit history
-timelines with roll-back, and
+timelines with state restore, and
 template-driven communication composition):
 
 ```bash
