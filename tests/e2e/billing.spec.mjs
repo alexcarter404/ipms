@@ -100,9 +100,11 @@ test.describe('Billing', () => {
         await page.getByRole('tab', { name: 'Tax Rates' }).click();
         await expect(page.locator('tr', { hasText: 'UK VAT (standard)' })).toContainText('20%');
 
-        // Rate cards tab shows the seeded cards with precedence note
-        await page.getByRole('tab', { name: 'Rate Cards' }).click();
+        // Rate rules tab: personal, grade-based and firm-default rules
+        await page.getByRole('tab', { name: 'Rate Rules' }).click();
         await expect(page.locator('tr', { hasText: 'Alex Carter' })).toContainText('GBP 320.00');
+        await expect(page.locator('tr', { hasText: 'Any Attorney' })).toContainText('GBP 240.00');
         await expect(page.locator('tr', { hasText: 'Any timekeeper' })).toContainText('GBP 250.00');
+        await expect(page.getByRole('heading', { name: 'Timekeeper grades' })).toBeVisible();
     });
 });

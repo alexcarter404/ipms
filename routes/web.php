@@ -120,6 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('billing/activity-codes', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.store');
     Route::patch('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.update');
     Route::delete('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'deleteActivityCode'])->name('billing.activity-codes.destroy');
+    Route::patch('billing/timekeepers/{user}/role', [BillingSettingsController::class, 'updateUserRole'])->name('billing.timekeepers.role');
     Route::post('billing/rate-cards', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.store');
     Route::patch('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.update');
     Route::delete('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'deleteRateCard'])->name('billing.rate-cards.destroy');

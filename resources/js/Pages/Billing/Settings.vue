@@ -20,8 +20,12 @@ const props = defineProps({
     exchangeRates: Array,
     taxRates: Array,
     activityCodes: Array,
+    activityCodeOptions: Array,
     rateCards: Array,
     users: Array,
+    timekeepers: Array,
+    roles: Array,
+    matterTypes: Array,
     clients: Array,
 });
 
@@ -101,7 +105,10 @@ const deleteCode = (code) =>
 const cardForm = useForm({
     id: null,
     user_id: '',
+    role: '',
     client_id: '',
+    matter_type: '',
+    activity_code_id: '',
     currency_code: props.baseCurrency,
     hourly_rate: '',
     effective_from: new Date().toISOString().slice(0, 10),
@@ -110,7 +117,10 @@ const cardForm = useForm({
 const editCard = (card) => {
     cardForm.id = card.id;
     cardForm.user_id = card.user_id ?? '';
+    cardForm.role = card.role ?? '';
     cardForm.client_id = card.client_id ?? '';
+    cardForm.matter_type = card.matter_type ?? '';
+    cardForm.activity_code_id = card.activity_code_id ?? '';
     cardForm.currency_code = card.currency_code;
     cardForm.hourly_rate = Number(card.hourly_rate);
     cardForm.effective_from = card.effective_from.slice(0, 10);
@@ -118,15 +128,38 @@ const editCard = (card) => {
 
 const saveCard = () => {
     const options = { preserveScroll: true, onSuccess: () => cardForm.reset() };
-    const transform = (d) => ({ ...d, user_id: d.user_id || null, client_id: d.client_id || null });
+    const transform = (d) => ({
+        ...d,
+        user_id: d.user_id || null,
+        role: d.role || null,
+        client_id: d.client_id || null,
+        matter_type: d.matter_type || null,
+        activity_code_id: d.activity_code_id || null,
+    });
     cardForm.id
         ? cardForm.transform(transform).patch(route('billing.rate-cards.update', cardForm.id), options)
         : cardForm.transform(transform).post(route('billing.rate-cards.store'), options);
 };
 
 const deleteCard = (card) =>
-    confirmDelete('Delete this rate card?', () =>
+    confirmDelete('Delete this rate rule?', () =>
         router.delete(route('billing.rate-cards.destroy', card.id), { preserveScroll: true })
+    );
+
+const roleLabel = (value) => props.roles.find((r) => r.value === value)?.label ?? value;
+const typeLabel = (value) => props.matterTypes.find((t) => t.value === value)?.label ?? value;
+
+const whoLabel = (card) => {
+    if (card.user) return card.user.name;
+    if (card.role) return `Any ${roleLabel(card.role)}`;
+    return 'Any timekeeper';
+};
+
+const setGrade = (timekeeper, role) =>
+    router.patch(
+        route('billing.timekeepers.role', timekeeper.id),
+        { role: role || null },
+        { preserveScroll: true }
     );
 </script>
 
@@ -138,7 +171,7 @@ const deleteCard = (card) =>
             <div>
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Billing Settings</h2>
                 <p class="mt-1 text-sm text-gray-600">
-                    Exchange rates, tax treatments, task codes and hourly rate cards.
+                    Exchange rates, tax treatments, task codes, timekeeper grades and rate rules.
                     Base currency: <strong>{{ baseCurrency }}</strong>.
                 </p>
             </div>
@@ -150,7 +183,7 @@ const deleteCard = (card) =>
                     <Tab value="rates">Exchange Rates</Tab>
                     <Tab value="tax">Tax Rates</Tab>
                     <Tab value="codes">Activity Codes</Tab>
-                    <Tab value="cards">Rate Cards</Tab>
+                    <Tab value="cards">Rate Rules</Tab>
                 </TabList>
             </Tabs>
 
@@ -314,22 +347,26 @@ const deleteCard = (card) =>
 
             <!-- Rate cards -->
             <div v-else-if="activeTab === 'cards'" class="grid gap-6 lg:grid-cols-3">
-                <div class="lg:col-span-2">
+                <div class="space-y-6 lg:col-span-2">
                     <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
                             <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 <tr>
-                                    <th class="px-4 py-3">Timekeeper</th>
+                                    <th class="px-4 py-3">Applies to</th>
                                     <th class="px-4 py-3">Client</th>
+                                    <th class="px-4 py-3">Matter type</th>
+                                    <th class="px-4 py-3">Task code</th>
                                     <th class="px-4 py-3 text-right">Hourly rate</th>
-                                    <th class="px-4 py-3">Effective from</th>
+                                    <th class="px-4 py-3">From</th>
                                     <th class="px-4 py-3"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <tr v-for="card in rateCards" :key="card.id">
-                                    <td class="px-4 py-3 text-gray-700">{{ card.user?.name ?? 'Any timekeeper' }}</td>
-                                    <td class="px-4 py-3 text-gray-700">{{ card.client?.name ?? 'All clients' }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-800">{{ whoLabel(card) }}</td>
+                                    <td class="max-w-[10rem] truncate px-4 py-3 text-gray-600">{{ card.client?.name ?? 'All' }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ card.matter_type ? typeLabel(card.matter_type) : 'All' }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ card.activity_code?.code ?? 'All' }}</td>
                                     <td class="whitespace-nowrap px-4 py-3 text-right font-medium text-gray-800">
                                         {{ card.currency_code }} {{ Number(card.hourly_rate).toFixed(2) }}
                                     </td>
@@ -340,21 +377,50 @@ const deleteCard = (card) =>
                                     </td>
                                 </tr>
                                 <tr v-if="!rateCards.length">
-                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">
-                                        No rate cards — time cannot be valued until one exists.
+                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
+                                        No rate rules — time cannot be valued until one exists.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">
-                        The most specific card wins: timekeeper + client, then timekeeper,
-                        then client, then the firm-wide default.
+                    <p class="-mt-4 text-xs text-gray-500">
+                        Rules are listed most-specific first and resolve in that order:
+                        a personal rate beats a grade rate, which beats client, matter-type
+                        and task-code scoping. Ties go to the most recent effective date.
                     </p>
+
+                    <!-- Timekeeper grades -->
+                    <div class="rounded-lg bg-white p-4 shadow-sm">
+                        <h4 class="font-semibold text-gray-800">Timekeeper grades</h4>
+                        <p class="mb-3 mt-1 text-xs text-gray-500">
+                            Grades drive grade-based rate rules — new joiners get the
+                            right rate without a personal rule.
+                        </p>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div
+                                v-for="timekeeper in timekeepers"
+                                :key="timekeeper.id"
+                                class="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2"
+                            >
+                                <span class="text-sm text-gray-700">{{ timekeeper.name }}</span>
+                                <SelectInput
+                                    :model-value="timekeeper.role ?? ''"
+                                    :options="roles"
+                                    placeholder="No grade"
+                                    class="w-44"
+                                    @update:model-value="setGrade(timekeeper, $event)"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <form class="h-fit space-y-3 rounded-lg bg-white p-4 shadow-sm" @submit.prevent="saveCard">
-                    <h4 class="font-semibold text-gray-800">{{ cardForm.id ? 'Edit rate card' : 'New rate card' }}</h4>
+                    <h4 class="font-semibold text-gray-800">{{ cardForm.id ? 'Edit rate rule' : 'New rate rule' }}</h4>
+                    <p class="text-xs text-gray-500">
+                        Leave a dimension blank to match anything.
+                    </p>
                     <div>
                         <InputLabel value="Timekeeper" />
                         <SelectInput
@@ -365,6 +431,16 @@ const deleteCard = (card) =>
                         />
                     </div>
                     <div>
+                        <InputLabel value="Grade" />
+                        <SelectInput
+                            v-model="cardForm.role"
+                            :options="roles"
+                            placeholder="Any grade"
+                            class="mt-1"
+                        />
+                        <InputError :message="cardForm.errors.role" class="mt-1" />
+                    </div>
+                    <div>
                         <InputLabel value="Client" />
                         <SelectInput
                             v-model="cardForm.client_id"
@@ -372,6 +448,16 @@ const deleteCard = (card) =>
                             placeholder="All clients"
                             class="mt-1"
                         />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <InputLabel value="Matter type" />
+                            <SelectInput v-model="cardForm.matter_type" :options="matterTypes" placeholder="All" class="mt-1" />
+                        </div>
+                        <div>
+                            <InputLabel value="Task code" />
+                            <SelectInput v-model="cardForm.activity_code_id" :options="activityCodeOptions" placeholder="All" class="mt-1" />
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>

@@ -91,9 +91,15 @@ renewal/annuity management.
 - **Task-based billing**: an agreement can require a task (activity)
   code on every time entry; UTBMS-style codes are seeded and manageable
 - **Time recording** with automatic rounding to the agreement increment
-  and rate resolution from **rate cards** — most specific wins:
-  timekeeper + client, timekeeper, client, then the firm-wide default —
-  converted into the matter's billing currency
+  and rate resolution from **rule-based rate cards** scoped by any
+  combination of timekeeper, grade (partner / attorney / case manager /
+  paralegal), client, matter type and task code — null dimensions match
+  anything, the most specific matching rule wins (personal beats grade
+  beats client/matter/task scoping), ties go to the latest effective
+  date, and future-dated uplifts activate automatically. Timekeeper
+  grades are managed in Billing Settings, so new joiners inherit their
+  grade's rate without a personal rule. Rates convert into the matter's
+  billing currency
 - **Disbursements** captured at cost in any currency, marked up
   (per-item or agreement default) and converted to the billing currency
 - **Multi-currency**: billing currency set per client entity (or
@@ -184,7 +190,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 188 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 196 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),

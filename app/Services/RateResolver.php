@@ -13,8 +13,11 @@ use Illuminate\Support\Carbon;
 /**
  * Resolves the hourly rate for a timekeeper on a matter, in the matter's
  * billing currency. A blended agreement overrides everything; otherwise
- * the most specific rate card wins: user+client, then user, then client
- * (its own blended rate), then the firm-wide default.
+ * rate rules are matched on up to five dimensions — timekeeper, grade
+ * (role), client, matter type, activity code — where a null dimension
+ * matches anything. The most specific matching rule wins (personal
+ * rates beat grade rates beat client/matter/activity scoping); ties go
+ * to the most recent effective date.
  */
 class RateResolver
 {
@@ -22,7 +25,7 @@ class RateResolver
     {
     }
 
-    public function resolve(Matter $matter, User $user, ?CarbonInterface $date = null): float
+    public function resolve(Matter $matter, User $user, ?CarbonInterface $date = null, ?int $activityCodeId = null): float
     {
         $date ??= Carbon::today();
         $currency = $matter->billingCurrency();
@@ -33,22 +36,27 @@ class RateResolver
         }
 
         $card = RateCard::where('effective_from', '<=', $date->toDateString())
-            ->where(function ($q) use ($user, $matter) {
-                $q->whereNull('user_id')->orWhere('user_id', $user->id);
-            })
-            ->where(function ($q) use ($matter) {
-                $q->whereNull('client_id')->orWhere('client_id', $matter->client_id);
-            })
+            ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $user->id))
+            ->where(fn ($q) => $q->whereNull('role')->when(
+                $user->role,
+                fn ($qq) => $qq->orWhere('role', $user->role),
+            ))
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhere('client_id', $matter->client_id))
+            ->where(fn ($q) => $q->whereNull('matter_type')->orWhere('matter_type', $matter->matter_type))
+            ->where(fn ($q) => $q->whereNull('activity_code_id')->when(
+                $activityCodeId,
+                fn ($qq) => $qq->orWhere('activity_code_id', $activityCodeId),
+            ))
             ->get()
             ->sortByDesc(fn (RateCard $c) => [
-                ($c->user_id ? 2 : 0) + ($c->client_id ? 1 : 0), // specificity
-                $c->effective_from->timestamp,                    // recency
+                $c->specificity(),
+                $c->effective_from->timestamp,
             ])
             ->first();
 
         if (! $card) {
             throw new DomainActionException(
-                "No rate card covers {$user->name} on this matter. Add one in Billing Settings."
+                "No rate rule covers {$user->name} on this matter. Add one in Billing Settings."
             );
         }
 
