@@ -21,6 +21,7 @@ use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
 use App\Http\Controllers\MatterController;
 use App\Http\Controllers\OfficeMessageController;
+use App\Http\Controllers\OfficeSubmissionController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\MatterTakeOnController;
 use App\Http\Controllers\ProfileController;
@@ -102,6 +103,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('office-messages/{officeMessage}/assign', [OfficeMessageController::class, 'assign'])->name('office-messages.assign');
     Route::post('office-messages/{officeMessage}/process', [OfficeMessageController::class, 'process'])->name('office-messages.process');
     Route::post('office-messages/{officeMessage}/dismiss', [OfficeMessageController::class, 'dismiss'])->name('office-messages.dismiss');
+    Route::post('office-submissions', [OfficeSubmissionController::class, 'store'])->name('office-submissions.store');
+    Route::post('office-submissions/{officeSubmission}/submit', [OfficeSubmissionController::class, 'submit'])->name('office-submissions.submit');
+    Route::delete('office-submissions/{officeSubmission}', [OfficeSubmissionController::class, 'destroy'])->name('office-submissions.destroy');
 
     // Billing: budgets
     Route::get('billing/budgets', [BudgetController::class, 'index'])->name('budgets.index');

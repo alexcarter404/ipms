@@ -11,6 +11,7 @@ use App\Exceptions\DomainActionException;
 use App\Models\CommTemplate;
 use App\Models\Matter;
 use App\Models\OfficeMessage;
+use App\Models\OfficeSubmission;
 use App\Models\Workflow;
 use App\Services\TemplateRenderer;
 use App\Services\WorkflowRunner;
@@ -36,6 +37,7 @@ class ProcessOfficeMessage
         private WorkflowRunner $workflows,
         private TemplateRenderer $renderer,
         private AddDisbursement $disbursements,
+        private AcknowledgeSubmission $acknowledge,
     ) {
     }
 
@@ -43,6 +45,11 @@ class ProcessOfficeMessage
     {
         if ($message->status === OfficeMessageStatus::Processed) {
             throw new DomainActionException('This message has already been processed.');
+        }
+
+        // Submission receipts correlate by submission id, not matter.
+        if ($message->event_type === OfficeEventType::Receipt) {
+            return $this->handleReceipt($message);
         }
 
         $matter = $message->matter;
@@ -76,6 +83,34 @@ class ProcessOfficeMessage
             $message->update([
                 'status' => OfficeMessageStatus::Processed,
                 'actions' => $log ?: ['No automated actions applied'],
+                'processed_at' => now(),
+                'error' => null,
+            ]);
+
+            return $message;
+        });
+    }
+
+    /** An office receipt for one of our outbound submissions. */
+    private function handleReceipt(OfficeMessage $message): OfficeMessage
+    {
+        $submission = OfficeSubmission::find($message->payload['submission_id'] ?? null);
+
+        if (! $submission || $submission->office !== $message->office) {
+            throw new DomainActionException('Receipt does not reference a known submission for this office.');
+        }
+
+        return DB::transaction(function () use ($message, $submission) {
+            $log = $this->acknowledge->handle(
+                $submission,
+                $message->payload['office_ref'] ?? $message->external_id,
+                $message->payload,
+            );
+
+            $message->update([
+                'matter_id' => $submission->matter_id,
+                'status' => OfficeMessageStatus::Processed,
+                'actions' => $log,
                 'processed_at' => now(),
                 'error' => null,
             ]);

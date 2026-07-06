@@ -165,6 +165,21 @@ renewal/annuity management.
   payload + automation audit per message, assign-matter for unmatched
   messages, process/dismiss, and Poll Now (also scheduled hourly via
   `ipo:poll`)
+- **Outbound submissions**: filings, office action responses, renewal
+  payments and documents are drafted as canonical packages built from
+  matter data, pushed through the same per-office connector (file-drop
+  outbox or Saloon API), and tracked draft → submitted → acknowledged.
+  Inbound **receipts** auto-acknowledge the submission, store the
+  office reference, and complete the linked docket task; failures keep
+  the error and can be retried
+- **Per-office payload transformers**: each office's filing dialect is
+  an adapter (`OfficePayloadTransformer`) that validates
+  office-specific prerequisites before anything is sent and converts
+  the canonical package into the office's wire format — the EPO Online
+  Filing transformer assembles a Form 1001-style request (applicant
+  with full address, representative, title, priority claims) plus a
+  computed fee sheet; offices without a dialect send the canonical
+  package as-is
 
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
@@ -229,21 +244,24 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 219 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 230 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
-template rendering, and the dashboard):
+office integrations (ingestion, matching, automation, outbound
+submissions + EPO payload transformation, receipts), template
+rendering, and the dashboard):
 
 ```bash
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 56 tests driving the real app —
+**End-to-end UI tests** (Playwright, 57 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
-(log time → invoice → payment), quotes, billing settings, and
+(log time → invoice → payment), quotes, billing settings, the office
+exchange (inbox review, processing, outbound submissions), and
 template-driven communication composition):
 
 ```bash

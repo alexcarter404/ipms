@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import TextareaInput from '@/Components/TextareaInput.vue';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -19,6 +20,9 @@ const props = defineProps({
     offices: Array,
     counts: Object,
     matterOptions: Array,
+    submissions: Array,
+    submissionTypes: Array,
+    openTasks: Object,
 });
 
 const form = reactive({
@@ -77,6 +81,40 @@ const dismiss = (message) =>
         preserveScroll: true,
         onSuccess: () => (selected.value = null),
     });
+
+// --- outbound submissions ---
+const showNewSubmission = ref(false);
+const viewingSubmission = ref(null);
+
+const submissionForm = useForm({
+    office: '',
+    matter_id: '',
+    submission_type: 'filing',
+    task_id: '',
+    notes: '',
+});
+
+const taskOptions = () => props.openTasks[submissionForm.matter_id] ?? [];
+
+const createSubmission = () =>
+    submissionForm
+        .transform((d) => ({ ...d, task_id: d.task_id || null, notes: d.notes || null }))
+        .post(route('office-submissions.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showNewSubmission.value = false;
+                submissionForm.reset();
+            },
+        });
+
+const submitSubmission = (submission) =>
+    router.post(route('office-submissions.submit', submission.id), {}, {
+        preserveScroll: true,
+        onSuccess: () => (viewingSubmission.value = null),
+    });
+
+const deleteSubmission = (submission) =>
+    router.delete(route('office-submissions.destroy', submission.id), { preserveScroll: true });
 
 const shortDate = (value) =>
     value
@@ -203,7 +241,152 @@ const shortDate = (value) =>
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Outbound submissions -->
+            <div class="overflow-hidden rounded-lg bg-white shadow-sm" data-testid="submissions">
+                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Outbound Submissions</h3>
+                        <p class="text-xs text-gray-500">
+                            Filings, responses and payments pushed to the offices —
+                            acknowledgement completes the linked docket task.
+                        </p>
+                    </div>
+                    <SecondaryButton @click="showNewSubmission = true">New Submission</SecondaryButton>
+                </div>
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th class="px-4 py-2.5">Created</th>
+                            <th class="px-4 py-2.5">Office</th>
+                            <th class="px-4 py-2.5">Type</th>
+                            <th class="px-4 py-2.5">Matter</th>
+                            <th class="px-4 py-2.5">Discharges task</th>
+                            <th class="px-4 py-2.5">Office ref</th>
+                            <th class="px-4 py-2.5">Status</th>
+                            <th class="px-4 py-2.5"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="submission in submissions" :key="submission.id">
+                            <td class="whitespace-nowrap px-4 py-2.5 text-gray-600">{{ shortDate(submission.created_at) }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-gray-700">{{ submission.office_name }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-gray-700">{{ submission.type_label }}</td>
+                            <td class="px-4 py-2.5">
+                                <Link :href="route('matters.show', submission.matter.id)" class="whitespace-nowrap font-medium text-indigo-600 hover:underline">
+                                    {{ submission.matter.reference }}
+                                </Link>
+                            </td>
+                            <td class="max-w-[12rem] truncate px-4 py-2.5 text-gray-600">{{ submission.task?.title ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-gray-600">{{ submission.external_ref ?? '—' }}</td>
+                            <td class="px-4 py-2.5"><StatusBadge :status="submission.status" /></td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-right text-xs">
+                                <button class="text-indigo-600 hover:underline" @click="viewingSubmission = submission">View</button>
+                                <button
+                                    v-if="['draft', 'failed'].includes(submission.status)"
+                                    class="ml-2 font-medium text-indigo-600 hover:underline"
+                                    @click="submitSubmission(submission)"
+                                >
+                                    Submit
+                                </button>
+                                <button
+                                    v-if="submission.status === 'draft'"
+                                    class="ml-2 text-red-600 hover:underline"
+                                    @click="deleteSubmission(submission)"
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-if="!submissions.length">
+                            <td colspan="8" class="px-4 py-6 text-center text-gray-500">
+                                No outbound submissions yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- New submission modal -->
+        <Modal :show="showNewSubmission" @close="showNewSubmission = false">
+            <div class="space-y-4 p-6">
+                <h3 class="text-lg font-semibold text-gray-800">New Office Submission</h3>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel value="Office" />
+                        <SelectInput v-model="submissionForm.office" :options="offices" placeholder="Select…" class="mt-1" />
+                    </div>
+                    <div>
+                        <InputLabel value="Type" />
+                        <SelectInput v-model="submissionForm.submission_type" :options="submissionTypes" class="mt-1" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <InputLabel value="Matter" />
+                        <SelectInput
+                            v-model="submissionForm.matter_id"
+                            :options="matterOptions.map((m) => ({ value: m.id, label: `${m.reference} — ${m.title}` }))"
+                            placeholder="Select…"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <InputLabel value="Discharges task (optional)" />
+                        <SelectInput
+                            v-model="submissionForm.task_id"
+                            :options="taskOptions()"
+                            placeholder="—"
+                            class="mt-1"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            Completed automatically when the office acknowledges the submission.
+                        </p>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <InputLabel value="Notes" />
+                        <TextareaInput v-model="submissionForm.notes" class="mt-1" rows="2" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <SecondaryButton @click="showNewSubmission = false">Cancel</SecondaryButton>
+                    <PrimaryButton
+                        :disabled="submissionForm.processing || !submissionForm.office || !submissionForm.matter_id"
+                        @click="createSubmission"
+                    >
+                        Create Draft
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Submission detail modal -->
+        <Modal :show="viewingSubmission !== null" max-width="2xl" @close="viewingSubmission = null">
+            <div v-if="viewingSubmission" class="space-y-4 p-6" data-testid="submission-detail">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        {{ viewingSubmission.type_label }} — {{ viewingSubmission.office_name }}
+                    </h3>
+                    <StatusBadge :status="viewingSubmission.status" />
+                </div>
+                <dl class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div class="flex justify-between"><dt class="text-gray-500">Created by</dt><dd class="text-gray-700">{{ viewingSubmission.created_by }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Submitted</dt><dd class="text-gray-700">{{ viewingSubmission.submitted_at ? shortDate(viewingSubmission.submitted_at) : '—' }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Acknowledged</dt><dd class="text-gray-700">{{ viewingSubmission.acknowledged_at ? shortDate(viewingSubmission.acknowledged_at) : '—' }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Office ref</dt><dd class="text-gray-700">{{ viewingSubmission.external_ref ?? '—' }}</dd></div>
+                </dl>
+                <div v-if="viewingSubmission.error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                    {{ viewingSubmission.error }}
+                </div>
+                <div class="text-sm">
+                    <h4 class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Package</h4>
+                    <pre class="max-h-56 overflow-auto rounded-md bg-gray-50 p-3 text-xs text-gray-700">{{ JSON.stringify(viewingSubmission.payload, null, 2) }}</pre>
+                </div>
+                <div v-if="['draft', 'failed'].includes(viewingSubmission.status)" class="flex justify-end gap-3">
+                    <SecondaryButton @click="viewingSubmission = null">Close</SecondaryButton>
+                    <PrimaryButton @click="submitSubmission(viewingSubmission)">Submit to Office</PrimaryButton>
+                </div>
+            </div>
+        </Modal>
 
         <!-- Detail / review modal -->
         <Modal :show="selected !== null" max-width="2xl" @close="selected = null">

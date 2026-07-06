@@ -19,6 +19,20 @@ class FileDropConnector implements IpoConnector
         return $this->office;
     }
 
+    public function submit(array $payload): array
+    {
+        $disk = Storage::disk('local');
+        $outbox = config('integrations.outbox_path');
+        $disk->makeDirectory($outbox);
+        $disk->put(
+            sprintf('%s/%s-submission-%s.json', $outbox, $this->office, $payload['submission_id']),
+            json_encode($payload, JSON_PRETTY_PRINT)
+        );
+
+        // File exchanges acknowledge later via an inbound 'receipt'.
+        return ['acknowledged' => false, 'external_ref' => null, 'receipt' => null];
+    }
+
     public function fetch(): array
     {
         $disk = Storage::disk('local');
