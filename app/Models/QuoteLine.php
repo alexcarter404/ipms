@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class QuoteLine extends Model
+class QuoteLine extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'quote_id', 'description', 'quantity', 'unit_amount', 'line_total', 'sort_order',
     ];

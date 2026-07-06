@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BillingAgreementController;
 use App\Http\Controllers\BillingSettingsController;
 use App\Http\Controllers\BudgetController;
@@ -106,6 +107,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('office-submissions', [OfficeSubmissionController::class, 'store'])->name('office-submissions.store');
     Route::post('office-submissions/{officeSubmission}/submit', [OfficeSubmissionController::class, 'submit'])->name('office-submissions.submit');
     Route::delete('office-submissions/{officeSubmission}', [OfficeSubmissionController::class, 'destroy'])->name('office-submissions.destroy');
+
+    // Audit log: roll a record back/forward across an update entry
+    Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
 
     // Billing: budgets
     Route::get('billing/budgets', [BudgetController::class, 'index'])->name('budgets.index');

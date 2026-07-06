@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\MatterType;
 use App\Enums\TimekeeperRole;
 use Illuminate\Database\Eloquent\Model;
@@ -12,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * grade (role), client, matter type and activity code. Null dimensions
  * match anything; the most specific matching rule wins.
  */
-class RateCard extends Model
+class RateCard extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'user_id', 'role', 'client_id', 'matter_type', 'activity_code_id',
         'currency_code', 'hourly_rate', 'effective_from',

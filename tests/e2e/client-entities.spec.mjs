@@ -9,10 +9,10 @@ test.describe('Client entities', () => {
         await expect(page.getByRole('heading', { name: 'Entities' })).toBeVisible();
         // Two seeded entities: GB default + US
         await expect(page.getByText('Acme Industries Ltd').nth(1)).toBeVisible();
-        await expect(page.getByText('Acme Industries Inc')).toBeVisible();
+        await expect(page.getByText('Acme Industries Inc').first()).toBeVisible();
         await expect(page.getByText('Default', { exact: true })).toBeVisible();
-        await expect(page.getByText(/us-invoices@acme\.example/)).toBeVisible();
-        await expect(page.getByText(/ref PO-IP-2026/)).toBeVisible();
+        await expect(page.getByText(/us-invoices@acme\.example/).first()).toBeVisible();
+        await expect(page.getByText(/ref PO-IP-2026/).first()).toBeVisible();
     });
 
     test('an entity can be added with its own billing destination', async ({ page }) => {
@@ -27,8 +27,8 @@ test.describe('Client entities', () => {
         await page.getByRole('button', { name: 'Add Entity' }).click();
 
         await expect(page.getByText('Entity added.')).toBeVisible();
-        await expect(page.getByText('NovaTech Austria GmbH')).toBeVisible();
-        await expect(page.getByText(/rechnungen@novatech\.example/)).toBeVisible();
+        await expect(page.getByText('NovaTech Austria GmbH').first()).toBeVisible();
+        await expect(page.getByText(/rechnungen@novatech\.example/).first()).toBeVisible();
     });
 
     test('matter overview names its billing entity, explicit or fallback', async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe('Client entities', () => {
         await page.getByRole('link', { name: 'P-2021-0003' }).click();
 
         await expect(page.getByText('Billing entity')).toBeVisible();
-        await expect(page.getByText('Acme Industries Inc')).toBeVisible();
+        await expect(page.getByText('Acme Industries Inc').first()).toBeVisible();
 
         // P-2021-0001 falls back to the client default
         await page.goto('/matters');
@@ -65,6 +65,6 @@ test.describe('Client entities', () => {
         await page.getByRole('button', { name: 'Save Changes' }).click();
 
         await expect(page.getByText('Matter updated.')).toBeVisible();
-        await expect(page.getByText('Acme Industries Inc')).toBeVisible();
+        await expect(page.getByText('Acme Industries Inc').first()).toBeVisible();
     });
 });

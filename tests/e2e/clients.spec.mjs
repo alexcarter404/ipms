@@ -18,7 +18,7 @@ test.describe('Clients', () => {
         await page.getByRole('link', { name: 'ACME' }).click();
 
         await expect(page.getByRole('heading', { name: /Acme Industries Ltd/ })).toBeVisible();
-        await expect(page.getByText('Sarah Bennett')).toBeVisible();
+        await expect(page.getByText('Sarah Bennett').first()).toBeVisible();
         await expect(page.getByRole('link', { name: 'P-2021-0001' })).toBeVisible();
     });
 
@@ -39,6 +39,6 @@ test.describe('Clients', () => {
         await field(page, 'Email').fill('pat@e2e.example');
         await page.getByRole('button', { name: 'Save Contact' }).click();
 
-        await expect(page.getByText('Pat Tester')).toBeVisible();
+        await expect(page.getByText('Pat Tester').first()).toBeVisible();
     });
 });

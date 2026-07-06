@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\MatterStatus;
 use App\Enums\MatterType;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,8 +14,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Matter extends Model
+class Matter extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
@@ -162,6 +164,11 @@ class Matter extends Model
     public function budgets(): HasMany
     {
         return $this->hasMany(Budget::class)->latest();
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(OfficeSubmission::class)->latest();
     }
 
     /** The currency this matter is billed in: agreement > entity > firm base. */

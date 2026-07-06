@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\BillableStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Disbursement extends Model
+class Disbursement extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'matter_id', 'date', 'description', 'supplier', 'cost_amount',
         'cost_currency', 'markup_pct', 'amount', 'base_amount', 'currency_code', 'status',

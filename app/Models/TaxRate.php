@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
-class TaxRate extends Model
+class TaxRate extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = ['name', 'rate', 'country_code', 'is_default'];
 
     protected function casts(): array

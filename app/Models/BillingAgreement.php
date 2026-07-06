@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\AgreementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class BillingAgreement extends Model
+class BillingAgreement extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'matter_id', 'client_entity_id', 'type', 'currency_code',
         'increment_minutes', 'blended_rate', 'cap_amount', 'fixed_amount',
