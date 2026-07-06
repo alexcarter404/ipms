@@ -21,8 +21,8 @@ class Budget extends Model implements Auditable
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'base_amount' => 'decimal:2',
+            'amount' => \App\Casts\Money::class,
+            'base_amount' => \App\Casts\Money::class,
         ];
     }
 

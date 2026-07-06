@@ -21,9 +21,9 @@ class BillingAgreement extends Model implements Auditable
     {
         return [
             'type' => AgreementType::class,
-            'blended_rate' => 'decimal:2',
-            'cap_amount' => 'decimal:2',
-            'fixed_amount' => 'decimal:2',
+            'blended_rate' => \App\Casts\Money::class,
+            'cap_amount' => \App\Casts\Money::class,
+            'fixed_amount' => \App\Casts\Money::class,
             'default_markup_pct' => 'decimal:2',
             'requires_task_codes' => 'boolean',
         ];

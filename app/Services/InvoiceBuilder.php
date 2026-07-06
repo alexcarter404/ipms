@@ -93,7 +93,7 @@ class InvoiceBuilder
                 $this->addMatterLines($invoice, $set['matter'], $set['items'], $currency, $sort);
             }
 
-            $subtotal = round((float) $invoice->lines()->sum('line_total'), 2);
+            $subtotal = \App\Support\MoneyMinor::fromMinor($invoice->lines()->sum('line_total'));
             $taxAmount = round($subtotal * (float) $invoice->tax_pct / 100, 2);
             $invoice->update([
                 'subtotal' => $subtotal,
@@ -149,10 +149,10 @@ class InvoiceBuilder
         // Capped fee: never let this matter's time exceed what remains
         // under its cap.
         if ($agreement?->type === AgreementType::Capped && $agreement->cap_amount !== null) {
-            $alreadyBilled = (float) $matter->timeEntries()
+            $alreadyBilled = \App\Support\MoneyMinor::fromMinor($matter->timeEntries()
                 ->where('status', BillableStatus::Billed)
                 ->whereNotIn('id', $items['time']->pluck('id'))
-                ->sum('amount');
+                ->sum('amount'));
             $excess = round($alreadyBilled + $timeTotal - (float) $agreement->cap_amount, 2);
 
             if ($excess > 0) {

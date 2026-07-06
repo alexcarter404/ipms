@@ -142,7 +142,7 @@ class OfficeIntegrationTest extends TestCase
 
         // Official fee recorded at cost, converted to billing currency
         $disbursement = $matter->disbursements()->first();
-        $this->assertSame('100.00', $disbursement->amount); // 125 USD / 1.25
+        $this->assertSame(100.0, $disbursement->amount); // 125 USD / 1.25
         $this->assertSame('European Patent Office', $disbursement->supplier);
 
         // Draft comm generated for review, never sent

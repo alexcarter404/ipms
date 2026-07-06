@@ -79,12 +79,18 @@ class BudgetRepository
 
         $counted = fn ($q) => $q->whereIn('status', [BillableStatus::Billable, BillableStatus::Billed]);
 
-        $consumed = (float) $matter->timeEntries()->tap($counted)->sum('amount')
-            + (float) $matter->disbursements()->tap($counted)->sum('amount')
-            + (float) $matter->charges()->tap($counted)->sum('amount');
-        $consumedBase = (float) $matter->timeEntries()->tap($counted)->sum('base_amount')
-            + (float) $matter->disbursements()->tap($counted)->sum('base_amount')
-            + (float) $matter->charges()->tap($counted)->sum('base_amount');
+        // Query-level sums return raw minor units; collection sums on
+        // loaded models (below) already come through the Money cast.
+        $consumed = \App\Support\MoneyMinor::fromMinor(
+            (int) $matter->timeEntries()->tap($counted)->sum('amount')
+            + (int) $matter->disbursements()->tap($counted)->sum('amount')
+            + (int) $matter->charges()->tap($counted)->sum('amount')
+        );
+        $consumedBase = \App\Support\MoneyMinor::fromMinor(
+            (int) $matter->timeEntries()->tap($counted)->sum('base_amount')
+            + (int) $matter->disbursements()->tap($counted)->sum('base_amount')
+            + (int) $matter->charges()->tap($counted)->sum('base_amount')
+        );
 
         $budgetBase = round((float) $budgets->sum('base_amount'), 2);
 

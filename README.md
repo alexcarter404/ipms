@@ -103,6 +103,12 @@ renewal/annuity management.
   filterable, sortable, paginated table built to stay fast at scale
 - **Disbursements** captured at cost in any currency, marked up
   (per-item or agreement default) and converted to the billing currency
+- **Exact money storage**: every monetary value is stored as integer
+  minor units (fixed-point hundredths) behind a model-level Money cast
+  — services and the UI work in ordinary 12.34 values, the database
+  holds 1234, and SUM() over integers can never accumulate rounding
+  drift. Percentages, FX rates and quantities are ratios, not money,
+  and keep decimal types
 - **Multi-currency**: billing currency set per client entity (or
   overridden per agreement); daily exchange rates against the firm's
   base currency, synced from an ECB-backed provider
@@ -261,7 +267,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 236 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 238 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),

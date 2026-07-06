@@ -25,8 +25,8 @@ class RenewalRule extends Model implements Auditable
         return [
             'matter_type' => MatterType::class,
             'offsets_months' => 'array',
-            'default_official_fee' => 'decimal:2',
-            'default_service_fee' => 'decimal:2',
+            'default_official_fee' => \App\Casts\Money::class,
+            'default_service_fee' => \App\Casts\Money::class,
             'is_active' => 'boolean',
         ];
     }

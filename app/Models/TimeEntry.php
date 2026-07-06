@@ -21,9 +21,9 @@ class TimeEntry extends Model implements Auditable
     {
         return [
             'work_date' => 'date',
-            'rate' => 'decimal:2',
-            'amount' => 'decimal:2',
-            'base_amount' => 'decimal:2',
+            'rate' => \App\Casts\Money::class,
+            'amount' => \App\Casts\Money::class,
+            'base_amount' => \App\Casts\Money::class,
             'status' => BillableStatus::class,
         ];
     }

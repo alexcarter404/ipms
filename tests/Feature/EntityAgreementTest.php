@@ -48,7 +48,7 @@ class EntityAgreementTest extends TestCase
         $this->logTime($matter, 16);
 
         $entry = $matter->timeEntries()->first();
-        $this->assertSame('225.00', $entry->rate);     // blended, not the rate card
+        $this->assertSame(225.0, $entry->rate);     // blended, not the rate card
         $this->assertSame(30, $entry->billed_minutes); // entity's 15-minute blocks
     }
 
@@ -63,7 +63,7 @@ class EntityAgreementTest extends TestCase
         $this->logTime($matter);
 
         // Hourly override: the rate card wins, not the entity's blended rate
-        $this->assertSame('100.00', $matter->timeEntries()->first()->rate);
+        $this->assertSame(100.0, $matter->timeEntries()->first()->rate);
     }
 
     public function test_removing_the_override_falls_back_to_the_entity_default(): void
@@ -110,7 +110,7 @@ class EntityAgreementTest extends TestCase
 
         $invoice = Invoice::first();
         $this->assertSame(1, $invoice->lines()->count());
-        $this->assertSame('900.00', $invoice->subtotal);
+        $this->assertSame(900.0, $invoice->subtotal);
         $this->assertSame('billable', $matter->timeEntries()->first()->status->value);
     }
 

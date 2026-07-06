@@ -16,7 +16,7 @@ class Payment extends Model implements Auditable
     {
         return [
             'date' => 'date',
-            'amount' => 'decimal:2',
+            'amount' => \App\Casts\Money::class,
             'method' => PaymentMethod::class,
         ];
     }
