@@ -18,48 +18,56 @@ test.describe('Audit history', () => {
         const amendment = trail.locator('li', { hasText: 'Jordan Reeves' }).first();
         await expect(amendment).toContainText('Matter — P-2021-0001');
         await expect(amendment).toContainText('description');
-        await expect(amendment.getByRole('button', { name: '⟲ Roll back' })).toBeVisible();
+        await expect(amendment.getByRole('button', { name: '⟲ Restore this state' })).toBeVisible();
 
         // Creation events flow in from the matter's children too
         await expect(trail.locator('li', { hasText: 'Budget' }).first()).toContainText('created');
     });
 
-    test('an edit is audited and can be rolled back to the previous state', async ({ page }) => {
+    test('an edit is audited and any captured state can be restored', async ({ page }) => {
         await openMatter(page, 'P-2021-0001');
 
-        // Amend the title
+        // Amend the title twice, leaving two captured states in the trail
         await page.getByRole('link', { name: 'Edit', exact: true }).click();
         await field(page, 'Title').fill('Self-sealing valve assembly Mk II');
         await page.getByRole('button', { name: 'Save Changes' }).click();
         await expect(page.getByText('Matter updated.')).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'P-2021-0001' })).toBeVisible();
-        await expect(page.getByText('Self-sealing valve assembly Mk II')).toBeVisible();
+        await page.getByRole('link', { name: 'Edit', exact: true }).click();
+        await field(page, 'Title').fill('Self-sealing valve assembly Mk III');
+        await page.getByRole('button', { name: 'Save Changes' }).click();
+        await expect(page.getByText('Matter updated.')).toBeVisible();
+        await expect(page.getByText('Self-sealing valve assembly Mk III')).toBeVisible();
 
-        // The change sits at the top of the history with its before/after
+        // Both edits sit at the top of the history with their diffs
         await page.getByRole('tab', { name: 'History' }).click();
-        const entry = page.locator('[data-testid="audit-trail"] li').first();
-        await expect(entry).toContainText('updated');
-        await expect(entry).toContainText('Alex Carter');
-        await expect(entry).toContainText('Self-sealing valve assembly Mk II');
+        const entries = page.locator('[data-testid="audit-trail"] li');
+        await expect(entries.first()).toContainText('Self-sealing valve assembly Mk III');
+        await expect(entries.first()).toContainText('Alex Carter');
 
-        // Time-travel back to the pre-change state
-        await entry.getByRole('button', { name: '⟲ Roll back' }).click();
-        await page
-            .locator('.p-confirmdialog')
-            .getByRole('button', { name: 'Roll back' })
-            .click();
+        // Restore the state the first edit produced (Mk II)
+        const mkTwo = entries.nth(1);
+        await expect(mkTwo).toContainText('Self-sealing valve assembly Mk II');
+        await mkTwo.getByRole('button', { name: '⟲ Restore this state' }).click();
+        await page.locator('.p-confirmdialog').getByRole('button', { name: 'Restore' }).click();
         await expect(
-            page.getByText('Rolled back — the record now carries the values from before this change.')
+            page.getByText('State restored — the record now carries the values from this entry.')
         ).toBeVisible();
+        await expect(page.getByRole('banner').getByText('Self-sealing valve assembly Mk II')).toBeVisible();
 
-        // The reload lands back on Overview with the original title restored
-        await expect(page.getByText('Self-sealing valve assembly', { exact: true }).first()).toBeVisible();
-
-        // ...and the rollback itself was audited as the newest entry
+        // The matter's created entry captures its original values — restore those
         await page.getByRole('tab', { name: 'History' }).click();
-        const newest = page.locator('[data-testid="audit-trail"] li').first();
-        await expect(newest).toContainText('updated');
-        await expect(newest).toContainText('Self-sealing valve assembly');
+        const created = page
+            .locator('[data-testid="audit-trail"] li', { hasText: 'Matter — P-2021-0001' })
+            .filter({ hasText: 'Created' })
+            .first();
+        await created.getByRole('button', { name: '⟲ Restore this state' }).click();
+        await page.locator('.p-confirmdialog').getByRole('button', { name: 'Restore' }).click();
+        await expect(
+            page.getByText('State restored — the record now carries the values from this entry.').first()
+        ).toBeVisible();
+        await expect(
+            page.getByRole('banner').getByText('Self-sealing valve assembly', { exact: true })
+        ).toBeVisible();
     });
 
     test('the client screen shows its audit history including entities', async ({ page }) => {

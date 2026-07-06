@@ -98,8 +98,10 @@ class AuditRepository
             'at' => $audit->created_at->toDateTimeString(),
             'at_human' => $audit->created_at->diffForHumans(),
             'changes' => $this->changes($audit),
-            // Only an update snapshot has a before/after to travel between
-            'can_transition' => $audit->event === 'updated',
+            // Created and update entries capture a restorable state;
+            // a delete entry leaves nothing to apply
+            'can_transition' => in_array($audit->event, ['created', 'updated'], true)
+                && ! empty($audit->new_values),
         ])->all();
     }
 

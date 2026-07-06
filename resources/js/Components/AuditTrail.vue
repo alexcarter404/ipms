@@ -19,28 +19,18 @@ const eventSeverity = {
 
 const confirm = useConfirm();
 
-const transition = (audit, direction) => {
-    const wording =
-        direction === 'back'
-            ? 'Roll the record back to the values it had before this change?'
-            : 'Roll the record forward to the values this change produced?';
-
+// Version-history semantics: each entry captures the state it left the
+// record in; restoring applies exactly those values.
+const restore = (audit) =>
     confirm.require({
-        message: `${wording} The transition is audited too.`,
-        header: 'Time travel',
+        message:
+            'Restore the record to the values captured by this entry? The restore is audited too.',
+        header: 'Restore state',
         rejectProps: { label: 'Cancel', severity: 'secondary', outlined: true, size: 'small' },
-        acceptProps: {
-            label: direction === 'back' ? 'Roll back' : 'Roll forward',
-            size: 'small',
-        },
+        acceptProps: { label: 'Restore', size: 'small' },
         accept: () =>
-            router.post(
-                route('audits.transition', audit.id),
-                { direction },
-                { preserveScroll: true }
-            ),
+            router.post(route('audits.transition', audit.id), {}, { preserveScroll: true }),
     });
-};
 </script>
 
 <template>
@@ -95,12 +85,9 @@ const transition = (audit, direction) => {
                     </div>
                 </dl>
 
-                <div v-if="audit.can_transition" class="mt-2 flex gap-2">
-                    <SecondaryButton class="!px-2 !py-1 !text-xs" @click="transition(audit, 'back')">
-                        ⟲ Roll back
-                    </SecondaryButton>
-                    <SecondaryButton class="!px-2 !py-1 !text-xs" @click="transition(audit, 'forward')">
-                        ⟳ Roll forward
+                <div v-if="audit.can_transition" class="mt-2">
+                    <SecondaryButton class="!px-2 !py-1 !text-xs" @click="restore(audit)">
+                        ⟲ Restore this state
                     </SecondaryButton>
                 </div>
             </li>

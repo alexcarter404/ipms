@@ -264,8 +264,8 @@ const officialDates = computed(() => [
                 <h3 class="mb-1 text-base font-semibold text-gray-900">Audit history</h3>
                 <p class="mb-5 text-sm text-gray-500">
                     Every change to this matter and its tasks, renewals, communications, billing
-                    items and submissions — who, when, and what moved. Update entries can be
-                    rolled back or forward.
+                    items and submissions — who, when, and what moved. Each entry captures a
+                    state the record can be restored to.
                 </p>
                 <AuditTrail
                     :audits="audits"

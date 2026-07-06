@@ -8,17 +8,20 @@ use OwenIt\Auditing\Exceptions\AuditableTransitionException;
 use OwenIt\Auditing\Models\Audit;
 
 /**
- * Time-travel on an audit entry: roll the record back to the values it
- * had before the change, or forward to the values the change produced.
- * The transition itself is saved — and therefore audited — so the trail
- * always shows who moved the record and where to.
+ * Version-history semantics on the audit trail: every entry captures
+ * the state it left the record in (a created entry holds the original
+ * values, an update entry the values it produced). Restoring applies
+ * that captured state via the package's transitionTo — direction is
+ * the timeline's problem, not the user's. The restore itself is saved
+ * — and therefore audited — so the trail always shows who moved the
+ * record and where to.
  */
 class TransitionAudit
 {
-    public function handle(Audit $audit, string $direction): Model
+    public function handle(Audit $audit): Model
     {
-        if ($audit->event !== 'updated') {
-            throw new DomainActionException('Only update entries carry a before/after state to travel between.');
+        if (empty($audit->new_values)) {
+            throw new DomainActionException("This entry doesn't carry a restorable state.");
         }
 
         $auditable = $audit->auditable;
@@ -28,7 +31,7 @@ class TransitionAudit
         }
 
         try {
-            $auditable->transitionTo($audit, $direction === 'back');
+            $auditable->transitionTo($audit);
         } catch (AuditableTransitionException $e) {
             throw new DomainActionException("Can't restore this state: {$e->getMessage()}");
         }

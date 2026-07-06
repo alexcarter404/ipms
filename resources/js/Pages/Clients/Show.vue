@@ -277,7 +277,7 @@ const removeContact = (contact) =>
                 <h3 class="mb-1 font-semibold text-gray-800">Audit history</h3>
                 <p class="mb-5 text-sm text-gray-500">
                     Every change to this client, its entities and contacts — who, when, and what
-                    moved. Update entries can be rolled back or forward.
+                    moved. Each entry captures a state the record can be restored to.
                 </p>
                 <AuditTrail :audits="audits" empty-text="No audited activity on this client yet." />
             </div>

@@ -65,56 +65,56 @@ class AuditTest extends TestCase
         $this->assertArrayNotHasKey('password', $audit->old_values);
     }
 
-    public function test_an_update_audit_can_be_rolled_back_and_forward(): void
+    public function test_any_captured_state_can_be_restored_from_the_trail(): void
     {
         $this->actingAs($this->user);
 
         $matter = Matter::factory()->create(['title' => 'Original title']);
         $matter->update(['title' => 'Amended title']);
+        $matter->update(['title' => 'Final title']);
 
-        $audit = Audit::where('auditable_type', Matter::class)
+        $audits = Audit::where('auditable_type', Matter::class)
             ->where('auditable_id', $matter->id)
-            ->where('event', 'updated')
-            ->firstOrFail();
+            ->oldest('id')
+            ->get();
 
-        // Roll back to the pre-change state
-        $this->post(route('audits.transition', $audit), ['direction' => 'back'])
-            ->assertSessionHas('success');
-        $this->assertSame('Original title', $matter->fresh()->title);
-
-        // ...and forward to the post-change state again
-        $this->post(route('audits.transition', $audit), ['direction' => 'forward'])
+        // Restore the state the first amendment produced
+        $this->post(route('audits.transition', $audits[1]))
             ->assertSessionHas('success');
         $this->assertSame('Amended title', $matter->fresh()->title);
 
-        // The transitions themselves were audited, keeping the trail honest
-        $this->assertSame(4, Audit::where('auditable_type', Matter::class)
+        // The created entry captures the original values — restore those
+        $this->post(route('audits.transition', $audits[0]))
+            ->assertSessionHas('success');
+        $this->assertSame('Original title', $matter->fresh()->title);
+
+        // The restores themselves were audited, keeping the trail honest
+        $this->assertSame(5, Audit::where('auditable_type', Matter::class)
             ->where('auditable_id', $matter->id)->count());
     }
 
-    public function test_transition_guards(): void
+    public function test_restore_guards(): void
     {
         $this->actingAs($this->user);
 
-        $matter = Matter::factory()->create();
-        $created = Audit::where('auditable_type', Matter::class)
-            ->where('auditable_id', $matter->id)
-            ->where('event', 'created')
-            ->firstOrFail();
-
-        // A created entry has no before/after pair to travel between
-        $this->post(route('audits.transition', $created), ['direction' => 'back'])
-            ->assertSessionHas('error');
-
-        // A deleted record can't be restored through its audit trail
+        $matter = Matter::factory()->create(['title' => 'Guarded']);
         $matter->update(['title' => 'Changed']);
         $updated = Audit::where('auditable_type', Matter::class)
             ->where('auditable_id', $matter->id)
             ->where('event', 'updated')
             ->firstOrFail();
-        $matter->delete();
 
-        $this->post(route('audits.transition', $updated), ['direction' => 'back'])
+        // A deleted record can't be restored through its audit trail
+        $matter->delete();
+        $this->post(route('audits.transition', $updated))
+            ->assertSessionHas('error');
+
+        // A delete entry captures no state to apply
+        $deleted = Audit::where('auditable_type', Matter::class)
+            ->where('auditable_id', $matter->id)
+            ->where('event', 'deleted')
+            ->firstOrFail();
+        $this->post(route('audits.transition', $deleted))
             ->assertSessionHas('error');
     }
 
