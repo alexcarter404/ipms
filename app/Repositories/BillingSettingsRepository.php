@@ -56,9 +56,9 @@ class BillingSettingsRepository
 
     public function rateCards(): Collection
     {
-        return RateCard::with(['user:id,name', 'client:id,name'])
-            ->orderByRaw('user_id is null')
-            ->orderBy('effective_from', 'desc')
-            ->get();
+        return RateCard::with(['user:id,name', 'client:id,name', 'activityCode:id,code'])
+            ->get()
+            ->sortByDesc(fn (RateCard $card) => [$card->specificity(), $card->effective_from->timestamp])
+            ->values();
     }
 }

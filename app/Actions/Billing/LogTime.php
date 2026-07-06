@@ -24,7 +24,9 @@ class LogTime
             ?? config('billing.default_increment_minutes');
         $billedMinutes = (int) (ceil($data['minutes'] / $increment) * $increment);
 
-        $rate = $data['rate'] ?? $this->rates->resolve($matter, $user, $workDate);
+        $rate = $data['rate'] ?? $this->rates->resolve(
+            $matter, $user, $workDate, $data['activity_code_id'] ?? null
+        );
         $status = BillableStatus::from($data['status'] ?? BillableStatus::Billable->value);
 
         return $matter->timeEntries()->create([

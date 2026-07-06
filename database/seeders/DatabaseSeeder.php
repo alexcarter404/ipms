@@ -35,11 +35,13 @@ class DatabaseSeeder extends Seeder
         $admin = User::factory()->create([
             'name' => 'Alex Carter',
             'email' => 'admin@example.com',
+            'role' => 'partner',
         ]);
 
         $attorney = User::factory()->create([
             'name' => 'Jordan Reeves',
             'email' => 'jordan@example.com',
+            'role' => 'attorney',
         ]);
 
         // --- Clients & contacts ---
@@ -326,6 +328,11 @@ class DatabaseSeeder extends Seeder
             ->update(['currency_code' => 'EUR', 'tax_rate_id' => $zeroRated->id]);
 
         RateCard::create(['currency_code' => 'GBP', 'hourly_rate' => 250, 'effective_from' => now()->subYears(2)]);
+        // Grade-based rules: joiners inherit their grade's rate…
+        RateCard::create(['role' => 'attorney', 'currency_code' => 'GBP', 'hourly_rate' => 240, 'effective_from' => now()->subYears(2)]);
+        RateCard::create(['role' => 'case_manager', 'currency_code' => 'GBP', 'hourly_rate' => 150, 'effective_from' => now()->subYears(2)]);
+        RateCard::create(['role' => 'paralegal', 'currency_code' => 'GBP', 'hourly_rate' => 120, 'effective_from' => now()->subYears(2)]);
+        // …while personal rules take precedence over the grade
         RateCard::create(['user_id' => $admin->id, 'currency_code' => 'GBP', 'hourly_rate' => 320, 'effective_from' => now()->subYears(2)]);
         RateCard::create(['user_id' => $attorney->id, 'currency_code' => 'GBP', 'hourly_rate' => 260, 'effective_from' => now()->subYears(2)]);
 
