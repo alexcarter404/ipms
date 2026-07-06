@@ -13,6 +13,9 @@ class DraftInvoiceRequest extends FormRequest
             'include_disbursements' => ['boolean'],
             'include_charges' => ['boolean'],
             'through' => ['nullable', 'date'],
+            // Consolidated (entity-level) drafts can bill a subset
+            'matter_ids' => ['nullable', 'array'],
+            'matter_ids.*' => ['integer', 'exists:matters,id'],
         ];
     }
 }

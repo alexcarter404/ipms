@@ -24,7 +24,7 @@ class InvoiceRepository
             'client:id,name',
             'entity',
             'matter:id,reference,title',
-            'lines',
+            'lines.matter:id,reference,title',
             'payments',
         ]);
     }

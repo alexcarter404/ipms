@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ClientEntity extends Model
 {
@@ -40,6 +42,12 @@ class ClientEntity extends Model
         return $this->belongsTo(TaxRate::class);
     }
 
+    /** The default fee agreement for matters billed to this entity. */
+    public function billingAgreement(): HasOne
+    {
+        return $this->hasOne(BillingAgreement::class);
+    }
+
     /** Make this the client's default entity (exactly one per client). */
     public function makeDefault(): void
     {
@@ -51,5 +59,21 @@ class ClientEntity extends Model
     public function effectiveBillingAddress(): ?string
     {
         return $this->billing_address ?? $this->address;
+    }
+
+    /**
+     * Matters billed to this entity: explicitly assigned ones, plus the
+     * client's unassigned matters when this is the default entity.
+     */
+    public function billedMattersQuery(): Builder
+    {
+        return Matter::where('client_id', $this->client_id)
+            ->where(function (Builder $q) {
+                $q->where('client_entity_id', $this->id);
+
+                if ($this->is_default) {
+                    $q->orWhereNull('client_entity_id');
+                }
+            });
     }
 }

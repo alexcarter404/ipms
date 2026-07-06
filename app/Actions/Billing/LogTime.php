@@ -20,7 +20,7 @@ class LogTime
         $user = User::findOrFail($data['user_id']);
         $workDate = Carbon::parse($data['work_date']);
 
-        $increment = $matter->billingAgreement?->increment_minutes
+        $increment = $matter->effectiveBillingAgreement()?->increment_minutes
             ?? config('billing.default_increment_minutes');
         $billedMinutes = (int) (ceil($data['minutes'] / $increment) * $increment);
 

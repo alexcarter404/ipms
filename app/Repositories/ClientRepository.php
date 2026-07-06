@@ -26,7 +26,7 @@ class ClientRepository
     {
         return $client->load([
             'contacts' => fn ($q) => $q->orderByDesc('is_primary')->orderBy('name'),
-            'entities' => fn ($q) => $q->withCount('matters'),
+            'entities' => fn ($q) => $q->withCount('matters')->with('billingAgreement'),
         ]);
     }
 

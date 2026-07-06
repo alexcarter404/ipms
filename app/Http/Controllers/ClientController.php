@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Clients\CreateClient;
 use App\Actions\Clients\DeleteClient;
 use App\Actions\Clients\UpdateClient;
+use App\Enums\AgreementType;
 use App\Enums\ContactType;
 use App\Exceptions\DomainActionException;
 use App\Http\Requests\ClientRequest;
@@ -56,6 +57,11 @@ class ClientController extends Controller
             'matters' => $this->clients->paginateMatters($client),
             'billingCurrencies' => Currencies::options(),
             'taxRates' => $billingSettings->taxRateOptions(),
+            // Entity defaults can't be stage agreements (milestones are matter-specific)
+            'agreementTypes' => array_values(array_filter(
+                AgreementType::options(),
+                fn ($option) => $option['value'] !== 'stage'
+            )),
         ]);
     }
 

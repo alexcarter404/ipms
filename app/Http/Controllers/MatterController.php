@@ -115,7 +115,10 @@ class MatterController extends Controller
                 'registration' => $matter->registration_date?->toDateString(),
                 'priority' => $matter->priority_date?->toDateString(),
             ],
-            'billingAgreement' => $matter->billingAgreement?->load('stages.charge'),
+            'billingAgreement' => $matter->effectiveBillingAgreement()?->load('stages.charge'),
+            'billingAgreementSource' => $matter->billingAgreement
+                ? 'matter'
+                : ($matter->effectiveBillingAgreement() ? 'entity' : null),
             'billing' => array_merge($wip->forMatter($matter), [
                 'wip' => $wip->totals($matter),
                 'currency' => $matter->billingCurrency(),

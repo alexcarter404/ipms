@@ -1,6 +1,7 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
@@ -15,7 +16,62 @@ const props = defineProps({
     countries: Array,
     billingCurrencies: { type: Array, default: () => [] },
     taxRates: { type: Array, default: () => [] },
+    agreementTypes: { type: Array, default: () => [] },
 });
+
+const agreementLabel = (entity) => {
+    if (!entity.billing_agreement) return null;
+    return props.agreementTypes.find((t) => t.value === entity.billing_agreement.type)?.label
+        ?? entity.billing_agreement.type;
+};
+
+// --- entity-level default fee agreement ---
+const agreementFor = ref(null); // entity being edited, or null
+
+const agreementForm = useForm({
+    type: 'hourly',
+    currency_code: '',
+    increment_minutes: 6,
+    blended_rate: '',
+    cap_amount: '',
+    fixed_amount: '',
+    default_markup_pct: 0,
+    requires_task_codes: false,
+    notes: '',
+});
+
+const openAgreement = (entity) => {
+    const a = entity.billing_agreement;
+    agreementForm.defaults({
+        type: a?.type ?? 'hourly',
+        currency_code: a?.currency_code ?? '',
+        increment_minutes: a?.increment_minutes ?? 6,
+        blended_rate: a?.blended_rate ?? '',
+        cap_amount: a?.cap_amount ?? '',
+        fixed_amount: a?.fixed_amount ?? '',
+        default_markup_pct: a?.default_markup_pct ?? 0,
+        requires_task_codes: a?.requires_task_codes ?? false,
+        notes: a?.notes ?? '',
+    });
+    agreementForm.reset();
+    agreementForm.clearErrors();
+    agreementFor.value = entity;
+};
+
+const saveAgreement = () =>
+    agreementForm
+        .transform((d) => ({
+            ...d,
+            currency_code: d.currency_code || null,
+            blended_rate: d.blended_rate || null,
+            cap_amount: d.cap_amount || null,
+            fixed_amount: d.fixed_amount || null,
+            default_markup_pct: d.default_markup_pct || 0,
+        }))
+        .post(route('entities.agreement.save', agreementFor.value.id), {
+            preserveScroll: true,
+            onSuccess: () => (agreementFor.value = null),
+        });
 
 const editing = ref(null); // null = closed, 'new' = create, id = edit
 
@@ -138,8 +194,22 @@ const remove = (entity) =>
                             <template v-if="entity.billing_email">{{ entity.billing_email }}</template>
                             <template v-if="entity.billing_reference"> · ref {{ entity.billing_reference }}</template>
                         </div>
+                        <div class="mt-0.5 text-xs text-gray-500">
+                            Fee agreement:
+                            <span v-if="agreementLabel(entity)" class="font-medium text-gray-700">
+                                {{ agreementLabel(entity) }}
+                            </span>
+                            <span v-else>— (hourly default)</span>
+                        </div>
                     </div>
                     <div class="flex shrink-0 gap-2 text-xs">
+                        <button
+                            type="button"
+                            class="text-indigo-600 hover:underline"
+                            @click="openAgreement(entity)"
+                        >
+                            Fee agreement
+                        </button>
                         <button
                             type="button"
                             class="text-indigo-600 hover:underline"
@@ -291,5 +361,72 @@ const remove = (entity) =>
                 <SecondaryButton type="button" @click="editing = null">Cancel</SecondaryButton>
             </div>
         </form>
+
+        <!-- Entity default fee agreement modal -->
+        <Modal :show="agreementFor !== null" max-width="2xl" @close="agreementFor = null">
+            <div v-if="agreementFor" class="space-y-4 p-6">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    Default Fee Agreement — {{ agreementFor.name }}
+                </h3>
+                <p class="text-sm text-gray-600">
+                    Applies to every matter billed to this entity unless the
+                    matter sets its own override.
+                </p>
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <InputLabel value="Arrangement" />
+                        <SelectInput v-model="agreementForm.type" :options="agreementTypes" class="mt-1" />
+                        <InputError :message="agreementForm.errors.type" class="mt-1" />
+                    </div>
+                    <div>
+                        <InputLabel value="Currency" />
+                        <SelectInput
+                            v-model="agreementForm.currency_code"
+                            :options="billingCurrencies"
+                            placeholder="Entity default"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <InputLabel value="Increment (min)" />
+                        <TextInput v-model="agreementForm.increment_minutes" type="number" class="mt-1 w-full" />
+                        <InputError :message="agreementForm.errors.increment_minutes" class="mt-1" />
+                    </div>
+                    <div v-if="agreementForm.type === 'blended'">
+                        <InputLabel value="Blended rate /h" />
+                        <TextInput v-model="agreementForm.blended_rate" type="number" step="0.01" class="mt-1 w-full" />
+                        <InputError :message="agreementForm.errors.blended_rate" class="mt-1" />
+                    </div>
+                    <div v-if="agreementForm.type === 'capped'">
+                        <InputLabel value="Fee cap (per matter)" />
+                        <TextInput v-model="agreementForm.cap_amount" type="number" step="0.01" class="mt-1 w-full" />
+                        <InputError :message="agreementForm.errors.cap_amount" class="mt-1" />
+                    </div>
+                    <div v-if="agreementForm.type === 'fixed'">
+                        <InputLabel value="Fixed fee" />
+                        <TextInput v-model="agreementForm.fixed_amount" type="number" step="0.01" class="mt-1 w-full" />
+                        <InputError :message="agreementForm.errors.fixed_amount" class="mt-1" />
+                    </div>
+                    <div>
+                        <InputLabel value="Markup %" />
+                        <TextInput v-model="agreementForm.default_markup_pct" type="number" step="0.01" class="mt-1 w-full" />
+                    </div>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-gray-600">
+                    <input v-model="agreementForm.requires_task_codes" type="checkbox" class="rounded text-indigo-600" />
+                    Task-based billing — require a task code on every time entry
+                </label>
+                <div>
+                    <InputLabel value="Notes" />
+                    <TextareaInput v-model="agreementForm.notes" class="mt-1" rows="2" />
+                </div>
+                <div class="flex justify-end gap-3">
+                    <SecondaryButton @click="agreementFor = null">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="agreementForm.processing" @click="saveAgreement">
+                        Save Agreement
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
     </div>
 </template>

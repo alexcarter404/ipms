@@ -17,7 +17,7 @@ class AddDisbursement
     {
         $currency = $matter->billingCurrency();
         $markup = (float) ($data['markup_pct']
-            ?? $matter->billingAgreement?->default_markup_pct
+            ?? $matter->effectiveBillingAgreement()?->default_markup_pct
             ?? 0);
 
         // Billed amount: cost plus markup, converted to the billing currency.

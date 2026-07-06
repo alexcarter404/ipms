@@ -78,7 +78,12 @@ renewal/annuity management.
 - Renewals control centre with due-within windows (30/90/180/365 days)
 
 ### Billing
-- **Fee agreements per matter** covering the full arrangement spectrum:
+- **Fee agreements at client-entity level with case overrides**: set a
+  default arrangement on the billing entity and every matter billed to
+  it inherits it (shown as "Inherited from entity"); any matter can
+  override with its own agreement and later drop the override to fall
+  back to the entity default
+- **Fee agreements** covering the full arrangement spectrum:
   hourly (configurable 6/15-minute increments), blended hourly (one
   rate for every timekeeper), capped fee (hourly with a ceiling —
   invoices get an automatic cap-adjustment line), fixed/flat fee, and
@@ -97,6 +102,13 @@ renewal/annuity management.
   (`billing:sync-rates`, scheduled weekdays) or maintained by hand
 - **Tax rates** (e.g. UK VAT, zero-rated export) assigned per entity
   and snapshotted onto each invoice
+- **WIP dashboard** (Billing → WIP): every unbilled item in the firm,
+  grouped by the entity that gets the bill, filterable by client and
+  responsible attorney — bill an entity's whole balance or a selected
+  subset of matters in one click
+- **Consolidated invoices**: one bill per entity covering multiple
+  matters, lines grouped by matter, each matter's WIP converted into
+  the entity's currency (per-matter fee caps still respected)
 - **Quoting**: numbered quotes with lines, live totals and tax, and a
   draft → sent → accepted/declined pipeline
 - **Invoicing**: one click gathers a matter's unbilled WIP onto a draft
@@ -169,7 +181,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 172 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 186 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -179,7 +191,7 @@ template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 48 tests driving the real app —
+**End-to-end UI tests** (Playwright, 50 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
@@ -212,7 +224,8 @@ Client ─┬─ Contact (person | mailbox | organisation)
                    ├─ Renewal (annuity/renewal cycles) ── RenewalRule (schedule templates)
                    ├─ MatterTask ── WorkflowStep ── Workflow
                    ├─ Communication ── CommTemplate
-                   └─ BillingAgreement ─┬─ BillingAgreementStage
+                   └─ BillingAgreement (matter override OR entity default)
+                                        ─┬─ BillingAgreementStage
                                         ├─ TimeEntry (rate via RateCard)
                                         ├─ Disbursement (markup + FX)
                                         ├─ Charge (fixed fee | stage payment)

@@ -10,6 +10,7 @@ use App\Enums\InvoiceStatus;
 use App\Enums\PaymentMethod;
 use App\Exceptions\DomainActionException;
 use App\Http\Requests\DraftInvoiceRequest;
+use App\Models\ClientEntity;
 use App\Models\Invoice;
 use App\Models\Matter;
 use App\Repositories\ClientRepository;
@@ -63,6 +64,25 @@ class InvoiceController extends Controller
             ->with('success', sprintf(
                 'Draft invoice created — %d line(s), %s %s.',
                 $invoice->lines->count(),
+                $invoice->currency_code,
+                number_format((float) $invoice->total, 2)
+            ));
+    }
+
+    /** Consolidated draft across the matters billed to one entity. */
+    public function storeForEntity(DraftInvoiceRequest $request, ClientEntity $entity, DraftInvoice $action): RedirectResponse
+    {
+        try {
+            $invoice = $action->forEntity($entity, $request->validated());
+        } catch (DomainActionException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', sprintf(
+                'Consolidated draft created — %d line(s) across %d matter(s), %s %s.',
+                $invoice->lines->count(),
+                $invoice->lines->pluck('matter_id')->unique()->count(),
                 $invoice->currency_code,
                 number_format((float) $invoice->total, 2)
             ));

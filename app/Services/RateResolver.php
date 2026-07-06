@@ -26,7 +26,7 @@ class RateResolver
     {
         $date ??= Carbon::today();
         $currency = $matter->billingCurrency();
-        $agreement = $matter->billingAgreement;
+        $agreement = $matter->effectiveBillingAgreement();
 
         if ($agreement?->type === AgreementType::Blended && $agreement->blended_rate !== null) {
             return (float) $agreement->blended_rate;

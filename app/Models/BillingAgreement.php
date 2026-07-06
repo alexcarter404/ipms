@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class BillingAgreement extends Model
 {
     protected $fillable = [
-        'matter_id', 'type', 'currency_code', 'increment_minutes',
-        'blended_rate', 'cap_amount', 'fixed_amount', 'default_markup_pct',
-        'requires_task_codes', 'notes',
+        'matter_id', 'client_entity_id', 'type', 'currency_code',
+        'increment_minutes', 'blended_rate', 'cap_amount', 'fixed_amount',
+        'default_markup_pct', 'requires_task_codes', 'notes',
     ];
 
     protected function casts(): array
@@ -30,6 +30,11 @@ class BillingAgreement extends Model
     public function matter(): BelongsTo
     {
         return $this->belongsTo(Matter::class);
+    }
+
+    public function entity(): BelongsTo
+    {
+        return $this->belongsTo(ClientEntity::class, 'client_entity_id');
     }
 
     public function stages(): HasMany
