@@ -452,6 +452,18 @@ class DatabaseSeeder extends Seeder
             'application_no' => '17/456,789',
             'event_date' => now()->subDays(6)->toDateString(),
             'summary' => 'Non-final Office Action issued in respect of claims 1–14.',
+            'payload' => [
+                // The office action document rides along and is auto-filed
+                'documents' => [[
+                    'name' => 'CTNF-17456789.pdf',
+                    'title' => 'Non-final Office Action (CTNF)',
+                    'category' => 'office_action',
+                    'mime' => 'application/pdf',
+                    'content_base64' => base64_encode(
+                        "%PDF-1.4 demo\nNon-final Office Action — application 17/456,789\nClaims 1-14 rejected under 35 U.S.C. 102."
+                    ),
+                ]],
+            ],
         ]]);
 
         // Matched but waiting for a human to hit Process: an EPO grant
@@ -515,6 +527,23 @@ class DatabaseSeeder extends Seeder
             'status' => 'needs_review',
             'received_at' => now()->subDays(2),
         ]);
+
+        // --- Documents on the docket ---
+        $store = app(\App\Actions\Documents\StoreDocument::class);
+        $store->fromContent($gbPriority, 'specification-as-filed.pdf',
+            "%PDF-1.4 demo\nSpecification as filed — GB2101234.5\nSelf-sealing valve assembly.", [
+                'title' => 'Specification as filed',
+                'category' => \App\Enums\DocumentCategory::FiledDocument,
+                'source' => 'upload',
+                'mime' => 'application/pdf',
+                'uploaded_by' => $admin->id,
+            ]);
+        app(\App\Actions\Documents\GenerateDocument::class)->handle(
+            $gbPriority,
+            CommTemplate::firstWhere('name', 'Filing Confirmation') ?? CommTemplate::first(),
+            $admin,
+            'Filing confirmation letter'
+        );
 
         // --- A little edit history for the audit trail demo ---
         auth()->login($attorney);
