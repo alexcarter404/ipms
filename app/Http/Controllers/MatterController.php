@@ -15,11 +15,11 @@ use App\Models\Matter;
 use App\Repositories\ClientRepository;
 use App\Repositories\CommTemplateRepository;
 use App\Repositories\ContactRepository;
-use App\Repositories\FamilyRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\PartyRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WorkflowRepository;
+use App\Services\MatterFormOptions;
 use App\Services\RenewalScheduler;
 use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
@@ -47,10 +47,10 @@ class MatterController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request, MatterFormOptions $options): Response
     {
         return Inertia::render('Matters/Create', [
-            'options' => $this->formOptions(),
+            'options' => $options->build(),
             'preselectedClientId' => $request->integer('client_id') ?: null,
         ]);
     }
@@ -111,11 +111,11 @@ class MatterController extends Controller
         ]);
     }
 
-    public function edit(Matter $matter): Response
+    public function edit(Matter $matter, MatterFormOptions $options): Response
     {
         return Inertia::render('Matters/Edit', [
             'matter' => $matter,
-            'options' => $this->formOptions(),
+            'options' => $options->build(),
         ]);
     }
 
@@ -134,24 +134,4 @@ class MatterController extends Controller
         return redirect()->route('matters.index')->with('success', 'Matter deleted.');
     }
 
-    private function formOptions(): array
-    {
-        return [
-            'types' => MatterType::options(),
-            'statuses' => MatterStatus::options(),
-            'countries' => Countries::options(),
-            'clients' => app(ClientRepository::class)->optionsWithEntities(),
-            'families' => app(FamilyRepository::class)->options(),
-            'users' => app(UserRepository::class)->options(),
-            'matters' => $this->matters->referenceOptions(),
-            'filingRoutes' => [
-                ['value' => 'national', 'label' => 'National'],
-                ['value' => 'pct', 'label' => 'PCT'],
-                ['value' => 'ep', 'label' => 'European Patent (EP)'],
-                ['value' => 'madrid', 'label' => 'Madrid Protocol'],
-                ['value' => 'hague', 'label' => 'Hague System'],
-                ['value' => 'paris', 'label' => 'Paris Convention'],
-            ],
-        ];
-    }
 }

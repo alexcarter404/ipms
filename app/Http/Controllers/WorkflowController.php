@@ -6,6 +6,7 @@ use App\Actions\Workflows\SaveWorkflow;
 use App\Enums\MatterType;
 use App\Enums\TriggerEvent;
 use App\Http\Requests\WorkflowRequest;
+use App\Support\ContractFields;
 use App\Models\Workflow;
 use App\Repositories\WorkflowRepository;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class WorkflowController extends Controller
         return Inertia::render('Workflows/Create', [
             'types' => MatterType::options(),
             'triggerEvents' => TriggerEvent::options(),
+            'contractFields' => ContractFields::options(),
         ]);
     }
 
@@ -45,6 +47,7 @@ class WorkflowController extends Controller
             'workflow' => $workflow,
             'types' => MatterType::options(),
             'triggerEvents' => TriggerEvent::options(),
+            'contractFields' => ContractFields::options(),
         ]);
     }
 

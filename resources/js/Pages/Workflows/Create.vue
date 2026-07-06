@@ -6,6 +6,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 defineProps({
     types: Array,
     triggerEvents: Array,
+    contractFields: Array,
 });
 
 const form = useForm({
@@ -36,6 +37,7 @@ const submit = () =>
                 :form="form"
                 :types="types"
                 :trigger-events="triggerEvents"
+                :contract-fields="contractFields"
                 submit-label="Create Workflow"
                 @submit="submit"
             />
