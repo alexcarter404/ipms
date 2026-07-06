@@ -1,12 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { onUnmounted, reactive, ref, watch } from 'vue';
+import { onUnmounted, reactive, watch } from 'vue';
 
 const props = defineProps({
-    groups: Array,
+    rows: Array,
     filters: Object,
     clients: Array,
     users: Array,
@@ -33,26 +33,9 @@ onUnmounted(() => clearTimeout(timeout));
 const money = (amount, currency) =>
     new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount ?? 0);
 
-// --- selection: entity id -> Set of matter ids ---
-const selected = ref({});
-
-const isSelected = (entityId, matterId) => selected.value[entityId]?.has(matterId) ?? false;
-
-const toggle = (entityId, matterId) => {
-    const set = new Set(selected.value[entityId] ?? []);
-    set.has(matterId) ? set.delete(matterId) : set.add(matterId);
-    selected.value = { ...selected.value, [entityId]: set };
-};
-
-const selectionCount = (entityId) => selected.value[entityId]?.size ?? 0;
-
-const draftInvoice = (group) => {
-    const ids = [...(selected.value[group.entity.id] ?? [])];
-    router.post(
-        route('entities.invoices.store', group.entity.id),
-        ids.length ? { matter_ids: ids } : {},
-    );
-};
+// Age of the oldest unbilled item: fresh, ageing, or overdue attention.
+const ageSeverity = (days) => (days > 90 ? 'critical' : days > 30 ? 'pending' : 'completed');
+const ageLabel = (days) => (days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`);
 </script>
 
 <template>
@@ -66,8 +49,8 @@ const draftInvoice = (group) => {
                         Work in Progress
                     </h2>
                     <p class="mt-1 text-sm text-gray-600">
-                        Unbilled time, disbursements and charges across the firm,
-                        grouped by the entity that gets the bill.
+                        Unbilled totals by the entity that gets the bill — drill in
+                        to review items, amend descriptions and raise bills.
                     </p>
                 </div>
                 <div class="flex gap-2">
@@ -87,7 +70,7 @@ const draftInvoice = (group) => {
             </div>
         </template>
 
-        <div class="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
             <!-- Filters -->
             <div class="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
                 <SelectInput
@@ -102,87 +85,53 @@ const draftInvoice = (group) => {
                 />
             </div>
 
-            <!-- Entity groups -->
-            <div
-                v-for="group in groups"
-                :key="group.entity.id"
-                class="overflow-hidden rounded-lg bg-white shadow-sm"
-                :data-testid="`wip-entity-${group.entity.id}`"
-            >
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">{{ group.entity.name }}</h3>
-                        <p class="text-xs text-gray-500">
-                            {{ group.entity.client_name }} · billed in {{ group.entity.currency }}
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm font-semibold text-gray-900">
-                            {{ money(group.total, group.entity.currency) }}
-                        </span>
-                        <PrimaryButton :disabled="group.total <= 0" @click="draftInvoice(group)">
-                            {{
-                                selectionCount(group.entity.id)
-                                    ? `Draft Invoice (${selectionCount(group.entity.id)} selected)`
-                                    : 'Draft Invoice (all)'
-                            }}
-                        </PrimaryButton>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            <tr>
-                                <th class="w-8 px-4 py-2.5"></th>
-                                <th class="px-4 py-2.5">Matter</th>
-                                <th class="px-4 py-2.5">Fee arrangement</th>
-                                <th class="px-4 py-2.5 text-right">Time</th>
-                                <th class="px-4 py-2.5 text-right">Disbursements</th>
-                                <th class="px-4 py-2.5 text-right">Charges</th>
-                                <th class="px-4 py-2.5 text-right">Billable WIP</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="matter in group.matters" :key="matter.id">
-                                <td class="px-4 py-2.5">
-                                    <input
-                                        type="checkbox"
-                                        class="rounded text-indigo-600"
-                                        :checked="isSelected(group.entity.id, matter.id)"
-                                        @change="toggle(group.entity.id, matter.id)"
-                                    />
-                                </td>
-                                <td class="px-4 py-2.5">
-                                    <Link
-                                        :href="route('matters.show', matter.id)"
-                                        class="whitespace-nowrap font-medium text-indigo-600 hover:underline"
-                                    >
-                                        {{ matter.reference }}
-                                    </Link>
-                                    <span class="ml-2 hidden max-w-xs truncate text-gray-500 lg:inline">
-                                        {{ matter.title }}
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2.5 text-gray-600">{{ matter.agreement }}</td>
-                                <td class="whitespace-nowrap px-4 py-2.5 text-right text-gray-700">
-                                    {{ money(matter.time, matter.currency) }}
-                                    <span v-if="!matter.bills_time && matter.time > 0" class="text-xs text-gray-500" title="Time is tracked but not billed under this fee arrangement">
-                                        (not billed)
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-2.5 text-right text-gray-700">{{ money(matter.disbursements, matter.currency) }}</td>
-                                <td class="whitespace-nowrap px-4 py-2.5 text-right text-gray-700">{{ money(matter.charges, matter.currency) }}</td>
-                                <td class="whitespace-nowrap px-4 py-2.5 text-right font-medium text-gray-800">{{ money(matter.billable_total, matter.currency) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div v-if="!groups.length" class="rounded-lg bg-white p-10 text-center text-gray-500 shadow-sm">
-                No unbilled work in progress — log time, disbursements or charges
-                on a matter's Billing tab and it will appear here.
+            <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th class="px-4 py-3">Billing entity</th>
+                            <th class="px-4 py-3">Client</th>
+                            <th class="px-4 py-3 text-right">Matters</th>
+                            <th class="px-4 py-3">Oldest WIP</th>
+                            <th class="px-4 py-3 text-right">Unbilled total</th>
+                            <th class="px-4 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in rows" :key="row.entity.id">
+                            <td class="px-4 py-3">
+                                <Link
+                                    :href="route('billing.wip.show', row.entity.id)"
+                                    class="font-medium text-indigo-600 hover:underline"
+                                >
+                                    {{ row.entity.name }}
+                                </Link>
+                            </td>
+                            <td class="max-w-[16rem] truncate px-4 py-3 text-gray-600">{{ row.entity.client_name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-gray-700">{{ row.matter_count }}</td>
+                            <td class="whitespace-nowrap px-4 py-3">
+                                <StatusBadge :status="ageSeverity(row.oldest_days)" :label="ageLabel(row.oldest_days)" />
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-gray-900">
+                                {{ money(row.total, row.entity.currency) }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">
+                                <Link
+                                    :href="route('billing.wip.show', row.entity.id)"
+                                    class="text-sm font-medium text-indigo-600 hover:underline"
+                                >
+                                    Review &amp; bill →
+                                </Link>
+                            </td>
+                        </tr>
+                        <tr v-if="!rows.length">
+                            <td colspan="6" class="px-4 py-10 text-center text-gray-500">
+                                No unbilled work in progress — log time, disbursements or
+                                charges on a matter's Billing tab and it will appear here.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </AuthenticatedLayout>

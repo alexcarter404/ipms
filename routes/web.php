@@ -82,17 +82,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('matters/{matter}/agreement', [BillingAgreementController::class, 'destroy'])->name('matters.agreement.destroy');
     Route::post('entities/{entity}/agreement', [BillingAgreementController::class, 'saveForEntity'])->name('entities.agreement.save');
     Route::post('matters/{matter}/time', [TimeEntryController::class, 'store'])->name('matters.time.store');
+    Route::patch('time-entries/{timeEntry}', [TimeEntryController::class, 'update'])->name('time-entries.update');
     Route::patch('time-entries/{timeEntry}/status', [TimeEntryController::class, 'updateStatus'])->name('time-entries.status');
     Route::delete('time-entries/{timeEntry}', [TimeEntryController::class, 'destroy'])->name('time-entries.destroy');
     Route::post('matters/{matter}/disbursements', [DisbursementController::class, 'store'])->name('matters.disbursements.store');
+    Route::patch('disbursements/{disbursement}', [DisbursementController::class, 'update'])->name('disbursements.update');
     Route::patch('disbursements/{disbursement}/status', [DisbursementController::class, 'updateStatus'])->name('disbursements.status');
     Route::delete('disbursements/{disbursement}', [DisbursementController::class, 'destroy'])->name('disbursements.destroy');
     Route::post('matters/{matter}/charges', [ChargeController::class, 'store'])->name('matters.charges.store');
+    Route::patch('charges/{charge}', [ChargeController::class, 'update'])->name('charges.update');
     Route::post('agreement-stages/{stage}/charge', [ChargeController::class, 'raiseStage'])->name('agreement-stages.charge');
     Route::delete('charges/{charge}', [ChargeController::class, 'destroy'])->name('charges.destroy');
 
     // Billing: WIP dashboard & invoices
     Route::get('billing/wip', [WipController::class, 'index'])->name('billing.wip');
+    Route::get('billing/wip/{entity}', [WipController::class, 'show'])->name('billing.wip.show');
     Route::get('billing/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::post('matters/{matter}/invoices', [InvoiceController::class, 'store'])->name('matters.invoices.store');
     Route::post('entities/{entity}/invoices', [InvoiceController::class, 'storeForEntity'])->name('entities.invoices.store');

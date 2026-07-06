@@ -117,9 +117,9 @@ class ConsolidatedBillingTest extends TestCase
         $this->assertSame(0, Invoice::count());
     }
 
-    public function test_the_wip_dashboard_groups_unbilled_work_by_entity(): void
+    public function test_the_wip_dashboard_summarises_each_entity_with_age(): void
     {
-        $this->matterWithTime(60);  // 100
+        $this->matterWithTime(60);  // 100, dated 2026-06-01
         $this->matterWithTime(120); // 200
 
         // Fixed-fee matter: time is tracked but not billable
@@ -134,25 +134,76 @@ class ConsolidatedBillingTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Billing/Wip')
-                ->has('groups', 1)
-                ->has('groups.0.matters', 3)
-                ->where('groups.0.entity.name', $this->client->entities()->first()->name)
-                ->where('groups.0.total', 300) // fixed matter's time excluded
+                ->has('rows', 1)
+                ->where('rows.0.entity.name', $this->client->entities()->first()->name)
+                ->where('rows.0.matter_count', 3)
+                ->where('rows.0.total', 300) // fixed matter's time excluded
+                ->where('rows.0.oldest_date', '2026-06-01')
+                ->has('rows.0.oldest_days')
                 ->has('clients')
                 ->has('users'));
     }
 
     public function test_the_wip_dashboard_filters_by_responsible_attorney(): void
     {
-        $mine = $this->matterWithTime(60, ['responsible_user_id' => $this->user->id]);
+        $this->matterWithTime(60, ['responsible_user_id' => $this->user->id]);
         $someoneElse = User::factory()->create();
         $this->matterWithTime(60, ['responsible_user_id' => $someoneElse->id]);
 
         $this->actingAs($this->user)
             ->get(route('billing.wip', ['user_id' => $this->user->id]))
             ->assertInertia(fn ($page) => $page
-                ->has('groups.0.matters', 1)
-                ->where('groups.0.matters.0.reference', $mine->reference));
+                ->has('rows', 1)
+                ->where('rows.0.matter_count', 1));
+    }
+
+    public function test_the_entity_drill_in_lists_each_wip_item(): void
+    {
+        $entity = $this->client->entities()->first();
+        $matter = $this->matterWithTime(60);
+        $this->actingAs($this->user)->post(route('matters.disbursements.store', $matter), [
+            'date' => '2026-06-05', 'description' => 'Courier to agent',
+            'cost_amount' => 40, 'cost_currency' => 'GBP',
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('billing.wip.show', $entity))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Billing/WipEntity')
+                ->where('wip.entity.id', $entity->id)
+                ->has('wip.matters', 1)
+                ->has('wip.matters.0.items', 2)
+                ->where('wip.matters.0.items.1.description', 'Courier to agent')
+                ->where('wip.total', 140));
+    }
+
+    public function test_wip_descriptions_can_be_amended_until_billed(): void
+    {
+        $matter = $this->matterWithTime(60);
+        $entry = $matter->timeEntries()->first();
+        $this->actingAs($this->user)->post(route('matters.charges.store', $matter), [
+            'type' => 'other', 'date' => '2026-06-01',
+            'description' => 'Filing fee', 'amount' => 50,
+        ]);
+        $charge = $matter->charges()->first();
+
+        $this->actingAs($this->user)
+            ->patch(route('time-entries.update', $entry), ['narrative' => 'Reviewed examiner citations'])
+            ->assertSessionHas('success');
+        $this->assertSame('Reviewed examiner citations', $entry->fresh()->narrative);
+
+        $this->actingAs($this->user)
+            ->patch(route('charges.update', $charge), ['description' => 'Official filing fee'])
+            ->assertSessionHas('success');
+        $this->assertSame('Official filing fee', $charge->fresh()->description);
+
+        // Once billed, wording is locked to the invoice
+        $entry->update(['status' => 'billed']);
+        $this->actingAs($this->user)
+            ->patch(route('time-entries.update', $entry), ['narrative' => 'Too late'])
+            ->assertSessionHas('error');
+        $this->assertSame('Reviewed examiner citations', $entry->fresh()->narrative);
     }
 
     public function test_consolidated_invoice_show_loads_line_matters_for_grouping(): void

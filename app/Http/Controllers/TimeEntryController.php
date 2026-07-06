@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Billing\AmendBillable;
 use App\Actions\Billing\DeleteBillable;
 use App\Actions\Billing\LogTime;
 use App\Actions\Billing\UpdateBillableStatus;
@@ -30,6 +31,19 @@ class TimeEntryController extends Controller
             $entry->currency_code,
             number_format((float) $entry->amount, 2)
         ));
+    }
+
+    public function update(Request $request, TimeEntry $timeEntry, AmendBillable $action): RedirectResponse
+    {
+        $data = $request->validate(['narrative' => ['nullable', 'string', 'max:1000']]);
+
+        try {
+            $action->handle($timeEntry, $data);
+        } catch (DomainActionException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Narrative updated.');
     }
 
     public function updateStatus(Request $request, TimeEntry $timeEntry, UpdateBillableStatus $action): RedirectResponse

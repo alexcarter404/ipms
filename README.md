@@ -102,10 +102,13 @@ renewal/annuity management.
   (`billing:sync-rates`, scheduled weekdays) or maintained by hand
 - **Tax rates** (e.g. UK VAT, zero-rated export) assigned per entity
   and snapshotted onto each invoice
-- **WIP dashboard** (Billing → WIP): every unbilled item in the firm,
-  grouped by the entity that gets the bill, filterable by client and
-  responsible attorney — bill an entity's whole balance or a selected
-  subset of matters in one click
+- **WIP dashboard** (Billing → WIP): a compact row per billing entity —
+  unbilled total, matter count, and an aged "oldest WIP" indicator
+  (green/amber/red) — filterable by client and responsible attorney.
+  Drill into an entity to review every unbilled item, **amend the
+  wording that will appear on the invoice** (time narratives,
+  disbursement and charge descriptions — locked once billed), and bill
+  a single matter, a ticked selection, or the whole balance
 - **Consolidated invoices**: one bill per entity covering multiple
   matters, lines grouped by matter, each matter's WIP converted into
   the entity's currency (per-matter fee caps still respected)
@@ -181,7 +184,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 186 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 188 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -191,7 +194,7 @@ template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 50 tests driving the real app —
+**End-to-end UI tests** (Playwright, 51 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

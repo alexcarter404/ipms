@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Billing\AddDisbursement;
+use App\Actions\Billing\AmendBillable;
 use App\Actions\Billing\DeleteBillable;
 use App\Actions\Billing\UpdateBillableStatus;
 use App\Enums\BillableStatus;
@@ -28,6 +29,21 @@ class DisbursementController extends Controller
             $disbursement->currency_code,
             number_format((float) $disbursement->amount, 2)
         ));
+    }
+
+    public function update(Request $request, Disbursement $disbursement, AmendBillable $action): RedirectResponse
+    {
+        $data = $request->validate([
+            'description' => ['required', 'string', 'max:255'],
+        ]);
+
+        try {
+            $action->handle($disbursement, $data);
+        } catch (DomainActionException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Disbursement updated.');
     }
 
     public function updateStatus(Request $request, Disbursement $disbursement, UpdateBillableStatus $action): RedirectResponse
