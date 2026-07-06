@@ -46,4 +46,10 @@ class ExchangeRateService
 
         return round($amount / $this->rate($from, $date) * $this->rate($to, $date), 2);
     }
+
+    /** The base-currency value stored alongside every WIP item. */
+    public function toBase(float $amount, string $from, ?CarbonInterface $date = null): float
+    {
+        return $this->convert($amount, $from, config('billing.base_currency'), $date);
+    }
 }

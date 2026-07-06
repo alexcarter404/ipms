@@ -32,8 +32,16 @@ class BillingSettingsController extends Controller
     {
     }
 
-    public function edit(UserRepository $users, ClientRepository $clients): Response
+    public function edit(Request $request, UserRepository $users, ClientRepository $clients): Response
     {
+        $rateRuleFilters = [
+            'search' => $request->input('rr_search'),
+            'role' => $request->input('rr_role'),
+            'matter_type' => $request->input('rr_type'),
+            'sort' => $request->input('rr_sort'),
+            'dir' => $request->input('rr_dir'),
+        ];
+
         return Inertia::render('Billing/Settings', [
             'baseCurrency' => Currencies::base(),
             'currencies' => Currencies::options(),
@@ -41,7 +49,8 @@ class BillingSettingsController extends Controller
             'taxRates' => $this->settings->taxRates(),
             'activityCodes' => $this->settings->activityCodes(),
             'activityCodeOptions' => $this->settings->activityCodeOptions(),
-            'rateCards' => $this->settings->rateCards(),
+            'rateCards' => $this->settings->paginateRateCards($rateRuleFilters),
+            'rateRuleFilters' => $rateRuleFilters,
             'users' => $users->options(),
             'timekeepers' => User::orderBy('name')->get(['id', 'name', 'role']),
             'roles' => TimekeeperRole::options(),

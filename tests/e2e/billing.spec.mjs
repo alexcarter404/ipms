@@ -106,5 +106,10 @@ test.describe('Billing', () => {
         await expect(page.locator('tr', { hasText: 'Any Attorney' })).toContainText('GBP 240.00');
         await expect(page.locator('tr', { hasText: 'Any timekeeper' })).toContainText('GBP 250.00');
         await expect(page.getByRole('heading', { name: 'Timekeeper grades' })).toBeVisible();
+
+        // Server-side search narrows the rule list
+        await page.getByPlaceholder('Search timekeeper, client, code…').fill('Alex');
+        await expect(page.locator('tr', { hasText: 'Any timekeeper' })).toBeHidden();
+        await expect(page.locator('tr', { hasText: 'Alex Carter' })).toContainText('GBP 320.00');
     });
 });

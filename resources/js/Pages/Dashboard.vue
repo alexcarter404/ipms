@@ -34,7 +34,7 @@ const typeLabels = {
 
         <div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
             <!-- Stat tiles -->
-            <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-6">
                 <Link
                     :href="route('matters.index')"
                     class="rounded-lg bg-white p-4 shadow-sm hover:shadow"
@@ -84,6 +84,21 @@ const typeLabels = {
                         :class="stats.renewalsDue90 ? 'text-amber-600' : 'text-gray-900'"
                     >
                         {{ stats.renewalsDue90 }}
+                    </div>
+                </Link>
+                <Link
+                    :href="route('billing.wip')"
+                    class="rounded-lg bg-white p-4 shadow-sm hover:shadow"
+                >
+                    <div class="text-sm text-gray-500">Unbilled WIP ({{ stats.baseCurrency }})</div>
+                    <div class="mt-1 text-3xl font-semibold text-gray-900">
+                        {{
+                            new Intl.NumberFormat(undefined, {
+                                style: 'currency',
+                                currency: stats.baseCurrency,
+                                maximumFractionDigits: 0,
+                            }).format(stats.wipBase)
+                        }}
                     </div>
                 </Link>
             </div>

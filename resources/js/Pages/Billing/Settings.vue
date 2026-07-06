@@ -7,11 +7,13 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import TextInput from '@/Components/TextInput.vue';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import Tab from 'primevue/tab';
 import TabList from 'primevue/tablist';
 import Tabs from 'primevue/tabs';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onUnmounted, reactive, ref, watch } from 'vue';
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
@@ -21,7 +23,8 @@ const props = defineProps({
     taxRates: Array,
     activityCodes: Array,
     activityCodeOptions: Array,
-    rateCards: Array,
+    rateCards: Object,
+    rateRuleFilters: Object,
     users: Array,
     timekeepers: Array,
     roles: Array,
@@ -29,7 +32,9 @@ const props = defineProps({
     clients: Array,
 });
 
-const activeTab = ref('rates');
+const activeTab = ref(
+    Object.values(props.rateRuleFilters ?? {}).some((v) => v) ? 'cards' : 'rates'
+);
 
 const shortDate = (value) =>
     value
@@ -145,6 +150,42 @@ const deleteCard = (card) =>
     confirmDelete('Delete this rate rule?', () =>
         router.delete(route('billing.rate-cards.destroy', card.id), { preserveScroll: true })
     );
+
+// --- rule browsing: server-side search, filter, sort, pagination ---
+const ruleQuery = reactive({
+    rr_search: props.rateRuleFilters?.search ?? '',
+    rr_role: props.rateRuleFilters?.role ?? '',
+    rr_type: props.rateRuleFilters?.matter_type ?? '',
+    rr_sort: props.rateRuleFilters?.sort ?? '',
+    rr_dir: props.rateRuleFilters?.dir ?? '',
+});
+
+const reloadRules = (extra = {}) => {
+    const params = Object.fromEntries(
+        Object.entries({ ...ruleQuery, ...extra }).filter(([, v]) => v !== '' && v !== null)
+    );
+    router.get(route('billing.settings'), params, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        only: ['rateCards', 'rateRuleFilters'],
+    });
+};
+
+let ruleTimeout = null;
+watch(ruleQuery, () => {
+    clearTimeout(ruleTimeout);
+    ruleTimeout = setTimeout(() => reloadRules(), 300);
+});
+
+onUnmounted(() => clearTimeout(ruleTimeout));
+
+const onRulePage = (event) => reloadRules({ rr_page: event.page + 1 });
+
+const onRuleSort = (event) => {
+    ruleQuery.rr_sort = event.sortField ?? '';
+    ruleQuery.rr_dir = event.sortOrder === 1 ? 'asc' : 'desc';
+};
 
 const roleLabel = (value) => props.roles.find((r) => r.value === value)?.label ?? value;
 const typeLabel = (value) => props.matterTypes.find((t) => t.value === value)?.label ?? value;
@@ -348,42 +389,80 @@ const setGrade = (timekeeper, role) =>
             <!-- Rate cards -->
             <div v-else-if="activeTab === 'cards'" class="grid gap-6 lg:grid-cols-3">
                 <div class="space-y-6 lg:col-span-2">
-                    <div class="overflow-x-auto rounded-lg bg-white shadow-sm">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th class="px-4 py-3">Applies to</th>
-                                    <th class="px-4 py-3">Client</th>
-                                    <th class="px-4 py-3">Matter type</th>
-                                    <th class="px-4 py-3">Task code</th>
-                                    <th class="px-4 py-3 text-right">Hourly rate</th>
-                                    <th class="px-4 py-3">From</th>
-                                    <th class="px-4 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <tr v-for="card in rateCards" :key="card.id">
-                                    <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-800">{{ whoLabel(card) }}</td>
-                                    <td class="max-w-[10rem] truncate px-4 py-3 text-gray-600">{{ card.client?.name ?? 'All' }}</td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ card.matter_type ? typeLabel(card.matter_type) : 'All' }}</td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ card.activity_code?.code ?? 'All' }}</td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-right font-medium text-gray-800">
-                                        {{ card.currency_code }} {{ Number(card.hourly_rate).toFixed(2) }}
-                                    </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ shortDate(card.effective_from) }}</td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-right text-xs">
-                                        <button class="text-indigo-600 hover:underline" @click="editCard(card)">Edit</button>
-                                        <button class="ml-2 text-red-600 hover:underline" @click="deleteCard(card)">Delete</button>
-                                    </td>
-                                </tr>
-                                <tr v-if="!rateCards.length">
-                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        No rate rules — time cannot be valued until one exists.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Search & filters -->
+                    <div class="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-3">
+                        <TextInput
+                            v-model="ruleQuery.rr_search"
+                            type="search"
+                            placeholder="Search timekeeper, client, code…"
+                            class="w-full"
+                        />
+                        <SelectInput v-model="ruleQuery.rr_role" :options="roles" placeholder="All grades" />
+                        <SelectInput v-model="ruleQuery.rr_type" :options="matterTypes" placeholder="All matter types" />
                     </div>
+
+                    <DataTable
+                        :value="rateCards.data"
+                        lazy
+                        paginator
+                        :rows="rateCards.per_page"
+                        :total-records="rateCards.total"
+                        :first="(rateCards.current_page - 1) * rateCards.per_page"
+                        :sort-field="ruleQuery.rr_sort || null"
+                        :sort-order="ruleQuery.rr_dir === 'asc' ? 1 : -1"
+                        data-key="id"
+                        size="small"
+                        class="overflow-hidden rounded-lg shadow-sm"
+                        @page="onRulePage"
+                        @sort="onRuleSort"
+                    >
+                        <template #empty>
+                            <p class="py-4 text-center text-gray-500">
+                                No rate rules match — time cannot be valued until one exists.
+                            </p>
+                        </template>
+
+                        <Column header="Applies to">
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap font-medium text-gray-800">{{ whoLabel(data) }}</span>
+                            </template>
+                        </Column>
+                        <Column header="Client">
+                            <template #body="{ data }">
+                                <span class="block max-w-[10rem] truncate text-gray-600">{{ data.client?.name ?? 'All' }}</span>
+                            </template>
+                        </Column>
+                        <Column header="Matter type">
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap text-gray-600">{{ data.matter_type ? typeLabel(data.matter_type) : 'All' }}</span>
+                            </template>
+                        </Column>
+                        <Column header="Task code">
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap text-gray-600">{{ data.activity_code?.code ?? 'All' }}</span>
+                            </template>
+                        </Column>
+                        <Column field="hourly_rate" header="Hourly rate" sortable>
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap font-medium text-gray-800">
+                                    {{ data.currency_code }} {{ Number(data.hourly_rate).toFixed(2) }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column field="effective_from" header="From" sortable>
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap text-gray-600">{{ shortDate(data.effective_from) }}</span>
+                            </template>
+                        </Column>
+                        <Column>
+                            <template #body="{ data }">
+                                <span class="whitespace-nowrap text-right text-xs">
+                                    <button class="text-indigo-600 hover:underline" @click="editCard(data)">Edit</button>
+                                    <button class="ml-2 text-red-600 hover:underline" @click="deleteCard(data)">Delete</button>
+                                </span>
+                            </template>
+                        </Column>
+                    </DataTable>
                     <p class="-mt-4 text-xs text-gray-500">
                         Rules are listed most-specific first and resolve in that order:
                         a personal rate beats a grade rate, which beats client, matter-type

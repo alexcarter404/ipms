@@ -36,6 +36,7 @@ class AddDisbursement
             'cost_currency' => $data['cost_currency'],
             'markup_pct' => $markup,
             'amount' => $amount,
+            'base_amount' => $this->fx->toBase($amount, $currency, Carbon::parse($data['date'])),
             'currency_code' => $currency,
         ]);
     }

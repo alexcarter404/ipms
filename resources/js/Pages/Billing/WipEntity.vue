@@ -9,6 +9,7 @@ import { ref } from 'vue';
 
 const props = defineProps({
     wip: Object,
+    baseCurrency: String,
 });
 
 const money = (amount, currency) =>
@@ -86,8 +87,11 @@ const saveEdit = () => {
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-lg font-semibold text-gray-900">
+                    <span class="text-right text-lg font-semibold text-gray-900">
                         {{ money(wip.total, wip.entity.currency) }}
+                        <span v-if="wip.entity.currency !== baseCurrency" class="block text-xs font-normal text-gray-500">
+                            ≈ {{ money(wip.total_base, baseCurrency) }} base
+                        </span>
                     </span>
                     <PrimaryButton :disabled="wip.total <= 0" @click="draftInvoice">
                         {{

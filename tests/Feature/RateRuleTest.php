@@ -104,6 +104,42 @@ class RateRuleTest extends TestCase
         $this->assertSame('215.00', $this->loggedRate());
     }
 
+    public function test_rate_rules_are_searchable_filterable_and_paginated(): void
+    {
+        RateCard::create(['user_id' => $this->user->id, 'currency_code' => 'GBP', 'hourly_rate' => 300, 'effective_from' => '2020-01-01']);
+        RateCard::create(['role' => 'paralegal', 'currency_code' => 'GBP', 'hourly_rate' => 120, 'effective_from' => '2020-01-01']);
+        foreach (range(1, 12) as $i) {
+            RateCard::create(['matter_type' => 'patent', 'currency_code' => 'GBP', 'hourly_rate' => 100 + $i, 'effective_from' => '2020-01-01']);
+        }
+
+        // Paginated at 10 per page
+        $this->actingAs($this->user)
+            ->get(route('billing.settings'))
+            ->assertInertia(fn ($page) => $page
+                ->has('rateCards.data', 10)
+                ->where('rateCards.total', 14));
+
+        // Search by timekeeper name
+        $this->actingAs($this->user)
+            ->get(route('billing.settings', ['rr_search' => $this->user->name]))
+            ->assertInertia(fn ($page) => $page
+                ->has('rateCards.data', 1)
+                ->where('rateCards.data.0.user_id', $this->user->id));
+
+        // Filter by grade
+        $this->actingAs($this->user)
+            ->get(route('billing.settings', ['rr_role' => 'paralegal']))
+            ->assertInertia(fn ($page) => $page
+                ->has('rateCards.data', 1)
+                ->where('rateCards.data.0.role', 'paralegal'));
+
+        // Sort by rate ascending
+        $this->actingAs($this->user)
+            ->get(route('billing.settings', ['rr_sort' => 'hourly_rate', 'rr_dir' => 'asc']))
+            ->assertInertia(fn ($page) => $page
+                ->where('rateCards.data.0.hourly_rate', '101.00'));
+    }
+
     public function test_timekeeper_grades_are_managed_from_billing_settings(): void
     {
         $this->actingAs($this->user)

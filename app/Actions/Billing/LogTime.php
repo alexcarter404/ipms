@@ -6,12 +6,13 @@ use App\Enums\BillableStatus;
 use App\Models\Matter;
 use App\Models\TimeEntry;
 use App\Models\User;
+use App\Services\ExchangeRateService;
 use App\Services\RateResolver;
 use Illuminate\Support\Carbon;
 
 class LogTime
 {
-    public function __construct(private RateResolver $rates)
+    public function __construct(private RateResolver $rates, private ExchangeRateService $fx)
     {
     }
 
@@ -28,6 +29,8 @@ class LogTime
             $matter, $user, $workDate, $data['activity_code_id'] ?? null
         );
         $status = BillableStatus::from($data['status'] ?? BillableStatus::Billable->value);
+        $currency = $matter->billingCurrency();
+        $amount = round($billedMinutes / 60 * $rate, 2);
 
         return $matter->timeEntries()->create([
             'user_id' => $user->id,
@@ -36,8 +39,9 @@ class LogTime
             'minutes' => $data['minutes'],
             'billed_minutes' => $billedMinutes,
             'rate' => $rate,
-            'currency_code' => $matter->billingCurrency(),
-            'amount' => round($billedMinutes / 60 * $rate, 2),
+            'currency_code' => $currency,
+            'amount' => $amount,
+            'base_amount' => $this->fx->toBase($amount, $currency, $workDate),
             'narrative' => $data['narrative'] ?? null,
             'status' => $status,
         ]);

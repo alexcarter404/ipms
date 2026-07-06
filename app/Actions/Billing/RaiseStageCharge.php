@@ -6,6 +6,7 @@ use App\Enums\ChargeType;
 use App\Exceptions\DomainActionException;
 use App\Models\BillingAgreementStage;
 use App\Models\Charge;
+use App\Services\ExchangeRateService;
 use Illuminate\Support\Carbon;
 
 /**
@@ -14,6 +15,10 @@ use Illuminate\Support\Carbon;
  */
 class RaiseStageCharge
 {
+    public function __construct(private ExchangeRateService $fx)
+    {
+    }
+
     public function handle(BillingAgreementStage $stage): Charge
     {
         if ($stage->charge()->exists()) {
@@ -21,6 +26,7 @@ class RaiseStageCharge
         }
 
         $matter = $stage->agreement->matter;
+        $currency = $matter->billingCurrency();
 
         return $matter->charges()->create([
             'stage_id' => $stage->id,
@@ -28,7 +34,8 @@ class RaiseStageCharge
             'date' => Carbon::today(),
             'description' => $stage->description,
             'amount' => $stage->amount,
-            'currency_code' => $matter->billingCurrency(),
+            'base_amount' => $this->fx->toBase((float) $stage->amount, $currency),
+            'currency_code' => $currency,
         ]);
     }
 }

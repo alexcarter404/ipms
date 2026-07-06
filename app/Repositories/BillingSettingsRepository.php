@@ -6,6 +6,7 @@ use App\Models\ActivityCode;
 use App\Models\ExchangeRate;
 use App\Models\RateCard;
 use App\Models\TaxRate;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -54,11 +55,40 @@ class BillingSettingsRepository
             ->all();
     }
 
-    public function rateCards(): Collection
+    /**
+     * Rate rules for the settings DataTable: searchable, filterable,
+     * sortable, paginated — ordered most-specific first by default.
+     */
+    public function paginateRateCards(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        return RateCard::with(['user:id,name', 'client:id,name', 'activityCode:id,code'])
-            ->get()
-            ->sortByDesc(fn (RateCard $card) => [$card->specificity(), $card->effective_from->timestamp])
-            ->values();
+        $sort = in_array($filters['sort'] ?? null, ['hourly_rate', 'effective_from'], true)
+            ? $filters['sort']
+            : null;
+        $dir = ($filters['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        return RateCard::query()
+            ->with(['user:id,name', 'client:id,name', 'activityCode:id,code'])
+            ->when($filters['search'] ?? null, function ($q, $term) {
+                $like = "%{$term}%";
+                $q->where(fn ($w) => $w
+                    ->whereHas('user', fn ($u) => $u->where('name', 'like', $like))
+                    ->orWhereHas('client', fn ($c) => $c->where('name', 'like', $like))
+                    ->orWhereHas('activityCode', fn ($a) => $a->where('code', 'like', $like))
+                    ->orWhere('role', 'like', $like));
+            })
+            ->when($filters['role'] ?? null, fn ($q, $role) => $q->where('role', $role))
+            ->when($filters['matter_type'] ?? null, fn ($q, $type) => $q->where('matter_type', $type))
+            ->when($sort,
+                fn ($q) => $q->orderBy($sort, $dir),
+                fn ($q) => $q->orderByRaw(
+                    '(case when user_id is not null then 16 else 0 end'
+                    .' + case when role is not null then 8 else 0 end'
+                    .' + case when client_id is not null then 4 else 0 end'
+                    .' + case when matter_type is not null then 2 else 0 end'
+                    .' + case when activity_code_id is not null then 1 else 0 end) desc, effective_from desc'
+                )
+            )
+            ->paginate($perPage, ['*'], 'rr_page')
+            ->withQueryString();
     }
 }

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Charge extends Model
 {
     protected $fillable = [
-        'matter_id', 'stage_id', 'type', 'date', 'description', 'amount',
+        'matter_id', 'stage_id', 'type', 'date', 'description', 'amount', 'base_amount',
         'currency_code', 'status', 'invoice_line_id',
     ];
 
@@ -25,6 +25,7 @@ class Charge extends Model
             'type' => ChargeType::class,
             'date' => 'date',
             'amount' => 'decimal:2',
+            'base_amount' => 'decimal:2',
             'status' => BillableStatus::class,
         ];
     }
