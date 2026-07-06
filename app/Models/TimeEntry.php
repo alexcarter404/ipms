@@ -11,7 +11,7 @@ class TimeEntry extends Model
 {
     protected $fillable = [
         'matter_id', 'user_id', 'activity_code_id', 'work_date', 'minutes',
-        'billed_minutes', 'rate', 'currency_code', 'amount', 'narrative',
+        'billed_minutes', 'rate', 'currency_code', 'amount', 'base_amount', 'narrative',
         'status', 'invoice_line_id',
     ];
 
@@ -21,6 +21,7 @@ class TimeEntry extends Model
             'work_date' => 'date',
             'rate' => 'decimal:2',
             'amount' => 'decimal:2',
+            'base_amount' => 'decimal:2',
             'status' => BillableStatus::class,
         ];
     }

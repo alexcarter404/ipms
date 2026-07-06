@@ -7,6 +7,8 @@ import { onUnmounted, reactive, watch } from 'vue';
 
 const props = defineProps({
     rows: Array,
+    baseCurrency: String,
+    firmTotal: Number,
     filters: Object,
     clients: Array,
     users: Array,
@@ -53,7 +55,11 @@ const ageLabel = (days) => (days === 0 ? 'Today' : days === 1 ? '1 day' : `${day
                         to review items, amend descriptions and raise bills.
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex items-center gap-4">
+                    <div class="text-right" data-testid="firm-wip-total">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Firm WIP ({{ baseCurrency }})</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ money(firmTotal, baseCurrency) }}</div>
+                    </div>
                     <Link
                         :href="route('invoices.index')"
                         class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
@@ -114,6 +120,9 @@ const ageLabel = (days) => (days === 0 ? 'Today' : days === 1 ? '1 day' : `${day
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-gray-900">
                                 {{ money(row.total, row.entity.currency) }}
+                                <span v-if="row.entity.currency !== baseCurrency" class="block text-xs font-normal text-gray-500">
+                                    ≈ {{ money(row.base_total, baseCurrency) }}
+                                </span>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right">
                                 <Link

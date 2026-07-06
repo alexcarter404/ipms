@@ -6,6 +6,7 @@ use App\Models\ClientEntity;
 use App\Repositories\ClientRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WipRepository;
+use App\Support\Currencies;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,9 +20,12 @@ class WipController extends Controller
         UserRepository $users,
     ): Response {
         $filters = $request->only('client_id', 'user_id');
+        $rows = $wip->entitySummary($filters);
 
         return Inertia::render('Billing/Wip', [
-            'rows' => $wip->entitySummary($filters),
+            'rows' => $rows,
+            'baseCurrency' => Currencies::base(),
+            'firmTotal' => round(array_sum(array_column($rows, 'base_total')), 2),
             'filters' => $filters,
             'clients' => $clients->options(),
             'users' => $users->options(),
@@ -33,6 +37,7 @@ class WipController extends Controller
     {
         return Inertia::render('Billing/WipEntity', [
             'wip' => $wip->entityWip($entity),
+            'baseCurrency' => Currencies::base(),
         ]);
     }
 }

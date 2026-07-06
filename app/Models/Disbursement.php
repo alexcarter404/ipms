@@ -11,7 +11,7 @@ class Disbursement extends Model
 {
     protected $fillable = [
         'matter_id', 'date', 'description', 'supplier', 'cost_amount',
-        'cost_currency', 'markup_pct', 'amount', 'currency_code', 'status',
+        'cost_currency', 'markup_pct', 'amount', 'base_amount', 'currency_code', 'status',
         'invoice_line_id',
     ];
 
@@ -22,6 +22,7 @@ class Disbursement extends Model
             'cost_amount' => 'decimal:2',
             'markup_pct' => 'decimal:2',
             'amount' => 'decimal:2',
+            'base_amount' => 'decimal:2',
             'status' => BillableStatus::class,
         ];
     }

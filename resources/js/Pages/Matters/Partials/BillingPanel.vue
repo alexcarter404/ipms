@@ -297,7 +297,15 @@ const raiseStage = (stage) =>
                     </div>
                     <div class="flex justify-between border-t border-gray-200 pt-2">
                         <dt class="font-semibold text-gray-700">Total WIP</dt>
-                        <dd class="font-semibold text-gray-900">{{ money(billing.wip.total) }}</dd>
+                        <dd class="text-right font-semibold text-gray-900">
+                            {{ money(billing.wip.total) }}
+                            <span
+                                v-if="billing.wip.currency !== billing.wip.base_currency"
+                                class="block text-xs font-normal text-gray-500"
+                            >
+                                ≈ {{ money(billing.wip.base_total, billing.wip.base_currency) }} base
+                            </span>
+                        </dd>
                     </div>
                 </dl>
 

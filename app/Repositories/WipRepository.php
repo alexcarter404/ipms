@@ -53,6 +53,7 @@ class WipRepository
                     ],
                     'matter_count' => $group->count(),
                     'total' => $total,
+                    'base_total' => round($group->sum(fn (Matter $matter) => $this->billableBaseTotal($matter)), 2),
                     'oldest_date' => $oldest,
                     'oldest_days' => $oldest ? (int) floor(now()->diffInDays($oldest, true)) : 0,
                 ];
@@ -146,6 +147,7 @@ class WipRepository
             'total' => round($matters->sum(fn (Matter $matter) => $this->fx->convert(
                 $this->billableTotal($matter), $matter->billingCurrency(), $currency
             )), 2),
+            'total_base' => round($matters->sum(fn (Matter $matter) => $this->billableBaseTotal($matter)), 2),
         ];
     }
 
@@ -165,6 +167,9 @@ class WipRepository
             ->withSum(['timeEntries as wip_time' => $billable], 'amount')
             ->withSum(['disbursements as wip_disbursements' => $billable], 'amount')
             ->withSum(['charges as wip_charges' => $billable], 'amount')
+            ->withSum(['timeEntries as wip_time_base' => $billable], 'base_amount')
+            ->withSum(['disbursements as wip_disbursements_base' => $billable], 'base_amount')
+            ->withSum(['charges as wip_charges_base' => $billable], 'base_amount')
             ->withMin(['timeEntries as oldest_time' => $billable], 'work_date')
             ->withMin(['disbursements as oldest_disbursement' => $billable], 'date')
             ->withMin(['charges as oldest_charge' => $billable], 'date')
@@ -186,12 +191,28 @@ class WipRepository
         );
     }
 
+    /** The same total from the base-currency values stored at capture. */
+    private function billableBaseTotal(Matter $matter): float
+    {
+        $billsTime = ($matter->effectiveBillingAgreement()?->type ?? AgreementType::Hourly)->billsTime();
+
+        return round(
+            ($billsTime ? (float) ($matter->wip_time_base ?? 0) : 0)
+            + (float) ($matter->wip_disbursements_base ?? 0)
+            + (float) ($matter->wip_charges_base ?? 0),
+            2
+        );
+    }
+
     /** @return array{time: float, disbursements: float, charges: float, total: float, currency: string} */
     public function totals(Matter $matter): array
     {
         $time = (float) $matter->timeEntries()->billable()->sum('amount');
         $disbursements = (float) $matter->disbursements()->billable()->sum('amount');
         $charges = (float) $matter->charges()->billable()->sum('amount');
+        $baseTotal = (float) $matter->timeEntries()->billable()->sum('base_amount')
+            + (float) $matter->disbursements()->billable()->sum('base_amount')
+            + (float) $matter->charges()->billable()->sum('base_amount');
 
         return [
             'time' => $time,
@@ -199,6 +220,8 @@ class WipRepository
             'charges' => $charges,
             'total' => round($time + $disbursements + $charges, 2),
             'currency' => $matter->billingCurrency(),
+            'base_total' => round($baseTotal, 2),
+            'base_currency' => config('billing.base_currency'),
         ];
     }
 

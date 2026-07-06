@@ -99,13 +99,19 @@ renewal/annuity management.
   date, and future-dated uplifts activate automatically. Timekeeper
   grades are managed in Billing Settings, so new joiners inherit their
   grade's rate without a personal rule. Rates convert into the matter's
-  billing currency
+  billing currency. Rules are managed in a server-side searchable,
+  filterable, sortable, paginated table built to stay fast at scale
 - **Disbursements** captured at cost in any currency, marked up
   (per-item or agreement default) and converted to the billing currency
 - **Multi-currency**: billing currency set per client entity (or
   overridden per agreement); daily exchange rates against the firm's
   base currency, synced from an ECB-backed provider
-  (`billing:sync-rates`, scheduled weekdays) or maintained by hand
+  (`billing:sync-rates`, scheduled weekdays) or maintained by hand.
+  Every WIP item stores its value in **both** the billing currency and
+  the base currency, converted at capture time — so entity-currency and
+  firm-wide base totals are always available and never drift with
+  later FX moves (dashboard tile, WIP screens, per-entity ≈ base
+  equivalents)
 - **Tax rates** (e.g. UK VAT, zero-rated export) assigned per entity
   and snapshotted onto each invoice
 - **WIP dashboard** (Billing → WIP): a compact row per billing entity —
@@ -190,7 +196,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 196 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 202 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),

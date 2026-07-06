@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Charge;
+use App\Models\Disbursement;
+use App\Models\TimeEntry;
 use App\Repositories\ClientRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\RenewalRepository;
@@ -27,11 +30,24 @@ class DashboardService
                 'openTasks' => $this->tasks->openCount(),
                 'overdueTasks' => $this->tasks->overdueCount(),
                 'renewalsDue90' => $this->renewals->openDueWithinCount(90),
+                'wipBase' => $this->firmWipInBase(),
+                'baseCurrency' => config('billing.base_currency'),
             ],
             'mattersByType' => $this->matters->activeCountsByType(),
             'upcomingTasks' => $this->tasks->upcoming(8),
             'upcomingRenewals' => $this->renewals->upcoming(8),
             'recentMatters' => $this->matters->recent(6),
         ];
+    }
+
+    /** Unbilled WIP firm-wide, from the base values stored at capture. */
+    private function firmWipInBase(): float
+    {
+        return round(
+            (float) TimeEntry::billable()->sum('base_amount')
+            + (float) Disbursement::billable()->sum('base_amount')
+            + (float) Charge::billable()->sum('base_amount'),
+            2
+        );
     }
 }
