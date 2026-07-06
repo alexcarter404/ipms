@@ -17,6 +17,7 @@ const props = defineProps({
     matter: Object,
     agreement: { type: Object, default: null },
     agreementSource: { type: String, default: null }, // 'matter' | 'entity' | null
+    budget: { type: Object, default: null },
     billing: Object,
     options: Object,
     users: Array,
@@ -40,6 +41,43 @@ const agreementTypeLabel = computed(
 );
 
 const userOptions = computed(() => props.users.map((u) => ({ value: u.id, label: u.name })));
+
+// --- budgets ---
+const showBudget = ref(false);
+const editingBudget = ref(null); // null = add, object = amend
+
+const budgetForm = useForm({
+    amount: '',
+    currency_code: '',
+    description: '',
+});
+
+const openBudget = (row = null) => {
+    editingBudget.value = row;
+    budgetForm.defaults({
+        amount: row ? row.amount : '',
+        currency_code: row ? row.currency : props.billing.currency,
+        description: row?.description ?? '',
+    });
+    budgetForm.reset();
+    budgetForm.clearErrors();
+    showBudget.value = true;
+};
+
+const saveBudget = () => {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => (showBudget.value = false),
+    };
+    const transform = (d) => ({ ...d, description: d.description || null });
+
+    editingBudget.value
+        ? budgetForm.transform(transform).patch(route('budgets.update', editingBudget.value.id), options)
+        : budgetForm.transform(transform).post(route('matters.budgets.store', props.matter.id), options);
+};
+
+const utilisationColor = (pct) =>
+    pct === null ? 'bg-gray-300' : pct > 100 ? 'bg-red-500' : pct > 75 ? 'bg-amber-500' : 'bg-green-500';
 
 // --- agreement editor ---
 const showAgreement = ref(false);
@@ -328,6 +366,70 @@ const raiseStage = (stage) =>
             </div>
         </div>
 
+        <!-- Budget -->
+        <div v-if="budget" class="rounded-lg bg-white p-6 shadow-sm" data-testid="budget-card">
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800">Budget</h3>
+                <SecondaryButton @click="openBudget()">Add Budget</SecondaryButton>
+            </div>
+
+            <template v-if="budget.rows.length">
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <div class="text-sm text-gray-500">Total budget</div>
+                        <div class="text-lg font-semibold text-gray-900">
+                            {{ budget.budget !== null ? money(budget.budget) : money(budget.budget_base, budget.base_currency) }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Consumed (billed + WIP)</div>
+                        <div class="text-lg font-semibold text-gray-900">
+                            {{ budget.budget !== null ? money(budget.consumed) : money(budget.consumed_base, budget.base_currency) }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Utilisation</div>
+                        <div
+                            class="text-lg font-semibold"
+                            :class="budget.utilisation > 100 ? 'text-red-600' : budget.utilisation > 75 ? 'text-amber-600' : 'text-green-700'"
+                        >
+                            {{ budget.utilisation }}%
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div
+                        class="h-full rounded-full"
+                        :class="utilisationColor(budget.utilisation)"
+                        :style="{ width: Math.min(budget.utilisation ?? 0, 100) + '%' }"
+                    />
+                </div>
+
+                <h4 class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Budget history
+                </h4>
+                <ul class="divide-y divide-gray-100 text-sm">
+                    <li v-for="row in budget.rows" :key="row.id" class="flex items-center justify-between gap-3 py-2">
+                        <span class="min-w-0">
+                            <span class="font-medium text-gray-800">{{ money(row.amount, row.currency) }}</span>
+                            <span v-if="row.description" class="ml-2 text-gray-600">{{ row.description }}</span>
+                            <span class="block text-xs text-gray-500">
+                                {{ row.created_by }} · {{ shortDate(row.created_at) }}
+                                <span v-if="row.amended">· amended</span>
+                            </span>
+                        </span>
+                        <button class="shrink-0 text-xs text-indigo-600 hover:underline" @click="openBudget(row)">
+                            Amend
+                        </button>
+                    </li>
+                </ul>
+            </template>
+            <p v-else class="text-sm text-gray-500">
+                No budget set — costs (billed + WIP) are untracked against a ceiling.
+                Budgets accumulate: each addition raises the matter's total.
+            </p>
+        </div>
+
         <!-- Time -->
         <div class="rounded-lg bg-white shadow-sm">
             <div class="flex items-center justify-between px-4 py-3">
@@ -495,6 +597,40 @@ const raiseStage = (stage) =>
                 </table>
             </div>
         </div>
+
+        <!-- Budget modal -->
+        <Modal :show="showBudget" @close="showBudget = false">
+            <div class="space-y-4 p-6">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    {{ editingBudget ? 'Amend Budget Entry' : 'Add Budget' }}
+                </h3>
+                <p v-if="!editingBudget" class="text-sm text-gray-600">
+                    Budgets accumulate — this amount is added to the matter's total.
+                </p>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel value="Amount" />
+                        <TextInput v-model="budgetForm.amount" type="number" step="0.01" class="mt-1 w-full" />
+                        <InputError :message="budgetForm.errors.amount" class="mt-1" />
+                    </div>
+                    <div>
+                        <InputLabel value="Currency" />
+                        <SelectInput v-model="budgetForm.currency_code" :options="options.currencies" class="mt-1" />
+                        <InputError :message="budgetForm.errors.currency_code" class="mt-1" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <InputLabel value="Description" />
+                        <TextInput v-model="budgetForm.description" class="mt-1 w-full" placeholder="e.g. Prosecution phase budget" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <SecondaryButton @click="showBudget = false">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="budgetForm.processing" @click="saveBudget">
+                        {{ editingBudget ? 'Save Amendment' : 'Add Budget' }}
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
 
         <!-- Agreement modal -->
         <Modal :show="showAgreement" max-width="2xl" @close="showAgreement = false">

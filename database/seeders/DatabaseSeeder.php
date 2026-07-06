@@ -386,6 +386,29 @@ class DatabaseSeeder extends Seeder
             'description' => 'EUIPO registration certificate fee', 'supplier' => 'EUIPO',
             'cost_amount' => 120, 'cost_currency' => 'EUR',
         ]);
+        // --- Budgets: accumulate per matter, audit-stamped ---
+        $gbPriority->budgets()->createMany([
+            ['created_by' => $admin->id, 'description' => 'Initial prosecution budget',
+             'amount' => 1000, 'currency_code' => 'GBP', 'base_amount' => 1000],
+            ['created_by' => $attorney->id, 'description' => 'Uplift for examination response',
+             'amount' => 500, 'currency_code' => 'GBP', 'base_amount' => 500],
+        ]);
+        $tm->budgets()->create([
+            'created_by' => $admin->id, 'description' => 'Registration programme',
+            'amount' => 4000, 'currency_code' => 'EUR', 'base_amount' => round(4000 / 1.17, 2),
+        ]);
+        Matter::firstWhere('reference', 'D-2024-0001')->budgets()->create([
+            'created_by' => $attorney->id, 'description' => 'Design registration (fixed scope)',
+            'amount' => 1000, 'currency_code' => 'EUR', 'base_amount' => round(1000 / 1.17, 2),
+        ]);
+
+        // Admin's own portfolio WIP (TM matter) for the dashboard tile
+        $logTime->handle($tm, [
+            'user_id' => $admin->id, 'work_date' => now()->subDays(3)->toDateString(),
+            'minutes' => 45, 'activity_code_id' => $codes['C100']->id,
+            'narrative' => 'Advise on renewal and watch strategy',
+        ]);
+
         $invoice = app(InvoiceBuilder::class)->draft($tm);
         app(InvoicingProvider::class)->issue($invoice);
         app(InvoicingProvider::class)->recordPayment($invoice, [

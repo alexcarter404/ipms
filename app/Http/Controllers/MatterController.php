@@ -20,6 +20,7 @@ use App\Repositories\ContactRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\PartyRepository;
 use App\Repositories\BillingSettingsRepository;
+use App\Repositories\BudgetRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WipRepository;
 use App\Repositories\WorkflowRepository;
@@ -78,6 +79,7 @@ class MatterController extends Controller
         UserRepository $users,
         WipRepository $wip,
         BillingSettingsRepository $billingSettings,
+        BudgetRepository $budgets,
     ): Response {
         $this->matters->loadForDisplay($matter);
 
@@ -115,6 +117,7 @@ class MatterController extends Controller
                 'registration' => $matter->registration_date?->toDateString(),
                 'priority' => $matter->priority_date?->toDateString(),
             ],
+            'billingBudget' => $budgets->forMatter($matter),
             'billingAgreement' => $matter->effectiveBillingAgreement()?->load('stages.charge'),
             'billingAgreementSource' => $matter->billingAgreement
                 ? 'matter'

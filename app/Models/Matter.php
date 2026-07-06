@@ -159,6 +159,11 @@ class Matter extends Model
         return $this->hasMany(Invoice::class)->latest();
     }
 
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class)->latest();
+    }
+
     /** The currency this matter is billed in: agreement > entity > firm base. */
     public function billingCurrency(): string
     {

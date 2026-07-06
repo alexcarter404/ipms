@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Charge;
 use App\Models\Disbursement;
 use App\Models\TimeEntry;
+use App\Models\User;
 use App\Repositories\ClientRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\RenewalRepository;
@@ -21,7 +22,7 @@ class DashboardService
     }
 
     /** Everything the dashboard page shows. */
-    public function overview(): array
+    public function overview(User $user): array
     {
         return [
             'stats' => [
@@ -30,7 +31,7 @@ class DashboardService
                 'openTasks' => $this->tasks->openCount(),
                 'overdueTasks' => $this->tasks->overdueCount(),
                 'renewalsDue90' => $this->renewals->openDueWithinCount(90),
-                'wipBase' => $this->firmWipInBase(),
+                'myWipBase' => $this->wipInBaseFor($user),
                 'baseCurrency' => config('billing.base_currency'),
             ],
             'mattersByType' => $this->matters->activeCountsByType(),
@@ -40,13 +41,20 @@ class DashboardService
         ];
     }
 
-    /** Unbilled WIP firm-wide, from the base values stored at capture. */
-    private function firmWipInBase(): float
+    /**
+     * Unbilled WIP on the user's portfolio (matters they're responsible
+     * for), from the base values stored at capture.
+     */
+    private function wipInBaseFor(User $user): float
     {
+        $mine = fn ($q) => $q->whereHas(
+            'matter', fn ($m) => $m->where('responsible_user_id', $user->id)
+        );
+
         return round(
-            (float) TimeEntry::billable()->sum('base_amount')
-            + (float) Disbursement::billable()->sum('base_amount')
-            + (float) Charge::billable()->sum('base_amount'),
+            (float) TimeEntry::billable()->tap($mine)->sum('base_amount')
+            + (float) Disbursement::billable()->tap($mine)->sum('base_amount')
+            + (float) Charge::billable()->tap($mine)->sum('base_amount'),
             2
         );
     }

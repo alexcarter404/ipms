@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BillingAgreementController;
 use App\Http\Controllers\BillingSettingsController;
+use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientEntityController;
@@ -93,6 +94,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('charges/{charge}', [ChargeController::class, 'update'])->name('charges.update');
     Route::post('agreement-stages/{stage}/charge', [ChargeController::class, 'raiseStage'])->name('agreement-stages.charge');
     Route::delete('charges/{charge}', [ChargeController::class, 'destroy'])->name('charges.destroy');
+
+    // Billing: budgets
+    Route::get('billing/budgets', [BudgetController::class, 'index'])->name('budgets.index');
+    Route::post('matters/{matter}/budgets', [BudgetController::class, 'store'])->name('matters.budgets.store');
+    Route::patch('budgets/{budget}', [BudgetController::class, 'update'])->name('budgets.update');
+    Route::delete('budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
 
     // Billing: WIP dashboard & invoices
     Route::get('billing/wip', [WipController::class, 'index'])->name('billing.wip');

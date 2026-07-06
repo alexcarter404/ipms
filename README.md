@@ -124,6 +124,14 @@ renewal/annuity management.
 - **Consolidated invoices**: one bill per entity covering multiple
   matters, lines grouped by matter, each matter's WIP converted into
   the entity's currency (per-matter fee caps still respected)
+- **Matter budgets**: budgets accumulate per matter — each entry
+  records who added it, when, and in what currency (with a frozen base
+  value), and stays amendable with the audit trail intact. Consumption
+  counts every cost, billed and WIP, with utilisation shown on the
+  matter's Billing tab. A **Budgets dashboard** (Billing → Budgets)
+  gives client/case managers budget-vs-cost across their portfolio —
+  defaulting to the logged-in user's matters — with RAG utilisation
+  bars, over-budget highlighting, and add-budget straight from the row
 - **Quoting**: numbered quotes with lines, live totals and tax, and a
   draft → sent → accepted/declined pipeline
 - **Invoicing**: one click gathers a matter's unbilled WIP onto a draft
@@ -196,7 +204,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 202 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 208 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -206,7 +214,7 @@ template rendering, and the dashboard):
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 51 tests driving the real app —
+**End-to-end UI tests** (Playwright, 53 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

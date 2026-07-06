@@ -87,17 +87,17 @@ const typeLabels = {
                     </div>
                 </Link>
                 <Link
-                    :href="route('billing.wip')"
+                    :href="route('billing.wip', { user_id: $page.props.auth.user.id })"
                     class="rounded-lg bg-white p-4 shadow-sm hover:shadow"
                 >
-                    <div class="text-sm text-gray-500">Unbilled WIP ({{ stats.baseCurrency }})</div>
+                    <div class="text-sm text-gray-500">My WIP ({{ stats.baseCurrency }})</div>
                     <div class="mt-1 text-3xl font-semibold text-gray-900">
                         {{
                             new Intl.NumberFormat(undefined, {
                                 style: 'currency',
                                 currency: stats.baseCurrency,
                                 maximumFractionDigits: 0,
-                            }).format(stats.wipBase)
+                            }).format(stats.myWipBase)
                         }}
                     </div>
                 </Link>
