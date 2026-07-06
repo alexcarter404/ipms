@@ -1,4 +1,5 @@
 <script setup>
+import AuditTrail from '@/Components/AuditTrail.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
@@ -21,6 +22,7 @@ const props = defineProps({
     billingCurrencies: Array,
     taxRates: Array,
     agreementTypes: Array,
+    audits: { type: Array, default: () => [] },
 });
 
 const typeLabel = (value) =>
@@ -269,6 +271,16 @@ const removeContact = (contact) =>
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Audit history -->
+            <div class="rounded-lg bg-white p-6 shadow-sm">
+                <h3 class="mb-1 font-semibold text-gray-800">Audit history</h3>
+                <p class="mb-5 text-sm text-gray-500">
+                    Every change to this client, its entities and contacts — who, when, and what
+                    moved. Update entries can be rolled back or forward.
+                </p>
+                <AuditTrail :audits="audits" empty-text="No audited activity on this client yet." />
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

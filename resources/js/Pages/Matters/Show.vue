@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AuditTrail from '@/Components/AuditTrail.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import BillingPanel from './Partials/BillingPanel.vue';
@@ -37,6 +38,7 @@ const props = defineProps({
     billingBudget: { type: Object, default: null },
     billing: Object,
     billingOptions: Object,
+    audits: { type: Array, default: () => [] },
 });
 
 const tabs = computed(() => {
@@ -59,7 +61,8 @@ const tabs = computed(() => {
         { key: 'tasks', label: `Tasks (${openTasks})` },
         { key: 'renewals', label: `Renewals (${openRenewals})` },
         { key: 'billing', label: 'Billing' },
-        { key: 'comms', label: `Comms (${props.matter.communications.length})` }
+        { key: 'comms', label: `Comms (${props.matter.communications.length})` },
+        { key: 'history', label: 'History' }
     );
     return list;
 });
@@ -257,6 +260,18 @@ const officialDates = computed(() => [
                 :users="users"
             />
             <CommsPanel v-else-if="activeTab === 'comms'" :matter="matter" :templates="templates" />
+            <div v-else-if="activeTab === 'history'" class="rounded-lg bg-white p-6 shadow-sm">
+                <h3 class="mb-1 text-base font-semibold text-gray-900">Audit history</h3>
+                <p class="mb-5 text-sm text-gray-500">
+                    Every change to this matter and its tasks, renewals, communications, billing
+                    items and submissions — who, when, and what moved. Update entries can be
+                    rolled back or forward.
+                </p>
+                <AuditTrail
+                    :audits="audits"
+                    empty-text="No audited activity on this matter yet."
+                />
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

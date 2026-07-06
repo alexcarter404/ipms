@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,8 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * total budget is the sum of its rows, each carrying who added it,
  * when, and in what currency (with the base value frozen at entry).
  */
-class Budget extends Model
+class Budget extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'matter_id', 'created_by', 'description', 'amount', 'currency_code', 'base_amount',
     ];

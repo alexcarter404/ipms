@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\BillableStatus;
 use App\Enums\ChargeType;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * A non-time, non-disbursement billable: a fixed fee, a stage payment
  * raised against an agreement milestone, or any other one-off charge.
  */
-class Charge extends Model
+class Charge extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'matter_id', 'stage_id', 'type', 'date', 'description', 'amount', 'base_amount',
         'currency_code', 'status', 'invoice_line_id',

@@ -14,6 +14,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TriggerEvent;
 use App\Http\Requests\MatterRequest;
 use App\Models\Matter;
+use App\Repositories\AuditRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\CommTemplateRepository;
 use App\Repositories\ContactRepository;
@@ -80,6 +81,7 @@ class MatterController extends Controller
         WipRepository $wip,
         BillingSettingsRepository $billingSettings,
         BudgetRepository $budgets,
+        AuditRepository $audits,
     ): Response {
         $this->matters->loadForDisplay($matter);
 
@@ -118,6 +120,7 @@ class MatterController extends Controller
                 'priority' => $matter->priority_date?->toDateString(),
             ],
             'billingBudget' => $budgets->forMatter($matter),
+            'audits' => $audits->forMatter($matter),
             'billingAgreement' => $matter->effectiveBillingAgreement()?->load('stages.charge'),
             'billingAgreementSource' => $matter->billingAgreement
                 ? 'matter'

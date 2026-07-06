@@ -10,6 +10,7 @@ use App\Enums\ContactType;
 use App\Exceptions\DomainActionException;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
+use App\Repositories\AuditRepository;
 use App\Repositories\BillingSettingsRepository;
 use App\Repositories\ClientRepository;
 use App\Support\Countries;
@@ -48,13 +49,14 @@ class ClientController extends Controller
             ->with('success', 'Client created.');
     }
 
-    public function show(Client $client, BillingSettingsRepository $billingSettings): Response
+    public function show(Client $client, BillingSettingsRepository $billingSettings, AuditRepository $audits): Response
     {
         return Inertia::render('Clients/Show', [
             'client' => $this->clients->loadForDisplay($client),
             'countries' => Countries::options(),
             'contactTypes' => ContactType::options(),
             'matters' => $this->clients->paginateMatters($client),
+            'audits' => $audits->forClient($client),
             'billingCurrencies' => Currencies::options(),
             'taxRates' => $billingSettings->taxRateOptions(),
             // Entity defaults can't be stage agreements (milestones are matter-specific)

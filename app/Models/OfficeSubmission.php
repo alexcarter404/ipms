@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\SubmissionStatus;
 use App\Enums\SubmissionType;
 use Illuminate\Database\Eloquent\Model;
@@ -13,8 +14,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * pushed through the office connector, and acknowledged with the
  * office's receipt reference.
  */
-class OfficeSubmission extends Model
+class OfficeSubmission extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'office', 'matter_id', 'task_id', 'submission_type', 'payload',
         'notes', 'status', 'external_ref', 'receipt', 'error', 'created_by',

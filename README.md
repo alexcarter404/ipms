@@ -181,6 +181,21 @@ renewal/annuity management.
   computed fee sheet; offices without a dialect send the canonical
   package as-is
 
+### Application Auditing
+- **Every model is audited** via `owen-it/laravel-auditing`: creates,
+  updates, deletes and restores are recorded with the acting user, the
+  before/after values, IP and URL. Credentials and 2FA material are
+  excluded from the log at the model level
+- **History timelines** where the work happens: a History tab on the
+  matter (covering the matter plus its tasks, renewals, communications,
+  billing items, budgets and office submissions) and an audit panel on
+  the client screen (client, entities, contacts) — who, when, and each
+  field's old → new value
+- **Roll back / roll forward**: any update entry can be transitioned
+  using the package's `transitionTo`, restoring the record to the state
+  before or after that change. Transitions are saved through the model,
+  so the time-travel itself lands in the audit trail
+
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
   rendered through the app's Inertia pages: login, registration,
@@ -244,24 +259,25 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 230 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 236 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
 office integrations (ingestion, matching, automation, outbound
 submissions + EPO payload transformation, receipts), template
-rendering, and the dashboard):
+rendering, application auditing with audit-trail rollback, and the dashboard):
 
 ```bash
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 57 tests driving the real app —
+**End-to-end UI tests** (Playwright, 60 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey
 (log time → invoice → payment), quotes, billing settings, the office
-exchange (inbox review, processing, outbound submissions), and
+exchange (inbox review, processing, outbound submissions), audit history
+timelines with roll-back, and
 template-driven communication composition):
 
 ```bash

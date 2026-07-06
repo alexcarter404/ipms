@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\OfficeEventType;
 use App\Enums\OfficeMessageStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -12,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * office action, …), matched to a matter and processed by the
  * automation pipeline — with an audit log of everything it did.
  */
-class OfficeMessage extends Model
+class OfficeMessage extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'office', 'external_id', 'event_type', 'application_no',
         'registration_no', 'event_date', 'summary', 'payload', 'matter_id',

@@ -50,6 +50,12 @@ class DatabaseSeeder extends Seeder
             'role' => 'attorney',
         ]);
 
+        // Auditing is off in console runs by default; the demo data
+        // should carry a history, so record the rest of the seeding as
+        // the admin's activity.
+        config(['audit.console' => true]);
+        auth()->login($admin);
+
         // --- Clients & contacts ---
         $acme = Client::factory()->create([
             'code' => 'ACME',
@@ -509,5 +515,14 @@ class DatabaseSeeder extends Seeder
             'status' => 'needs_review',
             'received_at' => now()->subDays(2),
         ]);
+
+        // --- A little edit history for the audit trail demo ---
+        auth()->login($attorney);
+        Matter::firstWhere('reference', 'P-2021-0001')->update([
+            'description' => 'Self-sealing valve for hydraulic couplings. '
+                .'Scope narrowed to the two-stage seal during examination.',
+        ]);
+        auth()->logout();
+        config(['audit.console' => false]);
     }
 }
