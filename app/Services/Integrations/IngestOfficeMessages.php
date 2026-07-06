@@ -3,6 +3,7 @@
 namespace App\Services\Integrations;
 
 use App\Actions\Integrations\ProcessOfficeMessage;
+use App\Enums\OfficeEventType;
 use App\Enums\OfficeMessageStatus;
 use App\Http\Integrations\OfficeExchange\OfficeExchangeConnector;
 use App\Models\OfficeMessage;
@@ -53,15 +54,20 @@ class IngestOfficeMessages
             ]);
             $stats['ingested']++;
 
-            $matter = $this->matcher->match($message);
+            if ($message->event_type === OfficeEventType::Receipt) {
+                // Correlated by submission id inside the processor.
+                $message->update(['status' => OfficeMessageStatus::Matched]);
+            } else {
+                $matter = $this->matcher->match($message);
 
-            if (! $matter) {
-                $stats['review']++;
+                if (! $matter) {
+                    $stats['review']++;
 
-                continue;
+                    continue;
+                }
+
+                $message->update(['matter_id' => $matter->id, 'status' => OfficeMessageStatus::Matched]);
             }
-
-            $message->update(['matter_id' => $matter->id, 'status' => OfficeMessageStatus::Matched]);
 
             if (config('integrations.auto_process')) {
                 try {

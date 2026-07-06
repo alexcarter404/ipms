@@ -6,7 +6,9 @@ use App\Actions\Integrations\ProcessOfficeMessage;
 use App\Enums\OfficeEventType;
 use App\Enums\OfficeMessageStatus;
 use App\Exceptions\DomainActionException;
+use App\Enums\SubmissionType;
 use App\Models\OfficeMessage;
+use App\Models\OfficeSubmission;
 use App\Repositories\MatterRepository;
 use App\Services\Integrations\IngestOfficeMessages;
 use Illuminate\Http\RedirectResponse;
@@ -63,6 +65,32 @@ class OfficeMessageController extends Controller
                 'processed' => OfficeMessage::where('status', OfficeMessageStatus::Processed)->count(),
             ],
             'matterOptions' => $matters->referenceOptions(),
+            'submissions' => OfficeSubmission::with(['matter:id,reference', 'task:id,title', 'creator:id,name'])
+                ->latest()
+                ->limit(50)
+                ->get()
+                ->map(fn (OfficeSubmission $submission) => [
+                    'id' => $submission->id,
+                    'office' => $submission->office,
+                    'office_name' => $submission->officeName(),
+                    'type' => $submission->submission_type->value,
+                    'type_label' => $submission->submission_type->label(),
+                    'matter' => $submission->matter,
+                    'task' => $submission->task,
+                    'payload' => $submission->payload,
+                    'status' => $submission->status->value,
+                    'external_ref' => $submission->external_ref,
+                    'error' => $submission->error,
+                    'created_by' => $submission->creator?->name,
+                    'created_at' => $submission->created_at->toDateTimeString(),
+                    'submitted_at' => $submission->submitted_at?->toDateTimeString(),
+                    'acknowledged_at' => $submission->acknowledged_at?->toDateTimeString(),
+                ]),
+            'submissionTypes' => SubmissionType::options(),
+            'openTasks' => \App\Models\MatterTask::whereIn('status', ['pending', 'in_progress'])
+                ->get(['id', 'matter_id', 'title'])
+                ->groupBy('matter_id')
+                ->map(fn ($tasks) => $tasks->map(fn ($t) => ['value' => $t->id, 'label' => $t->title])->values()),
         ]);
     }
 

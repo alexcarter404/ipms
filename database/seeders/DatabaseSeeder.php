@@ -23,7 +23,11 @@ use App\Models\RateCard;
 use App\Models\TaxRate;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Actions\Integrations\CreateSubmission;
+use App\Enums\SubmissionType;
 use App\Models\OfficeMessage;
+use App\Models\OfficeSubmission;
+use App\Services\Integrations\BuildSubmissionPayload;
 use App\Services\InvoiceBuilder;
 use App\Services\Integrations\IngestOfficeMessages;
 use App\Services\Invoicing\InvoicingProvider;
@@ -464,6 +468,33 @@ class DatabaseSeeder extends Seeder
             'matter_id' => Matter::firstWhere('reference', 'P-2021-0002')->id,
             'status' => 'matched',
             'received_at' => now()->subDay(),
+        ]);
+
+        // --- Outbound submissions ---
+        // Draft OA response on P-2021-0003, discharging the task the
+        // inbound office action created above.
+        $oaMatter = Matter::firstWhere('reference', 'P-2021-0003');
+        app(CreateSubmission::class)->handle($oaMatter, $attorney, [
+            'office' => 'uspto',
+            'submission_type' => 'oa_response',
+            'task_id' => $oaMatter->tasks()->where('title', 'File response')->first()?->id,
+            'notes' => 'Response traversing the §102 rejection; claims 1 and 8 amended.',
+        ]);
+
+        // An already-acknowledged renewal payment with the office receipt.
+        OfficeSubmission::create([
+            'office' => 'ukipo',
+            'matter_id' => $gbPriority->id,
+            'submission_type' => 'renewal_payment',
+            'payload' => app(BuildSubmissionPayload::class)->handle(
+                $gbPriority, SubmissionType::RenewalPayment
+            ),
+            'status' => 'acknowledged',
+            'external_ref' => 'UKIPO-RCPT-4471',
+            'receipt' => ['receipt_id' => 'UKIPO-RCPT-4471', 'received' => now()->subDays(10)->toDateString()],
+            'created_by' => $attorney->id,
+            'submitted_at' => now()->subDays(10),
+            'acknowledged_at' => now()->subDays(9),
         ]);
 
         // Unmatched: number not on the docket — needs review.

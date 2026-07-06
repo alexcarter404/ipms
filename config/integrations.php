@@ -12,12 +12,17 @@ return [
     // Drivers: 'filedrop' (JSON batches in the inbox path) or 'api'
     // (REST exchange via the Saloon OfficeExchangeConnector — set
     // base_url + token).
+    // 'transformer' points at the office's payload dialect — the class
+    // that validates prerequisites and builds the wire format (e.g. the
+    // EPO Online Filing request + fee sheet). Offices without one send
+    // the canonical package as-is.
     'offices' => [
         'epo' => [
             'name' => 'European Patent Office',
             'driver' => env('EPO_DRIVER', 'filedrop'),
             'base_url' => env('EPO_API_URL'),
             'token' => env('EPO_API_TOKEN'),
+            'transformer' => App\Services\Integrations\Transformers\EpoOnlineFilingTransformer::class,
         ],
         'ukipo' => ['name' => 'UK IPO', 'driver' => 'filedrop'],
         'uspto' => [
@@ -36,6 +41,12 @@ return [
     | archived alongside after ingestion.
     */
     'inbox_path' => 'ipo-inbox',
+
+    /*
+    | Where the file-drop driver writes outbound submissions for the
+    | exchange to collect.
+    */
+    'outbox_path' => 'ipo-outbox',
 
     /*
     | Process matched messages immediately on ingestion. When false,

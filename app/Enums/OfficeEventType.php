@@ -9,6 +9,7 @@ enum OfficeEventType: string
     case Registration = 'registration';
     case OfficeAction = 'office_action';
     case RenewalReminder = 'renewal_reminder';
+    case Receipt = 'receipt';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum OfficeEventType: string
             self::Registration => 'Registration',
             self::OfficeAction => 'Office Action',
             self::RenewalReminder => 'Renewal Reminder',
+            self::Receipt => 'Submission Receipt',
         };
     }
 
@@ -29,7 +31,7 @@ enum OfficeEventType: string
             self::Grant => TriggerEvent::Grant,
             self::Registration => TriggerEvent::Registration,
             self::OfficeAction => TriggerEvent::OfficeAction,
-            self::RenewalReminder => null,
+            self::RenewalReminder, self::Receipt => null,
         };
     }
 
@@ -41,7 +43,7 @@ enum OfficeEventType: string
             self::Grant => MatterStatus::Granted,
             self::Registration => MatterStatus::Registered,
             self::OfficeAction => MatterStatus::OfficeAction,
-            self::RenewalReminder => null,
+            self::RenewalReminder, self::Receipt => null,
         };
     }
 

@@ -67,4 +67,42 @@ test.describe('IPO integrations', () => {
         await page.getByRole('button', { name: 'Poll offices now' }).click();
         await expect(page.getByText(/Polled all offices — 0 new message\(s\)/)).toBeVisible();
     });
+
+    test('outbound submissions are drafted, packaged and pushed to the office', async ({ page }) => {
+        await page.goto('/integrations');
+        const outbound = page.locator('[data-testid="submissions"]');
+
+        // Seeded: an acknowledged renewal payment carrying the office receipt
+        await expect(outbound.locator('tr', { hasText: 'Renewal Payment' })).toContainText('UKIPO-RCPT-4471');
+
+        // The draft OA response was packaged from the matter's data
+        const draftRow = outbound.locator('tr', { hasText: 'Office Action Response' });
+        await expect(draftRow).toContainText('P-2021-0003');
+        await expect(draftRow).toContainText('File response');
+        await draftRow.getByRole('button', { name: 'View' }).click();
+        const detail = page.locator('[data-testid="submission-detail"]');
+        await expect(detail.getByText('"application_no": "17/456,789"')).toBeVisible();
+
+        // Push it through the file-drop exchange
+        await detail.getByRole('button', { name: 'Submit to Office' }).click();
+        await expect(
+            page.getByText('Submitted to the exchange outbox — awaiting the office receipt.')
+        ).toBeVisible();
+        await expect(draftRow.getByText('Submitted')).toBeVisible();
+
+        // Draft a fresh document submission from the modal, then delete it
+        await outbound.getByRole('button', { name: 'New Submission' }).click();
+        const modal = page.locator('.p-dialog');
+        await pickOptionIn(page, modal.locator('.p-select').first(), 'European Patent Office');
+        await pickOptionIn(page, modal.locator('.p-select').nth(1), 'Document / Form');
+        await pickOptionIn(page, modal.locator('.p-select').nth(2), 'P-2021-0001');
+        await modal.getByRole('textbox').fill('Certified priority document');
+        await modal.getByRole('button', { name: 'Create Draft' }).click();
+        await expect(page.getByText(/Submission draft created — Document \/ Form to European Patent Office for P-2021-0001\./)).toBeVisible();
+
+        const newRow = outbound.locator('tr', { hasText: 'Document / Form' });
+        await expect(newRow.getByText('Draft')).toBeVisible();
+        await newRow.getByRole('button', { name: 'Delete' }).click();
+        await expect(page.getByText('Submission draft deleted.')).toBeVisible();
+    });
 });

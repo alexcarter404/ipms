@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Http\Integrations\OfficeExchange\OfficeExchangeConnector;
 use App\Http\Integrations\OfficeExchange\Requests\ListMessagesRequest;
+use App\Http\Integrations\OfficeExchange\Requests\SubmitSubmissionRequest;
 use App\Models\OfficeMessage;
 
 /**
@@ -34,5 +35,18 @@ class ApiConnector implements IpoConnector
         $response = $this->connector->send(new ListMessagesRequest($since));
 
         return $response->json('messages', []);
+    }
+
+    public function submit(array $payload): array
+    {
+        $response = $this->connector->send(new SubmitSubmissionRequest($payload));
+        $response->throw();
+
+        // REST exchanges acknowledge synchronously with a receipt.
+        return [
+            'acknowledged' => true,
+            'external_ref' => $response->json('receipt_id'),
+            'receipt' => $response->json(),
+        ];
     }
 }
