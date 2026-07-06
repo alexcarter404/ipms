@@ -10,6 +10,7 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
     form: Object,
     types: Array,
+    officeEvents: { type: Array, default: () => [] },
     mergeFields: Array,
     submitLabel: { type: String, default: 'Save' },
 });
@@ -46,6 +47,19 @@ const asMergeTag = (field) => '{{' + field + '}}';
                     <div>
                         <InputLabel value="Matter type" />
                         <SelectInput v-model="form.matter_type" :options="types" placeholder="Any type" class="mt-1" />
+                    </div>
+                    <div>
+                        <InputLabel value="Auto-draft on office event" />
+                        <SelectInput
+                            v-model="form.auto_event"
+                            :options="officeEvents"
+                            placeholder="Never"
+                            class="mt-1"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            A draft is generated for review whenever an office
+                            reports this event on a matching matter.
+                        </p>
                         <InputError :message="form.errors.matter_type" class="mt-1" />
                     </div>
                     <label class="flex items-end gap-2 pb-2 text-sm text-gray-600 sm:col-span-2">

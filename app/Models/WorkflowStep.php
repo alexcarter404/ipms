@@ -13,7 +13,7 @@ class WorkflowStep extends Model
 
     protected $fillable = [
         'workflow_id', 'title', 'description', 'offset_value',
-        'offset_unit', 'is_critical', 'required_fields', 'sort_order',
+        'offset_unit', 'is_critical', 'required_fields', 'completed_by_event', 'sort_order',
     ];
 
     protected function casts(): array

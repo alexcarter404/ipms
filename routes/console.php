@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Keep billing exchange rates fresh (ECB publishes around 16:00 CET).
 Schedule::command('billing:sync-rates')->weekdays()->dailyAt('16:30');
+
+// Pull inbound messages from IP office exchanges.
+Schedule::command('ipo:poll')->hourly();

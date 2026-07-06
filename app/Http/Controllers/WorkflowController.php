@@ -6,6 +6,7 @@ use App\Actions\Workflows\SaveWorkflow;
 use App\Enums\MatterType;
 use App\Enums\TriggerEvent;
 use App\Http\Requests\WorkflowRequest;
+use App\Enums\OfficeEventType;
 use App\Support\ContractFields;
 use App\Models\Workflow;
 use App\Repositories\WorkflowRepository;
@@ -28,6 +29,7 @@ class WorkflowController extends Controller
             'types' => MatterType::options(),
             'triggerEvents' => TriggerEvent::options(),
             'contractFields' => ContractFields::options(),
+            'officeEvents' => OfficeEventType::options(),
         ]);
     }
 
@@ -48,6 +50,7 @@ class WorkflowController extends Controller
             'types' => MatterType::options(),
             'triggerEvents' => TriggerEvent::options(),
             'contractFields' => ContractFields::options(),
+            'officeEvents' => OfficeEventType::options(),
         ]);
     }
 

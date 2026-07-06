@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MatterType;
+use App\Enums\OfficeEventType;
 use App\Http\Requests\CommTemplateRequest;
 use App\Http\Requests\TemplatePreviewRequest;
 use App\Models\CommTemplate;
@@ -27,6 +28,7 @@ class CommTemplateController extends Controller
     {
         return Inertia::render('Templates/Create', [
             'types' => MatterType::options(),
+            'officeEvents' => OfficeEventType::options(),
             'mergeFields' => TemplateRenderer::availableFields(),
         ]);
     }
@@ -43,6 +45,7 @@ class CommTemplateController extends Controller
         return Inertia::render('Templates/Edit', [
             'template' => $template,
             'types' => MatterType::options(),
+            'officeEvents' => OfficeEventType::options(),
             'mergeFields' => TemplateRenderer::availableFields(),
         ]);
     }

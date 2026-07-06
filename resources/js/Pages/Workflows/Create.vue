@@ -7,6 +7,7 @@ defineProps({
     types: Array,
     triggerEvents: Array,
     contractFields: Array,
+    officeEvents: Array,
 });
 
 const form = useForm({
@@ -38,6 +39,7 @@ const submit = () =>
                 :types="types"
                 :trigger-events="triggerEvents"
                 :contract-fields="contractFields"
+                :office-events="officeEvents"
                 submit-label="Create Workflow"
                 @submit="submit"
             />
