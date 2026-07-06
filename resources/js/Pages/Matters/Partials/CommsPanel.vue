@@ -119,13 +119,20 @@ const formatDateTime = (value) =>
                             {{ comm.subject || '(no subject)' }}
                         </div>
                         <div class="text-xs text-gray-500">
-                            {{ comm.channel }} · to {{ comm.recipient_name || comm.recipient_email || '—' }}
-                            <template v-if="comm.template"> · from “{{ comm.template.name }}”</template>
-                            · {{ formatDateTime(comm.created_at) }}
-                            <template v-if="comm.creator"> · by {{ comm.creator.name }}</template>
+                            <template v-if="comm.direction === 'inbound'">
+                                {{ comm.channel }} · from {{ comm.from_name || comm.from_email || '—' }}
+                                · {{ formatDateTime(comm.received_at ?? comm.created_at) }}
+                            </template>
+                            <template v-else>
+                                {{ comm.channel }} · to {{ comm.recipient_name || comm.recipient_email || '—' }}
+                                <template v-if="comm.template"> · from “{{ comm.template.name }}”</template>
+                                · {{ formatDateTime(comm.created_at) }}
+                                <template v-if="comm.creator"> · by {{ comm.creator.name }}</template>
+                            </template>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 text-xs">
+                        <StatusBadge v-if="comm.direction === 'inbound'" status="received" label="Inbound" />
                         <StatusBadge :status="comm.status" />
                         <button
                             class="text-indigo-600 hover:underline"

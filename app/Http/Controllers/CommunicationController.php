@@ -23,12 +23,14 @@ class CommunicationController extends Controller
     public function markSent(Communication $communication, MarkCommunicationSent $action): RedirectResponse
     {
         try {
-            $action->handle($communication);
+            $result = $action->handle($communication);
         } catch (DomainActionException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Communication marked as sent.');
+        return back()->with('success', $result['delivered']
+            ? "Email sent to {$communication->recipient_email}."
+            : 'Communication marked as sent.');
     }
 
     public function destroy(Communication $communication, DeleteCommunication $action): RedirectResponse

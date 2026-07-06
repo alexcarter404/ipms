@@ -21,6 +21,7 @@ const navigation = [
     { name: 'Billing', route: 'invoices.index', current: ['invoices.*', 'quotes.*', 'billing.*'] },
     { name: 'Workflows', route: 'workflows.index', current: 'workflows.*' },
     { name: 'Integrations', route: 'integrations.index', current: 'integrations.*' },
+    { name: 'Mailroom', route: 'mailroom.index', current: 'mailroom.*' },
     { name: 'Templates', route: 'templates.index', current: 'templates.*' },
 ];
 

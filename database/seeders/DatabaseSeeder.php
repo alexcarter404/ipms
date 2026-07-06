@@ -545,6 +545,32 @@ class DatabaseSeeder extends Seeder
             'Filing confirmation letter'
         );
 
+        // --- Mailroom: inbound email capture ---
+        $mailroom = app(\App\Services\Mailroom\IngestInboundMail::class);
+        // Matched by the reference in the subject; attachment auto-filed
+        $mailroom->ingest([
+            'message_id' => 'MSG-2026-0611-01',
+            'from' => 'r.mendez@epo-associates.example',
+            'from_name' => 'Ricardo Mendez',
+            'subject' => 'Re: P-2021-0002 — examination report enclosed',
+            'body' => "Dear colleagues,\n\nPlease find enclosed the examination report for the above case. We recommend responding within the official term.\n\nKind regards,\nRicardo",
+            'received_at' => now()->subDays(1)->toDateTimeString(),
+            'attachments' => [[
+                'name' => 'examination-report.pdf',
+                'mime' => 'application/pdf',
+                'content_base64' => base64_encode("%PDF-1.4 demo\nExamination report — EP21789012.3"),
+            ]],
+        ]);
+        // No reference or number anywhere — waits in the mailroom
+        $mailroom->ingest([
+            'message_id' => 'MSG-2026-0611-02',
+            'from' => 'accounts@acme.example',
+            'from_name' => 'Acme Accounts Payable',
+            'subject' => 'Purchase order update for your invoices',
+            'body' => "Hello,\n\nOur PO reference for IP work has changed to PO-IP-2027. Please quote it on future invoices.\n\nThanks,\nAP team",
+            'received_at' => now()->subHours(5)->toDateTimeString(),
+        ]);
+
         // --- A little edit history for the audit trail demo ---
         auth()->login($attorney);
         Matter::firstWhere('reference', 'P-2021-0001')->update([
