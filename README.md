@@ -147,6 +147,22 @@ renewal/annuity management.
   interface, so an external driver (Xero, QuickBooks, Stripe) can take
   over the last mile later without touching the WIP layer
 
+### Reports & E-billing
+- **Report builder** (Reports): five practice-shaped datasets —
+  matters register, tasks & deadlines, renewals, unbilled WIP items,
+  invoices — with shared filters (client, attorney/user, status, date
+  window), on-screen results and **CSV export**
+- **Saved reports with schedules**: save any definition and have it
+  emailed as CSV daily or weekly (`reports:send`, scheduled weekday
+  mornings)
+- **Client-ready PDF invoices** rendered on the firm letterhead: lines
+  grouped by matter, tax breakdown, payments and balance due, the
+  entity's PO reference
+- **LEDES 1998B export** per invoice: the e-billing format corporate
+  legal departments ingest — pipe-delimited, fees (F) and expenses (E)
+  typed from the billable behind each line, timekeeper ids/names/
+  classifications and UTBMS task codes included
+
 ### IPO Integrations — Office Exchange
 - **Connector seam per office** (EPO, UK IPO, USPTO, WIPO, EUIPO):
   a file-drop driver reads JSON exchange batches from
@@ -335,7 +351,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 271 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 276 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -347,7 +363,7 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 71 tests driving the real app —
+**End-to-end UI tests** (Playwright, 73 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

@@ -22,3 +22,6 @@ Schedule::command('ipo:reconcile')->weeklyOn(1, '05:00');
 
 // The morning docket: due tasks and renewals per user.
 Schedule::command('reminders:digest')->weekdays()->dailyAt('07:00');
+
+// Scheduled report deliveries (daily every run; weekly on Mondays).
+Schedule::command('reports:send')->weekdays()->dailyAt('06:30');

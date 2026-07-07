@@ -111,6 +111,18 @@ const recordPayment = () =>
                     <StatusBadge :status="invoice.status" />
                 </div>
                 <div class="flex gap-2">
+                    <a
+                        :href="route('invoices.pdf', invoice.id)"
+                        class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
+                    >
+                        PDF
+                    </a>
+                    <a
+                        :href="route('invoices.ledes', invoice.id)"
+                        class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
+                    >
+                        LEDES
+                    </a>
                     <PrimaryButton v-if="invoice.status === 'draft'" @click="issue">Issue Invoice</PrimaryButton>
                     <SecondaryButton
                         v-if="['issued', 'paid'].includes(invoice.status) && invoice.balance > 0"
