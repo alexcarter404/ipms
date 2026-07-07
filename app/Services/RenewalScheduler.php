@@ -20,9 +20,7 @@ use Illuminate\Support\Collection;
  */
 class RenewalScheduler
 {
-    public function __construct(private RenewalRuleRepository $rules)
-    {
-    }
+    public function __construct(private RenewalRuleRepository $rules) {}
 
     /** The rule that would govern this matter's schedule, if any. */
     public function ruleFor(Matter $matter): ?RenewalRule

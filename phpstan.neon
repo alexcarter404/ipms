@@ -1,0 +1,30 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+        - routes
+
+    # Migrations are schema DSL; nothing there benefits from analysis.
+    excludePaths:
+        - database/migrations
+
+    # Our models declare casts via the casts() method (Laravel 11+
+    # style); larastan only parses it when asked.
+    parseModelCastsMethod: true
+
+    # PHPDoc types in this codebase are hints, not certainties — don't
+    # report always-true comparisons derived from them.
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Team policy: array-shape docblocks and Eloquent generics are
+        # documentation-only churn at this stage; semantic checks stay on.
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics

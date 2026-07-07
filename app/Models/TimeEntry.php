@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\BillableStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class TimeEntry extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'matter_id', 'user_id', 'activity_code_id', 'work_date', 'minutes',
         'billed_minutes', 'rate', 'currency_code', 'amount', 'base_amount', 'narrative',
@@ -21,9 +23,9 @@ class TimeEntry extends Model implements Auditable
     {
         return [
             'work_date' => 'date',
-            'rate' => \App\Casts\Money::class,
-            'amount' => \App\Casts\Money::class,
-            'base_amount' => \App\Casts\Money::class,
+            'rate' => Money::class,
+            'amount' => Money::class,
+            'base_amount' => Money::class,
             'status' => BillableStatus::class,
         ];
     }

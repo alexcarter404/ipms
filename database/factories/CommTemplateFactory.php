@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\CommTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\CommTemplate>
+ * @extends Factory<CommTemplate>
  */
 class CommTemplateFactory extends Factory
 {

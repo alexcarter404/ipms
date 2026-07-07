@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Workflow;
+use App\Models\WorkflowStep;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\WorkflowStep>
+ * @extends Factory<WorkflowStep>
  */
 class WorkflowStepFactory extends Factory
 {

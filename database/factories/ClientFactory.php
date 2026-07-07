@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Client>
+ * @extends Factory<Client>
  */
 class ClientFactory extends Factory
 {
@@ -25,7 +26,7 @@ class ClientFactory extends Factory
     public function configure(): static
     {
         // Every client has a default legal entity.
-        return $this->afterCreating(function (\App\Models\Client $client) {
+        return $this->afterCreating(function (Client $client) {
             if (! $client->entities()->exists()) {
                 $client->entities()->create([
                     'name' => $client->name,

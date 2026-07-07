@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\CommTemplate;
 use App\Models\Document;
 use App\Models\Matter;
+use App\Models\OfficeMessage;
 use App\Models\User;
 use App\Services\Integrations\IngestOfficeMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -135,7 +136,7 @@ class DocumentTest extends TestCase
         $this->assertSame('office_action', $document->category->value);
         $this->assertSame('%PDF-1.4 examination communication', Storage::disk('local')->get($document->path));
 
-        $message = \App\Models\OfficeMessage::firstWhere('external_id', 'EPO-DOC-1');
+        $message = OfficeMessage::firstWhere('external_id', 'EPO-DOC-1');
         $this->assertContains('Filed document “Communication under Art. 94(3)” from the office message', $message->actions);
     }
 

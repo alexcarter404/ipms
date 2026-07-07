@@ -11,9 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class SaveQuote
 {
-    public function __construct(private QuoteRepository $quotes)
-    {
-    }
+    public function __construct(private QuoteRepository $quotes) {}
 
     public function create(array $data): Quote
     {

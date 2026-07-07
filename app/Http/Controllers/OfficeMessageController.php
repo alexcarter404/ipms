@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Actions\Integrations\ProcessOfficeMessage;
 use App\Enums\OfficeEventType;
 use App\Enums\OfficeMessageStatus;
-use App\Exceptions\DomainActionException;
 use App\Enums\SubmissionType;
+use App\Exceptions\DomainActionException;
+use App\Models\MatterTask;
 use App\Models\OfficeMessage;
 use App\Models\OfficeSubmission;
+use App\Models\RegisterCheck;
 use App\Repositories\MatterRepository;
 use App\Services\Integrations\IngestOfficeMessages;
 use Illuminate\Http\RedirectResponse;
@@ -65,7 +67,7 @@ class OfficeMessageController extends Controller
                 'processed' => OfficeMessage::where('status', OfficeMessageStatus::Processed)->count(),
             ],
             'matterOptions' => $matters->referenceOptions(),
-            'registerChecks' => \App\Models\RegisterCheck::with('matter:id,reference,title')
+            'registerChecks' => RegisterCheck::with('matter:id,reference,title')
                 ->whereNull('resolved_at')
                 ->latest('checked_at')
                 ->limit(50)
@@ -100,7 +102,7 @@ class OfficeMessageController extends Controller
                     'acknowledged_at' => $submission->acknowledged_at?->toDateTimeString(),
                 ]),
             'submissionTypes' => SubmissionType::options(),
-            'openTasks' => \App\Models\MatterTask::whereIn('status', ['pending', 'in_progress'])
+            'openTasks' => MatterTask::whereIn('status', ['pending', 'in_progress'])
                 ->get(['id', 'matter_id', 'title'])
                 ->groupBy('matter_id')
                 ->map(fn ($tasks) => $tasks->map(fn ($t) => ['value' => $t->id, 'label' => $t->title])->values()),

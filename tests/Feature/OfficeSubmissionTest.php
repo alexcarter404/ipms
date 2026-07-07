@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Http\Integrations\OfficeExchange\Requests\SubmitSubmissionRequest;
 use App\Models\Client;
+use App\Models\ClientEntity;
 use App\Models\Matter;
+use App\Models\OfficeMessage;
 use App\Models\OfficeSubmission;
 use App\Models\User;
 use App\Services\Integrations\IngestOfficeMessages;
@@ -103,7 +105,7 @@ class OfficeSubmissionTest extends TestCase
         $this->assertSame('EP-ACK-2026-771', $submission->external_ref);
         $this->assertSame('completed', $task->fresh()->status->value);
 
-        $message = \App\Models\OfficeMessage::firstWhere('external_id', 'EPO-RCPT-1');
+        $message = OfficeMessage::firstWhere('external_id', 'EPO-RCPT-1');
         $this->assertSame('processed', $message->status->value);
         $this->assertSame($this->matter->id, $message->matter_id);
         $this->assertContains('Completed task “File response”', $message->actions);
@@ -200,7 +202,7 @@ class OfficeSubmissionTest extends TestCase
     public function test_an_epo_filing_is_transformed_into_the_online_filing_package(): void
     {
         Storage::fake('local');
-        $entity = \App\Models\ClientEntity::factory()->default()->create([
+        $entity = ClientEntity::factory()->default()->create([
             'client_id' => $this->matter->client_id,
             'address' => '12 Erfinderstraße, 80331 München',
             'country_code' => 'DE',

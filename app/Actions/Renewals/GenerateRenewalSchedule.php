@@ -4,20 +4,19 @@ namespace App\Actions\Renewals;
 
 use App\Exceptions\DomainActionException;
 use App\Models\Matter;
+use App\Models\Renewal;
 use App\Services\RenewalScheduler;
 use Illuminate\Support\Collection;
 
 class GenerateRenewalSchedule
 {
-    public function __construct(private RenewalScheduler $scheduler)
-    {
-    }
+    public function __construct(private RenewalScheduler $scheduler) {}
 
     /**
      * Generate the matter's schedule from its governing rule, explaining
      * precisely why nothing could be generated otherwise.
      *
-     * @return Collection<int, \App\Models\Renewal> the newly created renewals
+     * @return Collection<int, Renewal> the newly created renewals
      */
     public function handle(Matter $matter): Collection
     {

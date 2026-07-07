@@ -15,9 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class WipRepository
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     /**
      * The WIP dashboard's compact top level: one row per billing entity
@@ -76,7 +74,7 @@ class WipRepository
 
         $currency = $entity->currency_code ?? config('billing.base_currency');
 
-        $rows = $matters->map(function (Matter $matter) use ($currency) {
+        $rows = $matters->map(function (Matter $matter) {
             $billable = fn ($q) => $q->where('status', BillableStatus::Billable);
             $billsTime = ($matter->effectiveBillingAgreement()?->type ?? AgreementType::Hourly)->billsTime();
 

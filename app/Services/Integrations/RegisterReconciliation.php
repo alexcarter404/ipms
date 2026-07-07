@@ -18,9 +18,7 @@ class RegisterReconciliation
         'registration_no', 'registration_date', 'expiry_date',
     ];
 
-    public function __construct(private IngestOfficeMessages $connectors)
-    {
-    }
+    public function __construct(private IngestOfficeMessages $connectors) {}
 
     /** @return array{checked: int, drift: int} */
     public function run(): array

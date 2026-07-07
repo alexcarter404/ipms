@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * One increment of a matter's budget. Budgets accumulate: the matter's
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Budget extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'matter_id', 'created_by', 'description', 'amount', 'currency_code', 'base_amount',
     ];
@@ -21,8 +23,8 @@ class Budget extends Model implements Auditable
     protected function casts(): array
     {
         return [
-            'amount' => \App\Casts\Money::class,
-            'base_amount' => \App\Casts\Money::class,
+            'amount' => Money::class,
+            'base_amount' => Money::class,
         ];
     }
 

@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\MatterType;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class RenewalRule extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'name', 'matter_type', 'country_code', 'base_date',
@@ -25,8 +26,8 @@ class RenewalRule extends Model implements Auditable
         return [
             'matter_type' => MatterType::class,
             'offsets_months' => 'array',
-            'default_official_fee' => \App\Casts\Money::class,
-            'default_service_fee' => \App\Casts\Money::class,
+            'default_official_fee' => Money::class,
+            'default_service_fee' => Money::class,
             'is_active' => 'boolean',
         ];
     }

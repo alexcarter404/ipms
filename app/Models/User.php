@@ -3,7 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Enums\AccessRole;
+use App\Enums\TimekeeperRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -11,23 +12,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use OwenIt\Auditing\Contracts\Auditable;
 
 #[Fillable(['name', 'email', 'password', 'role', 'access_role'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
+    use \OwenIt\Auditing\Auditable;
+
     public function isAdmin(): bool
     {
-        return $this->access_role === \App\Enums\AccessRole::Admin;
+        return $this->access_role === AccessRole::Admin;
     }
 
     public function canWrite(): bool
     {
-        return $this->access_role !== \App\Enums\AccessRole::ReadOnly;
+        return $this->access_role !== AccessRole::ReadOnly;
     }
 
     /** Credentials and 2FA material must never reach the audit log. */
@@ -46,8 +49,8 @@ class User extends Authenticatable implements Auditable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
-            'role' => \App\Enums\TimekeeperRole::class,
-            'access_role' => \App\Enums\AccessRole::class,
+            'role' => TimekeeperRole::class,
+            'access_role' => AccessRole::class,
         ];
     }
 }

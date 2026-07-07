@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\Integrations\Transformers\EpoOnlineFilingTransformer;
+
 return [
 
     /*
@@ -22,7 +24,7 @@ return [
             'driver' => env('EPO_DRIVER', 'filedrop'),
             'base_url' => env('EPO_API_URL'),
             'token' => env('EPO_API_TOKEN'),
-            'transformer' => App\Services\Integrations\Transformers\EpoOnlineFilingTransformer::class,
+            'transformer' => EpoOnlineFilingTransformer::class,
         ],
         'ukipo' => ['name' => 'UK IPO', 'driver' => 'filedrop'],
         'uspto' => [

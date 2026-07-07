@@ -2,20 +2,22 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class BillingAgreementStage extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = ['billing_agreement_id', 'description', 'amount', 'sort_order'];
 
     protected function casts(): array
     {
         return [
-            'amount' => \App\Casts\Money::class,
+            'amount' => Money::class,
         ];
     }
 

@@ -37,8 +37,7 @@ class SearchService
         private TaskRepository $tasks,
         private WorkflowRepository $workflows,
         private CommTemplateRepository $templates,
-    ) {
-    }
+    ) {}
 
     /** @return array<int, array{type: string, items: mixed}> */
     public function search(string $query): array

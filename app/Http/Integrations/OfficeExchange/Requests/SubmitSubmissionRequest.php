@@ -14,9 +14,7 @@ class SubmitSubmissionRequest extends Request implements HasBody
 
     protected Method $method = Method::POST;
 
-    public function __construct(private array $payload)
-    {
-    }
+    public function __construct(private array $payload) {}
 
     public function resolveEndpoint(): string
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +21,7 @@ class PreventReadOnlyWrites
         $user = $request->user();
 
         if (
-            $user instanceof \App\Models\User
+            $user instanceof User
             && ! $user->canWrite()
             && ! $request->isMethodSafe()
             && ! in_array($request->route()?->getName(), self::ALLOWED_ROUTES, true)

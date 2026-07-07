@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\ContactType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Contact extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'client_id', 'type', 'name', 'email', 'phone', 'position', 'is_primary', 'notes',

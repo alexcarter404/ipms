@@ -27,7 +27,7 @@ class LedesExporter
     {
         $invoice->loadMissing(['lines.billable', 'lines.matter', 'client', 'entity']);
 
-        $rows = ["LEDES1998B[]", implode('|', self::FIELDS).'[]'];
+        $rows = ['LEDES1998B[]', implode('|', self::FIELDS).'[]'];
         $invoiceDate = $invoice->issued_at?->format('Ymd') ?? now()->format('Ymd');
         $lineDates = $invoice->lines
             ->map(fn ($line) => $this->lineDate($line))

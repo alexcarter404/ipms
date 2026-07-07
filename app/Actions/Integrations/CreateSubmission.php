@@ -11,9 +11,7 @@ use App\Services\Integrations\BuildSubmissionPayload;
 
 class CreateSubmission
 {
-    public function __construct(private BuildSubmissionPayload $builder)
-    {
-    }
+    public function __construct(private BuildSubmissionPayload $builder) {}
 
     public function handle(Matter $matter, User $creator, array $data): OfficeSubmission
     {

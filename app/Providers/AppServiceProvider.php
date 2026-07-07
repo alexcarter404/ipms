@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use App\Services\Invoicing\InternalInvoicingProvider;
-use App\Services\Invoicing\InvoicingProvider;
 use App\Enums\AccessRole;
 use App\Models\Client;
 use App\Models\User;
+use App\Services\Invoicing\InternalInvoicingProvider;
+use App\Services\Invoicing\InvoicingProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;

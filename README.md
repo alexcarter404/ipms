@@ -385,6 +385,15 @@ environment provides its own Chromium build, point the suite at it:
 PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e
 ```
 
+**Static analysis & code style** (PHPStan via Larastan at level 6, plus
+Laravel Pint). Pre-existing findings are pinned in
+`phpstan-baseline.neon`; new code must analyse clean. Both run in CI:
+
+```bash
+composer analyse   # PHPStan (Larastan, level 6)
+composer lint      # Pint style check (vendor/bin/pint to auto-fix)
+```
+
 ## Domain model
 
 ```

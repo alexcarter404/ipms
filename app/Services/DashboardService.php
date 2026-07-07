@@ -10,6 +10,7 @@ use App\Repositories\ClientRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\RenewalRepository;
 use App\Repositories\TaskRepository;
+use App\Support\MoneyMinor;
 
 class DashboardService
 {
@@ -18,8 +19,7 @@ class DashboardService
         private ClientRepository $clients,
         private TaskRepository $tasks,
         private RenewalRepository $renewals,
-    ) {
-    }
+    ) {}
 
     /** Everything the dashboard page shows. */
     public function overview(User $user): array
@@ -52,7 +52,7 @@ class DashboardService
         );
 
         return round(
-            \App\Support\MoneyMinor::fromMinor(
+            MoneyMinor::fromMinor(
                 (int) TimeEntry::billable()->tap($mine)->sum('base_amount')
                 + (int) Disbursement::billable()->tap($mine)->sum('base_amount')
                 + (int) Charge::billable()->tap($mine)->sum('base_amount')

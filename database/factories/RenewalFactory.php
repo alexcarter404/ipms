@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\RenewalStatus;
 use App\Models\Matter;
+use App\Models\Renewal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Renewal>
+ * @extends Factory<Renewal>
  */
 class RenewalFactory extends Factory
 {

@@ -20,8 +20,7 @@ class ApiConnector implements IpoConnector
     public function __construct(
         private string $office,
         private OfficeExchangeConnector $connector,
-    ) {
-    }
+    ) {}
 
     public function office(): string
     {

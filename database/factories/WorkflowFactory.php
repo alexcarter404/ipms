@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\TriggerEvent;
+use App\Models\Workflow;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Workflow>
+ * @extends Factory<Workflow>
  */
 class WorkflowFactory extends Factory
 {

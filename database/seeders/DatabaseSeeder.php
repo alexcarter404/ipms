@@ -2,37 +2,44 @@
 
 namespace Database\Seeders;
 
-use App\Enums\MatterStatus;
-use App\Enums\MatterType;
-use App\Enums\RenewalStatus;
-use App\Enums\TaskPriority;
-use App\Enums\TaskStatus;
-use App\Enums\TriggerEvent;
 use App\Actions\Billing\AddCharge;
 use App\Actions\Billing\AddDisbursement;
 use App\Actions\Billing\LogTime;
 use App\Actions\Billing\RaiseStageCharge;
+use App\Actions\Documents\GenerateDocument;
+use App\Actions\Documents\StoreDocument;
+use App\Actions\Integrations\CreateSubmission;
+use App\Enums\DocumentCategory;
+use App\Enums\MatterStatus;
+use App\Enums\MatterType;
+use App\Enums\RenewalStatus;
+use App\Enums\SubmissionType;
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
+use App\Enums\TriggerEvent;
 use App\Models\ActivityCode;
 use App\Models\Client;
 use App\Models\CommTemplate;
 use App\Models\ExchangeRate;
 use App\Models\Family;
 use App\Models\Matter;
+use App\Models\OfficeMessage;
+use App\Models\OfficeSubmission;
 use App\Models\Party;
+use App\Models\PortalUser;
 use App\Models\RateCard;
 use App\Models\TaxRate;
 use App\Models\User;
 use App\Models\Workflow;
-use App\Actions\Integrations\CreateSubmission;
-use App\Enums\SubmissionType;
-use App\Models\OfficeMessage;
-use App\Models\OfficeSubmission;
 use App\Services\Integrations\BuildSubmissionPayload;
-use App\Services\InvoiceBuilder;
 use App\Services\Integrations\IngestOfficeMessages;
+use App\Services\Integrations\RegisterReconciliation;
+use App\Services\InvoiceBuilder;
 use App\Services\Invoicing\InvoicingProvider;
+use App\Services\Mailroom\IngestInboundMail;
 use App\Services\RenewalScheduler;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class DatabaseSeeder extends Seeder
 {
@@ -403,9 +410,9 @@ class DatabaseSeeder extends Seeder
         // --- Budgets: accumulate per matter, audit-stamped ---
         $gbPriority->budgets()->createMany([
             ['created_by' => $admin->id, 'description' => 'Initial prosecution budget',
-             'amount' => 1000, 'currency_code' => 'GBP', 'base_amount' => 1000],
+                'amount' => 1000, 'currency_code' => 'GBP', 'base_amount' => 1000],
             ['created_by' => $attorney->id, 'description' => 'Uplift for examination response',
-             'amount' => 500, 'currency_code' => 'GBP', 'base_amount' => 500],
+                'amount' => 500, 'currency_code' => 'GBP', 'base_amount' => 500],
         ]);
         $tm->budgets()->create([
             'created_by' => $admin->id, 'description' => 'Registration programme',
@@ -531,16 +538,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // --- Documents on the docket ---
-        $store = app(\App\Actions\Documents\StoreDocument::class);
+        $store = app(StoreDocument::class);
         $store->fromContent($gbPriority, 'specification-as-filed.pdf',
             "%PDF-1.4 demo\nSpecification as filed — GB2101234.5\nSelf-sealing valve assembly.", [
                 'title' => 'Specification as filed',
-                'category' => \App\Enums\DocumentCategory::FiledDocument,
+                'category' => DocumentCategory::FiledDocument,
                 'source' => 'upload',
                 'mime' => 'application/pdf',
                 'uploaded_by' => $admin->id,
             ]);
-        app(\App\Actions\Documents\GenerateDocument::class)->handle(
+        app(GenerateDocument::class)->handle(
             $gbPriority,
             CommTemplate::firstWhere('name', 'Filing Confirmation') ?? CommTemplate::first(),
             $admin,
@@ -548,7 +555,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // --- Mailroom: inbound email capture ---
-        $mailroom = app(\App\Services\Mailroom\IngestInboundMail::class);
+        $mailroom = app(IngestInboundMail::class);
         // Matched by the reference in the subject; attachment auto-filed
         $mailroom->ingest([
             'message_id' => 'MSG-2026-0611-01',
@@ -611,15 +618,15 @@ class DatabaseSeeder extends Seeder
             'abstract' => 'A controller allocating haptic feedback channels adaptively across peripherals.',
         ];
         foreach ($registers as $office => $records) {
-            \Illuminate\Support\Facades\Storage::disk('local')->put(
+            Storage::disk('local')->put(
                 config('integrations.register_path')."/{$office}.json",
                 json_encode($records, JSON_PRETTY_PRINT)
             );
         }
-        app(\App\Services\Integrations\RegisterReconciliation::class)->run();
+        app(RegisterReconciliation::class)->run();
 
         // --- Client portal login for ACME ---
-        \App\Models\PortalUser::create([
+        PortalUser::create([
             'client_id' => $acme->id,
             'name' => 'Sarah Bennett',
             'email' => 'sarah.bennett@acme.example',

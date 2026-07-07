@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Matters\TakeOnMatter;
+use App\Enums\TriggerEvent;
 use App\Http\Requests\TakeOnMatterRequest;
 use App\Models\Workflow;
 use App\Services\MatterFormOptions;
@@ -22,7 +23,7 @@ class MatterTakeOnController extends Controller
                 ->whereHas('steps')
                 ->get(['id', 'name', 'matter_type', 'trigger_event']),
             'contractFields' => ContractFields::options(),
-            'triggerDateFields' => collect(\App\Enums\TriggerEvent::cases())
+            'triggerDateFields' => collect(TriggerEvent::cases())
                 ->mapWithKeys(fn ($event) => [$event->value => $event->dateField()]),
         ]);
     }

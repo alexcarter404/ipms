@@ -4,6 +4,7 @@ namespace App\Actions\Workflows;
 
 use App\Exceptions\DomainActionException;
 use App\Models\Matter;
+use App\Models\MatterTask;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Services\WorkflowRunner;
@@ -12,15 +13,13 @@ use Illuminate\Support\Collection;
 
 class ApplyWorkflowToMatter
 {
-    public function __construct(private WorkflowRunner $runner)
-    {
-    }
+    public function __construct(private WorkflowRunner $runner) {}
 
     /**
      * Fan a workflow's steps out into matter tasks, anchored on the
      * given base date or the matter date implied by the trigger event.
      *
-     * @return Collection<int, \App\Models\MatterTask>
+     * @return Collection<int, MatterTask>
      */
     public function handle(Matter $matter, Workflow $workflow, ?string $baseDate, ?User $actor, ?int $assigneeId): Collection
     {

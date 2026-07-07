@@ -11,9 +11,7 @@ use App\Services\ExchangeRateService;
  */
 class AmendBudget
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     public function handle(Budget $budget, array $data): Budget
     {

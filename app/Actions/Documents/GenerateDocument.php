@@ -18,9 +18,7 @@ use Illuminate\Support\Str;
  */
 class GenerateDocument
 {
-    public function __construct(private TemplateRenderer $renderer, private StoreDocument $store)
-    {
-    }
+    public function __construct(private TemplateRenderer $renderer, private StoreDocument $store) {}
 
     public function handle(Matter $matter, CommTemplate $template, User $user, ?string $title = null): Document
     {

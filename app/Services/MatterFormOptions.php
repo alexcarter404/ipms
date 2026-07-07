@@ -18,8 +18,7 @@ class MatterFormOptions
         private FamilyRepository $families,
         private UserRepository $users,
         private MatterRepository $matters,
-    ) {
-    }
+    ) {}
 
     public function build(): array
     {

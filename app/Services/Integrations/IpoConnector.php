@@ -21,7 +21,7 @@ interface IpoConnector
      * unacknowledged and the receipt arrives later as an inbound
      * 'receipt' message referencing the submission id.
      *
-     * @param array $payload includes 'submission_id' for correlation
+     * @param  array  $payload  includes 'submission_id' for correlation
      */
     public function submit(array $payload): array;
 

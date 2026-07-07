@@ -15,9 +15,7 @@ use Illuminate\Support\Carbon;
  */
 class RaiseStageCharge
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     public function handle(BillingAgreementStage $stage): Charge
     {
