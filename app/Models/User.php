@@ -12,13 +12,23 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'access_role'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    public function isAdmin(): bool
+    {
+        return $this->access_role === \App\Enums\AccessRole::Admin;
+    }
+
+    public function canWrite(): bool
+    {
+        return $this->access_role !== \App\Enums\AccessRole::ReadOnly;
+    }
 
     /** Credentials and 2FA material must never reach the audit log. */
     protected $auditExclude = [
@@ -37,6 +47,7 @@ class User extends Authenticatable implements Auditable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'role' => \App\Enums\TimekeeperRole::class,
+            'access_role' => \App\Enums\AccessRole::class,
         ];
     }
 }

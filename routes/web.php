@@ -7,6 +7,8 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientEntityController;
+use App\Http\Controllers\ConflictCheckController;
+use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\DisbursementController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
@@ -72,15 +74,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Renewals & schedule rules
     Route::get('renewals', [RenewalController::class, 'index'])->name('renewals.index');
     Route::resource('renewal-rules', RenewalRuleController::class)
-        ->except(['show'])
+        ->only(['index'])
         ->parameters(['renewal-rules' => 'renewalRule']);
+    Route::resource('renewal-rules', RenewalRuleController::class)
+        ->except(['index', 'show'])
+        ->parameters(['renewal-rules' => 'renewalRule'])
+        ->middleware('can:manage-settings');
     Route::post('matters/{matter}/renewals', [RenewalController::class, 'store'])->name('matters.renewals.store');
     Route::post('matters/{matter}/renewals/generate', [RenewalController::class, 'generate'])->name('matters.renewals.generate');
     Route::patch('renewals/{renewal}', [RenewalController::class, 'update'])->name('renewals.update');
     Route::delete('renewals/{renewal}', [RenewalController::class, 'destroy'])->name('renewals.destroy');
 
     // Workflows
-    Route::resource('workflows', WorkflowController::class)->except(['show']);
+    Route::resource('workflows', WorkflowController::class)->only(['index']);
+    Route::resource('workflows', WorkflowController::class)
+        ->except(['index', 'show'])
+        ->middleware('can:manage-settings');
     Route::post('matters/{matter}/apply-workflow', [WorkflowApplicationController::class, 'store'])->name('matters.workflows.apply');
 
     // Billing: agreements & WIP (time, disbursements, charges)
@@ -112,6 +121,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit log: roll a record back/forward across an update entry
     Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
+
+    // Users & access (admin): roles and ethical walls
+    Route::get('settings/users', [UserAccessController::class, 'index'])
+        ->name('users.index')->middleware('can:manage-users');
+    Route::patch('settings/users/{user}', [UserAccessController::class, 'update'])
+        ->name('users.update')->middleware('can:manage-users');
+    Route::put('clients/{client}/wall', [UserAccessController::class, 'syncWall'])
+        ->name('clients.wall')->middleware('can:manage-users');
+
+    // Conflict check at intake
+    Route::get('conflict-check', ConflictCheckController::class)->name('conflict-check');
 
     // Mailroom: inbound email capture onto matters
     Route::get('mailroom', [MailroomController::class, 'index'])->name('mailroom.index');
@@ -150,21 +170,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Billing: settings (exchange rates, tax rates, activity codes, rate cards)
     Route::get('billing/settings', [BillingSettingsController::class, 'edit'])->name('billing.settings');
-    Route::post('billing/sync-rates', [BillingSettingsController::class, 'syncRates'])->name('billing.sync-rates');
-    Route::post('billing/exchange-rates', [BillingSettingsController::class, 'saveExchangeRate'])->name('billing.exchange-rates.save');
-    Route::post('billing/tax-rates', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.store');
-    Route::patch('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.update');
-    Route::delete('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'deleteTaxRate'])->name('billing.tax-rates.destroy');
-    Route::post('billing/activity-codes', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.store');
-    Route::patch('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.update');
-    Route::delete('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'deleteActivityCode'])->name('billing.activity-codes.destroy');
-    Route::patch('billing/timekeepers/{user}/role', [BillingSettingsController::class, 'updateUserRole'])->name('billing.timekeepers.role');
-    Route::post('billing/rate-cards', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.store');
-    Route::patch('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.update');
-    Route::delete('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'deleteRateCard'])->name('billing.rate-cards.destroy');
+    Route::post('billing/sync-rates', [BillingSettingsController::class, 'syncRates'])->name('billing.sync-rates')->middleware('can:manage-billing-settings');
+    Route::post('billing/exchange-rates', [BillingSettingsController::class, 'saveExchangeRate'])->name('billing.exchange-rates.save')->middleware('can:manage-billing-settings');
+    Route::post('billing/tax-rates', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.store')->middleware('can:manage-billing-settings');
+    Route::patch('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'saveTaxRate'])->name('billing.tax-rates.update')->middleware('can:manage-billing-settings');
+    Route::delete('billing/tax-rates/{taxRate}', [BillingSettingsController::class, 'deleteTaxRate'])->name('billing.tax-rates.destroy')->middleware('can:manage-billing-settings');
+    Route::post('billing/activity-codes', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.store')->middleware('can:manage-billing-settings');
+    Route::patch('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'saveActivityCode'])->name('billing.activity-codes.update')->middleware('can:manage-billing-settings');
+    Route::delete('billing/activity-codes/{activityCode}', [BillingSettingsController::class, 'deleteActivityCode'])->name('billing.activity-codes.destroy')->middleware('can:manage-billing-settings');
+    Route::patch('billing/timekeepers/{user}/role', [BillingSettingsController::class, 'updateUserRole'])->name('billing.timekeepers.role')->middleware('can:manage-billing-settings');
+    Route::post('billing/rate-cards', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.store')->middleware('can:manage-billing-settings');
+    Route::patch('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'saveRateCard'])->name('billing.rate-cards.update')->middleware('can:manage-billing-settings');
+    Route::delete('billing/rate-cards/{rateCard}', [BillingSettingsController::class, 'deleteRateCard'])->name('billing.rate-cards.destroy')->middleware('can:manage-billing-settings');
 
     // Communication templates & communications
-    Route::resource('templates', CommTemplateController::class, ['parameters' => ['templates' => 'template']])->except(['show']);
+    Route::resource('templates', CommTemplateController::class, ['parameters' => ['templates' => 'template']])->only(['index']);
+    Route::resource('templates', CommTemplateController::class, ['parameters' => ['templates' => 'template']])
+        ->except(['index', 'show'])
+        ->middleware('can:manage-settings');
     Route::post('templates/preview', [CommTemplateController::class, 'preview'])->name('templates.preview');
     Route::post('matters/{matter}/communications', [CommunicationController::class, 'store'])->name('matters.communications.store');
     Route::post('communications/{communication}/send', [CommunicationController::class, 'markSent'])->name('communications.send');

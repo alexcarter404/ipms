@@ -10,8 +10,9 @@ import StatusBadge from '@/Components/StatusBadge.vue';
 import EntitiesPanel from './Partials/EntitiesPanel.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import MultiSelect from 'primevue/multiselect';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm';
 
 const props = defineProps({
@@ -23,7 +24,19 @@ const props = defineProps({
     taxRates: Array,
     agreementTypes: Array,
     audits: { type: Array, default: () => [] },
+    wallUserIds: { type: Array, default: () => [] },
+    userOptions: { type: Array, default: () => [] },
 });
+
+const isAdmin = computed(() => usePage().props.auth.user.access_role === 'admin');
+const wallSelection = ref([...props.wallUserIds]);
+
+const saveWall = () =>
+    router.put(
+        route('clients.wall', props.client.id),
+        { user_ids: wallSelection.value },
+        { preserveScroll: true }
+    );
 
 const typeLabel = (value) =>
     props.contactTypes.find((t) => t.value === value)?.label ?? value;
@@ -271,6 +284,27 @@ const removeContact = (contact) =>
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Ethical wall (admin) -->
+            <div v-if="isAdmin" class="rounded-lg bg-white p-6 shadow-sm" data-testid="wall-panel">
+                <h3 class="mb-1 font-semibold text-gray-800">Access restrictions</h3>
+                <p class="mb-4 text-sm text-gray-500">
+                    Behind a wall, this client and all its matters are visible only to the users
+                    listed here (administrators always see everything). Leave empty for no wall.
+                </p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <MultiSelect
+                        v-model="wallSelection"
+                        :options="userOptions"
+                        option-label="label"
+                        option-value="value"
+                        placeholder="No wall — visible to everyone"
+                        display="chip"
+                        class="w-full max-w-xl"
+                    />
+                    <PrimaryButton @click="saveWall">Save Wall</PrimaryButton>
+                </div>
+            </div>
 
             <!-- Audit history -->
             <div class="rounded-lg bg-white p-6 shadow-sm">

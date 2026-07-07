@@ -100,6 +100,12 @@ const isCurrent = (patterns) =>
                                             Profile
                                         </DropdownLink>
                                         <DropdownLink
+                                            v-if="$page.props.auth.user.access_role === 'admin'"
+                                            :href="route('users.index')"
+                                        >
+                                            Users &amp; Access
+                                        </DropdownLink>
+                                        <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"

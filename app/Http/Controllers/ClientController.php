@@ -51,12 +51,18 @@ class ClientController extends Controller
 
     public function show(Client $client, BillingSettingsRepository $billingSettings, AuditRepository $audits): Response
     {
+        \Illuminate\Support\Facades\Gate::authorize('view-client', $client);
+
         return Inertia::render('Clients/Show', [
             'client' => $this->clients->loadForDisplay($client),
             'countries' => Countries::options(),
             'contactTypes' => ContactType::options(),
             'matters' => $this->clients->paginateMatters($client),
             'audits' => $audits->forClient($client),
+            'wallUserIds' => $client->walls()->pluck('user_id'),
+            'userOptions' => \App\Models\User::orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn ($u) => ['value' => $u->id, 'label' => $u->name]),
             'billingCurrencies' => Currencies::options(),
             'taxRates' => $billingSettings->taxRateOptions(),
             // Entity defaults can't be stage agreements (milestones are matter-specific)

@@ -42,12 +42,14 @@ class DatabaseSeeder extends Seeder
             'name' => 'Alex Carter',
             'email' => 'admin@example.com',
             'role' => 'partner',
+            'access_role' => 'admin',
         ]);
 
         $attorney = User::factory()->create([
             'name' => 'Jordan Reeves',
             'email' => 'jordan@example.com',
             'role' => 'attorney',
+            'access_role' => 'professional',
         ]);
 
         // Auditing is off in console runs by default; the demo data
