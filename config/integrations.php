@@ -49,6 +49,25 @@ return [
     'outbox_path' => 'ipo-outbox',
 
     /*
+    | Where register extracts live for the file-drop driver: one JSON
+    | map per office (ipo-register/<office>.json) keyed by application
+    | number. API drivers look the number up live instead.
+    */
+    'register_path' => 'ipo-register',
+
+    /*
+    | Which office speaks for which jurisdiction when importing or
+    | reconciling by application number.
+    */
+    'office_by_country' => [
+        'EP' => 'epo',
+        'GB' => 'ukipo',
+        'US' => 'uspto',
+        'EU' => 'euipo',
+        'WO' => 'wipo',
+    ],
+
+    /*
     | Process matched messages immediately on ingestion. When false,
     | everything waits in the inbox for a human to hit Process.
     */

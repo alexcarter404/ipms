@@ -573,6 +573,51 @@ class DatabaseSeeder extends Seeder
             'received_at' => now()->subHours(5)->toDateTimeString(),
         ]);
 
+        // --- Office registers: extracts per office + a reconcile run ---
+        $officeByCountry = config('integrations.office_by_country');
+        $registers = [];
+        foreach (Matter::whereNotNull('application_no')->get() as $matter) {
+            $office = $officeByCountry[$matter->country_code] ?? null;
+            if (! $office) {
+                continue;
+            }
+            // The register agrees with the docket (only known fields speak)
+            $registers[$office][$matter->application_no] = array_filter([
+                'title' => $matter->title,
+                'matter_type' => $matter->matter_type->value,
+                'country_code' => $matter->country_code,
+                'application_no' => $matter->application_no,
+                'application_date' => $matter->application_date?->toDateString(),
+                'publication_no' => $matter->publication_no,
+                'publication_date' => $matter->publication_date?->toDateString(),
+                'registration_no' => $matter->registration_no,
+                'registration_date' => $matter->registration_date?->toDateString(),
+            ]);
+        }
+        // ...except the EP case: the register knows a publication we missed
+        $registers['epo']['EP21789012.3']['publication_no'] = 'EP4123456';
+        $registers['epo']['EP21789012.3']['publication_date'] = now()->subYears(3)->subMonths(8)->toDateString();
+        // ...and carries an application we can import
+        $registers['epo']['EP24555001.1'] = [
+            'title' => 'Adaptive haptic feedback allocator',
+            'matter_type' => 'patent',
+            'country_code' => 'EP',
+            'filing_route' => 'ep',
+            'status' => 'under_examination',
+            'application_no' => 'EP24555001.1',
+            'application_date' => now()->subMonths(14)->toDateString(),
+            'publication_no' => 'EP4477001',
+            'publication_date' => now()->subMonths(2)->toDateString(),
+            'abstract' => 'A controller allocating haptic feedback channels adaptively across peripherals.',
+        ];
+        foreach ($registers as $office => $records) {
+            \Illuminate\Support\Facades\Storage::disk('local')->put(
+                config('integrations.register_path')."/{$office}.json",
+                json_encode($records, JSON_PRETTY_PRINT)
+            );
+        }
+        app(\App\Services\Integrations\RegisterReconciliation::class)->run();
+
         // --- A little edit history for the audit trail demo ---
         auth()->login($attorney);
         Matter::firstWhere('reference', 'P-2021-0001')->update([

@@ -1,11 +1,17 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Dialog from 'primevue/dialog';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { onUnmounted, reactive, watch } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { onUnmounted, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
     matters: Object,
@@ -14,7 +20,20 @@ const props = defineProps({
     statuses: Array,
     countries: Array,
     clients: Array,
+    offices: { type: Array, default: () => [] },
 });
+
+// Import a matter straight from an office register
+const showImport = ref(false);
+const importForm = useForm({ office: '', application_no: '', client_id: '' });
+
+const submitImport = () =>
+    importForm.post(route('matters.import'), {
+        onSuccess: () => {
+            importForm.reset();
+            showImport.value = false;
+        },
+    });
 
 const form = reactive({
     search: props.filters.search ?? '',
@@ -61,6 +80,7 @@ const typeLabel = (value) => props.types.find((t) => t.value === value)?.label ?
                     Matters
                 </h2>
                 <div class="flex gap-2">
+                    <SecondaryButton @click="showImport = true">Import from Office</SecondaryButton>
                     <Link
                         :href="route('matters.take-on')"
                         class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
@@ -155,5 +175,38 @@ const typeLabel = (value) => props.types.find((t) => t.value === value)?.label ?
                 </Column>
             </DataTable>
         </div>
+        <Dialog v-model:visible="showImport" modal header="Import from Office Register" :style="{ width: '28rem' }">
+            <form class="space-y-4" @submit.prevent="submitImport">
+                <p class="text-sm text-gray-500">
+                    Give the office an application number and the register record fills the
+                    docket — title, type, official numbers and dates.
+                </p>
+                <div>
+                    <InputLabel value="Office *" />
+                    <SelectInput v-model="importForm.office" :options="offices" class="mt-1 w-full" />
+                    <InputError :message="importForm.errors.office" class="mt-1" />
+                </div>
+                <div>
+                    <InputLabel value="Application number *" />
+                    <TextInput v-model="importForm.application_no" class="mt-1 w-full" placeholder="e.g. EP24555001.1" />
+                    <InputError :message="importForm.errors.application_no" class="mt-1" />
+                </div>
+                <div>
+                    <InputLabel value="Client *" />
+                    <SelectInput
+                        v-model="importForm.client_id"
+                        :options="clients.map((c) => ({ value: c.id, label: c.name }))"
+                        class="mt-1 w-full"
+                    />
+                    <InputError :message="importForm.errors.client_id" class="mt-1" />
+                </div>
+                <div class="flex justify-end gap-2">
+                    <SecondaryButton type="button" @click="showImport = false">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="importForm.processing || !importForm.office || !importForm.application_no || !importForm.client_id">
+                        Import Matter
+                    </PrimaryButton>
+                </div>
+            </form>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

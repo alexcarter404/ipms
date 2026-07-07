@@ -11,7 +11,7 @@ const props = defineProps({
 const severities = {
     success: ['granted', 'registered', 'accepted', 'completed', 'paid', 'sent', 'processed', 'grant', 'registration', 'acknowledged'],
     info: ['filed', 'published', 'in_progress', 'instructed', 'reminder_sent', 'under_examination', 'normal', 'billable', 'issued', 'matched', 'publication', 'renewal_reminder', 'time', 'submitted', 'received'],
-    warn: ['pending', 'pending_filing', 'upcoming', 'office_action', 'opposed', 'high', 'needs_review'],
+    warn: ['pending', 'pending_filing', 'upcoming', 'office_action', 'opposed', 'high', 'needs_review', 'drift', 'not_found'],
     danger: ['critical', 'declined', 'void', 'failed'],
     secondary: ['draft', 'abandoned', 'lapsed', 'expired', 'closed', 'cancelled', 'waived', 'low', 'billed', 'written_off', 'non_billable', 'dismissed', 'disbursement', 'charge'],
 };

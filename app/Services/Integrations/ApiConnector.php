@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Http\Integrations\OfficeExchange\OfficeExchangeConnector;
 use App\Http\Integrations\OfficeExchange\Requests\ListMessagesRequest;
+use App\Http\Integrations\OfficeExchange\Requests\LookupRegisterRequest;
 use App\Http\Integrations\OfficeExchange\Requests\SubmitSubmissionRequest;
 use App\Models\OfficeMessage;
 
@@ -25,6 +26,13 @@ class ApiConnector implements IpoConnector
     public function office(): string
     {
         return $this->office;
+    }
+
+    public function lookup(string $applicationNo): ?array
+    {
+        $response = $this->connector->send(new LookupRegisterRequest($applicationNo));
+
+        return $response->status() === 404 ? null : $response->json('record');
     }
 
     public function fetch(): array

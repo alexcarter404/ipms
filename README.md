@@ -171,6 +171,15 @@ renewal/annuity management.
   payload + automation audit per message, assign-matter for unmatched
   messages, process/dismiss, and Poll Now (also scheduled hourly via
   `ipo:poll`)
+- **Import from the register**: create a matter straight from an
+  office by application number — the register record fills the docket
+  (title, type, official numbers and dates, status) and the reference
+  is generated from the type's sequence
+- **Register reconciliation** (`ipo:reconcile`, scheduled weekly, or
+  on demand): every matter is compared field-by-field against the
+  office record; drift lands in a review queue on the Integrations
+  page with ours-vs-register diffs and one-click "accept office
+  values". Absent-from-register results are recorded as informational
 - **Outbound submissions**: filings, office action responses, renewal
   payments and documents are drafted as canonical packages built from
   matter data, pushed through the same per-office connector (file-drop
@@ -314,7 +323,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 260 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 265 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -326,7 +335,7 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 67 tests driving the real app —
+**End-to-end UI tests** (Playwright, 69 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

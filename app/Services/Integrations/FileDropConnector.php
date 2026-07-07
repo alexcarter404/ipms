@@ -33,6 +33,32 @@ class FileDropConnector implements IpoConnector
         return ['acknowledged' => false, 'external_ref' => null, 'receipt' => null];
     }
 
+    /**
+     * The register fixture: one JSON map per office at
+     * ipo-register/<office>.json, keyed by normalised application
+     * number (the SFTP-era "register extract" pattern).
+     */
+    public function lookup(string $applicationNo): ?array
+    {
+        $disk = Storage::disk('local');
+        $path = config('integrations.register_path', 'ipo-register')."/{$this->office}.json";
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $register = json_decode($disk->get($path), true) ?? [];
+        $normalise = fn (string $n) => strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $n));
+
+        foreach ($register as $number => $record) {
+            if ($normalise((string) $number) === $normalise($applicationNo)) {
+                return $record;
+            }
+        }
+
+        return null;
+    }
+
     public function fetch(): array
     {
         $disk = Storage::disk('local');
