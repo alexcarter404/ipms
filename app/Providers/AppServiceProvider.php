@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Services\Invoicing\InternalInvoicingProvider;
 use App\Services\Invoicing\InvoicingProvider;
+use App\Enums\AccessRole;
+use App\Models\Client;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +31,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Access control: admins own configuration; finance shares the
+        // billing settings; read-only users change nothing (enforced by
+        // middleware); walled clients only show to their wall.
+        Gate::define('manage-settings', fn (User $user) => $user->isAdmin());
+        Gate::define('manage-users', fn (User $user) => $user->isAdmin());
+        Gate::define('manage-billing-settings', fn (User $user) => $user->isAdmin()
+            || $user->access_role === AccessRole::Finance);
+        Gate::define('view-client', fn (User $user, Client $client) => $client->isVisibleTo($user));
     }
 }

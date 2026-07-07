@@ -17,6 +17,33 @@ class Client extends Model implements Auditable
         'code', 'name', 'type', 'email', 'phone', 'country_code', 'notes',
     ];
 
+    /** Users behind this client's ethical wall (empty = no wall). */
+    public function walls(): HasMany
+    {
+        return $this->hasMany(ClientWall::class);
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        if ($user->isAdmin() || ! $this->walls()->exists()) {
+            return true;
+        }
+
+        return $this->walls()->where('user_id', $user->id)->exists();
+    }
+
+    /** Walled clients only show to their wall members (and admins). */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->where(fn ($q) => $q
+            ->whereDoesntHave('walls')
+            ->orWhereHas('walls', fn ($w) => $w->where('user_id', $user->id)));
+    }
+
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);

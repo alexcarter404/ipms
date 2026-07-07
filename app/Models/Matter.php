@@ -46,6 +46,16 @@ class Matter extends Model implements Auditable
         return $this->belongsTo(Client::class);
     }
 
+    /** A matter is only as visible as its client's ethical wall allows. */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereHas('client', fn ($q) => $q->visibleTo($user));
+    }
+
     public function billingEntity(): BelongsTo
     {
         return $this->belongsTo(ClientEntity::class, 'client_entity_id');

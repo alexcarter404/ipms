@@ -231,6 +231,26 @@ renewal/annuity management.
   Restores are saved through the model, so the time-travel itself
   lands in the audit trail
 
+### Roles, Permissions & Conflicts
+- **Access roles** orthogonal to timekeeper grades: administrator
+  (everything, including configuration and users), professional
+  (day-to-day matter/docket/billing work), finance (billing operations
+  plus billing settings) and **read-only** (browses everything they may
+  see, changes nothing — enforced by middleware on every mutating
+  request, not per-controller)
+- Configuration is admin-only (workflows, templates, renewal rules,
+  users); billing settings are shared with finance; the last
+  administrator can never be demoted
+- **Ethical walls** per client: behind a wall, the client and all its
+  matters are visible only to the listed users (admins always see
+  everything) — enforced on index lists, detail pages, and global
+  search alike; managed from the client page
+- **Users & Access screen** (admin): grades, access roles and 2FA
+  status at a glance
+- **Conflict check at intake**: search the whole practice for a name —
+  clients, entities, contacts and opposing parties — before taking on
+  a new client
+
 ### Authentication & Security
 - Session auth powered end-to-end by **Laravel Fortify** (headless),
   rendered through the app's Inertia pages: login, registration,
@@ -294,7 +314,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 254 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 260 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -306,7 +326,7 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 64 tests driving the real app —
+**End-to-end UI tests** (Playwright, 67 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

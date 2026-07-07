@@ -85,6 +85,8 @@ class MatterController extends Controller
         AuditRepository $audits,
         DocumentRepository $documents,
     ): Response {
+        \Illuminate\Support\Facades\Gate::authorize('view-client', $matter->client);
+
         $this->matters->loadForDisplay($matter);
 
         $renewalRule = $scheduler->ruleFor($matter);

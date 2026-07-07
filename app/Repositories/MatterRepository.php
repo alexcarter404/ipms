@@ -11,6 +11,7 @@ class MatterRepository
     public function paginateFiltered(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return Matter::query()
+            ->when(auth()->user(), fn ($q, $user) => $q->visibleTo($user))
             ->with(['client:id,name', 'responsibleUser:id,name'])
             ->search($filters['search'] ?? null)
             ->when($filters['type'] ?? null, fn ($q, $type) => $q->where('matter_type', $type))
@@ -76,6 +77,7 @@ class MatterRepository
     public function searchTypeahead(string $like, int $limit): Collection
     {
         return Matter::query()
+            ->when(auth()->user(), fn ($q, $user) => $q->visibleTo($user))
             ->with('client:id,name')
             ->where(fn ($w) => $w
                 ->where('reference', 'like', $like)
