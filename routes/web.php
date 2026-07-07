@@ -30,6 +30,7 @@ use App\Http\Controllers\OfficeMessageController;
 use App\Http\Controllers\OfficeSubmissionController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\MatterTakeOnController;
+use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RenewalController;
 use App\Http\Controllers\RenewalRuleController;
@@ -40,7 +41,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Client portal: separate guard, hard-scoped to the client
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('login', [PortalController::class, 'login'])->name('login');
+    Route::post('login', [PortalController::class, 'authenticate'])->name('login.attempt');
+
+    Route::middleware('auth:portal')->group(function () {
+        Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');
+        Route::post('renewals/{renewal}/instruct', [PortalController::class, 'instructRenewal'])->name('renewals.instruct');
+        Route::get('documents/{document}/download', [PortalController::class, 'downloadDocument'])->name('documents.download');
+        Route::post('logout', [PortalController::class, 'logout'])->name('logout');
+    });
+});
+
+Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', App\Http\Controllers\SearchController::class)->name('search');
 
@@ -136,6 +150,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('users.update')->middleware('can:manage-users');
     Route::put('clients/{client}/wall', [UserAccessController::class, 'syncWall'])
         ->name('clients.wall')->middleware('can:manage-users');
+    Route::post('clients/{client}/portal-users', [UserAccessController::class, 'storePortalUser'])
+        ->name('clients.portal-users.store')->middleware('can:manage-users');
+    Route::delete('portal-users/{portalUser}', [UserAccessController::class, 'destroyPortalUser'])
+        ->name('portal-users.destroy')->middleware('can:manage-users');
 
     // Conflict check at intake
     Route::get('conflict-check', ConflictCheckController::class)->name('conflict-check');
@@ -201,7 +219,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('communications/{communication}', [CommunicationController::class, 'destroy'])->name('communications.destroy');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

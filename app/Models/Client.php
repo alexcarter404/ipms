@@ -44,6 +44,11 @@ class Client extends Model implements Auditable
             ->orWhereHas('walls', fn ($w) => $w->where('user_id', $user->id)));
     }
 
+    public function portalUsers(): HasMany
+    {
+        return $this->hasMany(PortalUser::class);
+    }
+
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);

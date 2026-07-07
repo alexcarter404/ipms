@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\PreventReadOnlyWrites::class,
         ]);
 
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->routeIs('portal.*')
+            ? route('portal.login')
+            : route('login'));
+
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -11,7 +11,7 @@ class ClientRepository
     public function paginateSearch(?string $search, int $perPage = 15): LengthAwarePaginator
     {
         return Client::query()
-            ->when(auth()->user(), fn ($q, $user) => $q->visibleTo($user))
+            ->when(auth('web')->user(), fn ($q, $user) => $q->visibleTo($user))
             ->withCount('matters')
             ->when($search, fn ($q, $term) => $q->where(
                 fn ($w) => $w->where('name', 'like', "%{$term}%")
@@ -60,7 +60,7 @@ class ClientRepository
     public function searchTypeahead(string $like, int $limit): Collection
     {
         return Client::query()
-            ->when(auth()->user(), fn ($q, $user) => $q->visibleTo($user))
+            ->when(auth('web')->user(), fn ($q, $user) => $q->visibleTo($user))
             ->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('code', 'like', $like))
             ->limit($limit)
             ->get();

@@ -26,7 +26,20 @@ const props = defineProps({
     audits: { type: Array, default: () => [] },
     wallUserIds: { type: Array, default: () => [] },
     userOptions: { type: Array, default: () => [] },
+    portalUsers: { type: Array, default: () => [] },
 });
+
+const portalForm = useForm({ name: '', email: '', password: '' });
+
+const addPortalUser = () =>
+    portalForm.post(route('clients.portal-users.store', props.client.id), {
+        preserveScroll: true,
+        onSuccess: () => portalForm.reset(),
+    });
+
+const revokePortalUser = (portalUser) =>
+    confirmDelete(`Revoke portal access for ${portalUser.name}?`, () =>
+        router.delete(route('portal-users.destroy', portalUser.id), { preserveScroll: true }), 'Revoke');
 
 const isAdmin = computed(() => usePage().props.auth.user.access_role === 'admin');
 const wallSelection = ref([...props.wallUserIds]);
@@ -304,6 +317,48 @@ const removeContact = (contact) =>
                     />
                     <PrimaryButton @click="saveWall">Save Wall</PrimaryButton>
                 </div>
+            </div>
+
+            <!-- Client portal access (admin) -->
+            <div v-if="isAdmin" class="rounded-lg bg-white p-6 shadow-sm" data-testid="portal-access">
+                <h3 class="mb-1 font-semibold text-gray-800">Client portal access</h3>
+                <p class="mb-4 text-sm text-gray-500">
+                    Portal logins see this client's matters, renewals (with pay/lapse
+                    instructions), documents and invoices — nothing else. Sign in at /portal.
+                </p>
+
+                <ul v-if="portalUsers.length" class="mb-4 divide-y text-sm">
+                    <li v-for="portalUser in portalUsers" :key="portalUser.id" class="flex items-center justify-between py-2">
+                        <div>
+                            <span class="font-medium text-gray-800">{{ portalUser.name }}</span>
+                            <span class="ml-2 text-gray-500">{{ portalUser.email }}</span>
+                            <span class="ml-2 text-xs text-gray-400">
+                                {{ portalUser.last_login_at ? `last seen ${portalUser.last_login_at}` : 'never signed in' }}
+                            </span>
+                        </div>
+                        <button type="button" class="text-xs text-red-600 hover:underline" @click="revokePortalUser(portalUser)">
+                            Revoke
+                        </button>
+                    </li>
+                </ul>
+
+                <form class="grid gap-3 sm:grid-cols-4" @submit.prevent="addPortalUser">
+                    <div>
+                        <TextInput v-model="portalForm.name" class="w-full" placeholder="Name" />
+                        <InputError :message="portalForm.errors.name" class="mt-1" />
+                    </div>
+                    <div>
+                        <TextInput v-model="portalForm.email" type="email" class="w-full" placeholder="Email" />
+                        <InputError :message="portalForm.errors.email" class="mt-1" />
+                    </div>
+                    <div>
+                        <TextInput v-model="portalForm.password" type="password" class="w-full" placeholder="Password" />
+                        <InputError :message="portalForm.errors.password" class="mt-1" />
+                    </div>
+                    <div>
+                        <PrimaryButton :disabled="portalForm.processing">Grant Access</PrimaryButton>
+                    </div>
+                </form>
             </div>
 
             <!-- Audit history -->

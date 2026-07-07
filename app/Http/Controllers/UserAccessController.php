@@ -51,6 +51,26 @@ class UserAccessController extends Controller
         return back()->with('success', "Access updated for {$user->name}.");
     }
 
+    public function storePortalUser(Request $request, Client $client): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:portal_users,email'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        $client->portalUsers()->create($data);
+
+        return back()->with('success', "Portal access created for {$data['name']}.");
+    }
+
+    public function destroyPortalUser(\App\Models\PortalUser $portalUser): RedirectResponse
+    {
+        $portalUser->delete();
+
+        return back()->with('success', 'Portal access revoked.');
+    }
+
     /** Replace the client's ethical wall with the given user list. */
     public function syncWall(Request $request, Client $client): RedirectResponse
     {
