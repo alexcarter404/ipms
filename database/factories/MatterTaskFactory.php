@@ -5,10 +5,11 @@ namespace Database\Factories;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Matter;
+use App\Models\MatterTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\MatterTask>
+ * @extends Factory<MatterTask>
  */
 class MatterTaskFactory extends Factory
 {

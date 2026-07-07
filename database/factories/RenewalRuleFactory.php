@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\MatterType;
+use App\Models\RenewalRule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\RenewalRule>
+ * @extends Factory<RenewalRule>
  */
 class RenewalRuleFactory extends Factory
 {

@@ -4,8 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\MatterType;
 use App\Enums\OfficeEventType;
-use App\Support\ContractFields;
 use App\Enums\TriggerEvent;
+use App\Support\ContractFields;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

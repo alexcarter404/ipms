@@ -3,6 +3,7 @@
 namespace App\Services\Mailroom;
 
 use App\Actions\Documents\StoreDocument;
+use App\Enums\DocumentCategory;
 use App\Models\Communication;
 use App\Models\Matter;
 use Illuminate\Support\Facades\Storage;
@@ -16,9 +17,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class IngestInboundMail
 {
-    public function __construct(private StoreDocument $documents)
-    {
-    }
+    public function __construct(private StoreDocument $documents) {}
 
     /** @return array{ingested: int, matched: int} */
     public function ingestFromInbox(): array
@@ -133,6 +132,7 @@ class IngestInboundMail
         foreach ($communication->attachments ?? [] as $attachment) {
             if (isset($attachment['document_id'])) {
                 $filed[] = $attachment; // already on the docket
+
                 continue;
             }
 
@@ -143,7 +143,7 @@ class IngestInboundMail
 
             $document = $this->documents->fromContent($communication->matter, $attachment['name'], $content, [
                 'title' => pathinfo($attachment['name'], PATHINFO_FILENAME),
-                'category' => \App\Enums\DocumentCategory::Correspondence,
+                'category' => DocumentCategory::Correspondence,
                 'source' => 'email',
                 'mime' => $attachment['mime'] ?? null,
                 'linked_type' => Communication::class,

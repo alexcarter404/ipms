@@ -10,9 +10,7 @@ class ListMessagesRequest extends Request
 {
     protected Method $method = Method::GET;
 
-    public function __construct(private ?string $since = null)
-    {
-    }
+    public function __construct(private ?string $since = null) {}
 
     public function resolveEndpoint(): string
     {

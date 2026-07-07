@@ -6,6 +6,7 @@ use App\Actions\Billing\AddCharge;
 use App\Actions\Billing\LogTime;
 use App\Mail\ScheduledReportMail;
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Matter;
 use App\Models\RateCard;
 use App\Models\Report;
@@ -35,7 +36,7 @@ class ReportingTest extends TestCase
         ]);
     }
 
-    private function billedInvoice(): \App\Models\Invoice
+    private function billedInvoice(): Invoice
     {
         RateCard::create(['currency_code' => 'GBP', 'hourly_rate' => 200, 'effective_from' => '2020-01-01']);
         app(LogTime::class)->handle($this->matter, [

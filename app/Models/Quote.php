@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\QuoteStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Quote extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'quote_no', 'client_id', 'client_entity_id', 'matter_id',
         'currency_code', 'status', 'valid_until', 'tax_name', 'tax_pct',
@@ -23,9 +25,9 @@ class Quote extends Model implements Auditable
             'status' => QuoteStatus::class,
             'valid_until' => 'date',
             'tax_pct' => 'decimal:2',
-            'subtotal' => \App\Casts\Money::class,
-            'tax_amount' => \App\Casts\Money::class,
-            'total' => \App\Casts\Money::class,
+            'subtotal' => Money::class,
+            'tax_amount' => Money::class,
+            'total' => Money::class,
         ];
     }
 

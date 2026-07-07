@@ -6,6 +6,7 @@ use App\Actions\Matters\SaveMatter;
 use App\Enums\AgreementType;
 use App\Enums\ChargeType;
 use App\Enums\ContactType;
+use App\Enums\DocumentCategory;
 use App\Enums\MatterContactRole;
 use App\Enums\MatterStatus;
 use App\Enums\MatterType;
@@ -15,14 +16,14 @@ use App\Enums\TriggerEvent;
 use App\Http\Requests\MatterRequest;
 use App\Models\Matter;
 use App\Repositories\AuditRepository;
-use App\Repositories\DocumentRepository;
+use App\Repositories\BillingSettingsRepository;
+use App\Repositories\BudgetRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\CommTemplateRepository;
 use App\Repositories\ContactRepository;
+use App\Repositories\DocumentRepository;
 use App\Repositories\MatterRepository;
 use App\Repositories\PartyRepository;
-use App\Repositories\BillingSettingsRepository;
-use App\Repositories\BudgetRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WipRepository;
 use App\Repositories\WorkflowRepository;
@@ -32,14 +33,13 @@ use App\Support\Countries;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MatterController extends Controller
 {
-    public function __construct(private MatterRepository $matters)
-    {
-    }
+    public function __construct(private MatterRepository $matters) {}
 
     public function index(Request $request, ClientRepository $clients): Response
     {
@@ -88,7 +88,7 @@ class MatterController extends Controller
         AuditRepository $audits,
         DocumentRepository $documents,
     ): Response {
-        \Illuminate\Support\Facades\Gate::authorize('view-client', $matter->client);
+        Gate::authorize('view-client', $matter->client);
 
         $this->matters->loadForDisplay($matter);
 
@@ -129,7 +129,7 @@ class MatterController extends Controller
             'billingBudget' => $budgets->forMatter($matter),
             'audits' => $audits->forMatter($matter),
             'documents' => $documents->forMatter($matter),
-            'documentCategories' => \App\Enums\DocumentCategory::options(),
+            'documentCategories' => DocumentCategory::options(),
             'billingAgreement' => $matter->effectiveBillingAgreement()?->load('stages.charge'),
             'billingAgreementSource' => $matter->billingAgreement
                 ? 'matter'
@@ -169,5 +169,4 @@ class MatterController extends Controller
 
         return redirect()->route('matters.index')->with('success', 'Matter deleted.');
     }
-
 }

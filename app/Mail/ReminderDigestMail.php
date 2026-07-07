@@ -19,8 +19,7 @@ class ReminderDigestMail extends Mailable
         public User $user,
         public Collection $tasks,
         public Collection $renewals,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {

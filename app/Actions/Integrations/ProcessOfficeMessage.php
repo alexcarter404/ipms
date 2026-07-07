@@ -3,6 +3,8 @@
 namespace App\Actions\Integrations;
 
 use App\Actions\Billing\AddDisbursement;
+use App\Actions\Documents\StoreDocument;
+use App\Enums\DocumentCategory;
 use App\Enums\OfficeEventType;
 use App\Enums\OfficeMessageStatus;
 use App\Enums\RenewalStatus;
@@ -15,6 +17,7 @@ use App\Models\OfficeSubmission;
 use App\Models\Workflow;
 use App\Services\TemplateRenderer;
 use App\Services\WorkflowRunner;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -38,9 +41,8 @@ class ProcessOfficeMessage
         private TemplateRenderer $renderer,
         private AddDisbursement $disbursements,
         private AcknowledgeSubmission $acknowledge,
-        private \App\Actions\Documents\StoreDocument $documents,
-    ) {
-    }
+        private StoreDocument $documents,
+    ) {}
 
     public function handle(OfficeMessage $message): OfficeMessage
     {
@@ -178,7 +180,7 @@ class ProcessOfficeMessage
         }
     }
 
-    private function applyWorkflows(OfficeEventType $event, Matter $matter, Carbon|\Carbon\CarbonInterface $eventDate, array &$log): void
+    private function applyWorkflows(OfficeEventType $event, Matter $matter, Carbon|CarbonInterface $eventDate, array &$log): void
     {
         $trigger = $event->trigger();
 
@@ -243,8 +245,8 @@ class ProcessOfficeMessage
 
             $document = $this->documents->fromContent($matter, $doc['name'], $content, [
                 'title' => $doc['title'] ?? pathinfo($doc['name'], PATHINFO_FILENAME),
-                'category' => \App\Enums\DocumentCategory::tryFrom($doc['category'] ?? '')
-                    ?? \App\Enums\DocumentCategory::OfficeAction,
+                'category' => DocumentCategory::tryFrom($doc['category'] ?? '')
+                    ?? DocumentCategory::OfficeAction,
                 'source' => 'office',
                 'mime' => $doc['mime'] ?? null,
                 'linked_type' => OfficeMessage::class,

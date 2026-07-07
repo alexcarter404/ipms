@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\AccessRole;
 use App\Enums\TimekeeperRole;
 use App\Models\Client;
+use App\Models\PortalUser;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class UserAccessController extends Controller
         return back()->with('success', "Portal access created for {$data['name']}.");
     }
 
-    public function destroyPortalUser(\App\Models\PortalUser $portalUser): RedirectResponse
+    public function destroyPortalUser(PortalUser $portalUser): RedirectResponse
     {
         $portalUser->delete();
 

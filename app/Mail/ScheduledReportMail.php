@@ -15,9 +15,7 @@ class ScheduledReportMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Report $report, public string $csv, public int $rowCount)
-    {
-    }
+    public function __construct(public Report $report, public string $csv, public int $rowCount) {}
 
     public function envelope(): Envelope
     {

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Actions\Integrations\ProcessOfficeMessage;
 use App\Http\Integrations\OfficeExchange\Requests\ListMessagesRequest;
 use App\Models\Client;
 use App\Models\CommTemplate;

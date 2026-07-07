@@ -10,6 +10,7 @@ use App\Enums\ContactType;
 use App\Exceptions\DomainActionException;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
+use App\Models\User;
 use App\Repositories\AuditRepository;
 use App\Repositories\BillingSettingsRepository;
 use App\Repositories\ClientRepository;
@@ -17,14 +18,13 @@ use App\Support\Countries;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ClientController extends Controller
 {
-    public function __construct(private ClientRepository $clients)
-    {
-    }
+    public function __construct(private ClientRepository $clients) {}
 
     public function index(Request $request): Response
     {
@@ -51,7 +51,7 @@ class ClientController extends Controller
 
     public function show(Client $client, BillingSettingsRepository $billingSettings, AuditRepository $audits): Response
     {
-        \Illuminate\Support\Facades\Gate::authorize('view-client', $client);
+        Gate::authorize('view-client', $client);
 
         return Inertia::render('Clients/Show', [
             'client' => $this->clients->loadForDisplay($client),
@@ -66,7 +66,7 @@ class ClientController extends Controller
                 'email' => $portalUser->email,
                 'last_login_at' => $portalUser->last_login_at?->toDateTimeString(),
             ]),
-            'userOptions' => \App\Models\User::orderBy('name')
+            'userOptions' => User::orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn ($u) => ['value' => $u->id, 'label' => $u->name]),
             'billingCurrencies' => Currencies::options(),

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\MatterType;
 use App\Enums\TimekeeperRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * A rate rule: an hourly rate scoped by any combination of timekeeper,
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RateCard extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'user_id', 'role', 'client_id', 'matter_type', 'activity_code_id',
         'currency_code', 'hourly_rate', 'effective_from',
@@ -26,7 +28,7 @@ class RateCard extends Model implements Auditable
         return [
             'role' => TimekeeperRole::class,
             'matter_type' => MatterType::class,
-            'hourly_rate' => \App\Casts\Money::class,
+            'hourly_rate' => Money::class,
             'effective_from' => 'date',
         ];
     }

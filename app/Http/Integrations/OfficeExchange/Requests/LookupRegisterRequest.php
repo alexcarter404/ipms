@@ -10,9 +10,7 @@ class LookupRegisterRequest extends Request
 {
     protected Method $method = Method::GET;
 
-    public function __construct(private string $applicationNo)
-    {
-    }
+    public function __construct(private string $applicationNo) {}
 
     public function resolveEndpoint(): string
     {

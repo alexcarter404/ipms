@@ -21,9 +21,7 @@ class ImportMatterFromOffice
         'copyright' => 'C', 'domain' => 'DN',
     ];
 
-    public function __construct(private IngestOfficeMessages $connectors)
-    {
-    }
+    public function __construct(private IngestOfficeMessages $connectors) {}
 
     public function handle(string $office, string $applicationNo, Client $client, User $user): Matter
     {

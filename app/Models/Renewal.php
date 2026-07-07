@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\RenewalStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Renewal extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'matter_id', 'cycle', 'due_date', 'grace_date', 'status',
@@ -26,8 +27,8 @@ class Renewal extends Model implements Auditable
             'status' => RenewalStatus::class,
             'due_date' => 'date',
             'grace_date' => 'date',
-            'official_fee' => \App\Casts\Money::class,
-            'service_fee' => \App\Casts\Money::class,
+            'official_fee' => Money::class,
+            'service_fee' => Money::class,
             'instructed_at' => 'datetime',
             'paid_at' => 'datetime',
         ];

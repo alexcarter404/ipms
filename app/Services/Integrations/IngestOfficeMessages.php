@@ -19,8 +19,7 @@ class IngestOfficeMessages
     public function __construct(
         private MessageMatcher $matcher,
         private ProcessOfficeMessage $processor,
-    ) {
-    }
+    ) {}
 
     /** @return array{ingested: int, processed: int, review: int} */
     public function ingest(string $office, array $messages): array

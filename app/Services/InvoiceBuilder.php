@@ -9,6 +9,7 @@ use App\Exceptions\DomainActionException;
 use App\Models\ClientEntity;
 use App\Models\Invoice;
 use App\Models\Matter;
+use App\Support\MoneyMinor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,10 @@ use Illuminate\Support\Facades\DB;
  */
 class InvoiceBuilder
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     /**
-     * @param array{include_time?: bool, include_disbursements?: bool, include_charges?: bool, through?: string|null} $options
+     * @param  array{include_time?: bool, include_disbursements?: bool, include_charges?: bool, through?: string|null}  $options
      */
     public function draft(Matter $matter, array $options = []): Invoice
     {
@@ -43,7 +42,7 @@ class InvoiceBuilder
     /**
      * Consolidated bill: one invoice covering the entity's matters.
      *
-     * @param array{matter_ids?: array<int>|null, include_time?: bool, include_disbursements?: bool, include_charges?: bool, through?: string|null} $options
+     * @param  array{matter_ids?: array<int>|null, include_time?: bool, include_disbursements?: bool, include_charges?: bool, through?: string|null}  $options
      */
     public function draftForEntity(ClientEntity $entity, array $options = []): Invoice
     {
@@ -93,7 +92,7 @@ class InvoiceBuilder
                 $this->addMatterLines($invoice, $set['matter'], $set['items'], $currency, $sort);
             }
 
-            $subtotal = \App\Support\MoneyMinor::fromMinor($invoice->lines()->sum('line_total'));
+            $subtotal = MoneyMinor::fromMinor($invoice->lines()->sum('line_total'));
             $taxAmount = round($subtotal * (float) $invoice->tax_pct / 100, 2);
             $invoice->update([
                 'subtotal' => $subtotal,
@@ -149,7 +148,7 @@ class InvoiceBuilder
         // Capped fee: never let this matter's time exceed what remains
         // under its cap.
         if ($agreement?->type === AgreementType::Capped && $agreement->cap_amount !== null) {
-            $alreadyBilled = \App\Support\MoneyMinor::fromMinor($matter->timeEntries()
+            $alreadyBilled = MoneyMinor::fromMinor($matter->timeEntries()
                 ->where('status', BillableStatus::Billed)
                 ->whereNotIn('id', $items['time']->pluck('id'))
                 ->sum('amount'));

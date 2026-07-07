@@ -21,9 +21,7 @@ use Illuminate\Support\Carbon;
  */
 class RateResolver
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     public function resolve(Matter $matter, User $user, ?CarbonInterface $date = null, ?int $activityCodeId = null): float
     {

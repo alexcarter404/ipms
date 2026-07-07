@@ -8,9 +8,7 @@ use App\Services\Invoicing\InvoicingProvider;
 
 class RecordPayment
 {
-    public function __construct(private InvoicingProvider $provider)
-    {
-    }
+    public function __construct(private InvoicingProvider $provider) {}
 
     public function handle(Invoice $invoice, array $data): Payment
     {

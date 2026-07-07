@@ -14,8 +14,7 @@ class SubmitSubmission
     public function __construct(
         private IngestOfficeMessages $connectors,
         private AcknowledgeSubmission $acknowledge,
-    ) {
-    }
+    ) {}
 
     public function handle(OfficeSubmission $submission): OfficeSubmission
     {

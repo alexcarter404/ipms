@@ -9,9 +9,7 @@ use Illuminate\Support\Carbon;
 
 class AddCharge
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private ExchangeRateService $fx) {}
 
     public function handle(Matter $matter, array $data): Charge
     {

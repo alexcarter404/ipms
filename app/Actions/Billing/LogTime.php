@@ -12,9 +12,7 @@ use Illuminate\Support\Carbon;
 
 class LogTime
 {
-    public function __construct(private RateResolver $rates, private ExchangeRateService $fx)
-    {
-    }
+    public function __construct(private RateResolver $rates, private ExchangeRateService $fx) {}
 
     public function handle(Matter $matter, array $data): TimeEntry
     {

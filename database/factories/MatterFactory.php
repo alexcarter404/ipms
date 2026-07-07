@@ -5,10 +5,11 @@ namespace Database\Factories;
 use App\Enums\MatterStatus;
 use App\Enums\MatterType;
 use App\Models\Client;
+use App\Models\Matter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Matter>
+ * @extends Factory<Matter>
  */
 class MatterFactory extends Factory
 {

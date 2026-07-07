@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PortalUser;
 use App\Models\User;
 
 return [
@@ -75,7 +76,7 @@ return [
 
         'portal_users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\PortalUser::class,
+            'model' => PortalUser::class,
         ],
 
         // 'users' => [

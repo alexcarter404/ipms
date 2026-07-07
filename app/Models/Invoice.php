@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use App\Enums\InvoiceStatus;
+use App\Support\MoneyMinor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Invoice extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'invoice_no', 'client_id', 'client_entity_id', 'matter_id',
         'currency_code', 'status', 'issued_at', 'due_at', 'tax_name',
@@ -24,9 +27,9 @@ class Invoice extends Model implements Auditable
             'issued_at' => 'date',
             'due_at' => 'date',
             'tax_pct' => 'decimal:2',
-            'subtotal' => \App\Casts\Money::class,
-            'tax_amount' => \App\Casts\Money::class,
-            'total' => \App\Casts\Money::class,
+            'subtotal' => Money::class,
+            'tax_amount' => Money::class,
+            'total' => Money::class,
         ];
     }
 
@@ -57,7 +60,7 @@ class Invoice extends Model implements Auditable
 
     public function amountPaid(): float
     {
-        return \App\Support\MoneyMinor::fromMinor($this->payments()->sum('amount'));
+        return MoneyMinor::fromMinor($this->payments()->sum('amount'));
     }
 
     public function balance(): float

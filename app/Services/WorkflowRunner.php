@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Matter;
+use App\Models\MatterTask;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowStep;
@@ -18,7 +19,7 @@ use Illuminate\Support\Collection;
 class WorkflowRunner
 {
     /**
-     * @return Collection<int, \App\Models\MatterTask>
+     * @return Collection<int, MatterTask>
      */
     public function apply(Workflow $workflow, Matter $matter, CarbonInterface $baseDate, ?User $actor = null, ?int $assigneeId = null, ?WorkflowStep $startAt = null): Collection
     {

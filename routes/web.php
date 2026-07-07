@@ -7,35 +7,36 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientEntityController;
-use App\Http\Controllers\ConflictCheckController;
-use App\Http\Controllers\UserAccessController;
-use App\Http\Controllers\DisbursementController;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\TimeEntryController;
-use App\Http\Controllers\WipController;
 use App\Http\Controllers\CommTemplateController;
 use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\ConflictCheckController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DisbursementController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FamilyController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailroomController;
 use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
-use App\Http\Controllers\MatterImportController;
 use App\Http\Controllers\MatterController;
-use App\Http\Controllers\OfficeMessageController;
-use App\Http\Controllers\OfficeSubmissionController;
+use App\Http\Controllers\MatterImportController;
 use App\Http\Controllers\MatterPartyController;
 use App\Http\Controllers\MatterTakeOnController;
+use App\Http\Controllers\OfficeMessageController;
+use App\Http\Controllers\OfficeSubmissionController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RenewalController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RenewalRuleController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TimeEntryController;
+use App\Http\Controllers\UserAccessController;
+use App\Http\Controllers\WipController;
 use App\Http\Controllers\WorkflowApplicationController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
@@ -57,7 +58,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
 Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/search', App\Http\Controllers\SearchController::class)->name('search');
+    Route::get('/search', SearchController::class)->name('search');
 
     // Clients & contacts
     Route::resource('clients', ClientController::class);

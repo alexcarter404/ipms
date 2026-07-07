@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class InternalInvoicingProvider implements InvoicingProvider
 {
-    public function __construct(private InvoiceRepository $invoices)
-    {
-    }
+    public function __construct(private InvoiceRepository $invoices) {}
 
     public function issue(Invoice $invoice): Invoice
     {

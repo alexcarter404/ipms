@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
 use App\Enums\MatterStatus;
 use App\Enums\MatterType;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,11 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Matter extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     use HasFactory, SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'reference', 'matter_type', 'title', 'client_id', 'client_entity_id',

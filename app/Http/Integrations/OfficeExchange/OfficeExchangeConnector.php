@@ -16,8 +16,7 @@ class OfficeExchangeConnector extends Connector
     public function __construct(
         private string $baseUrl,
         private ?string $token = null,
-    ) {
-    }
+    ) {}
 
     public function resolveBaseUrl(): string
     {

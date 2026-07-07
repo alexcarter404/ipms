@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * A day's rate against the base currency: 1 base unit = rate × currency.
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class ExchangeRate extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = ['currency_code', 'rate', 'rate_date'];
 
     protected function casts(): array

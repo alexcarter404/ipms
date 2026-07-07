@@ -17,9 +17,7 @@ use Illuminate\Support\Facades\DB;
  */
 class TakeOnMatter
 {
-    public function __construct(private WorkflowRunner $runner)
-    {
-    }
+    public function __construct(private WorkflowRunner $runner) {}
 
     /**
      * @return array{matter: Matter, tasks: Collection}

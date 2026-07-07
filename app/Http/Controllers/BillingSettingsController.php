@@ -28,9 +28,7 @@ use Inertia\Response;
 
 class BillingSettingsController extends Controller
 {
-    public function __construct(private BillingSettingsRepository $settings)
-    {
-    }
+    public function __construct(private BillingSettingsRepository $settings) {}
 
     public function edit(Request $request, UserRepository $users, ClientRepository $clients): Response
     {

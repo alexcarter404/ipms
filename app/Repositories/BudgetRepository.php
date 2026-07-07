@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\BillableStatus;
 use App\Models\Matter;
-use App\Services\ExchangeRateService;
+use App\Support\MoneyMinor;
 
 /**
  * Budget-vs-cost queries. A matter's budget accumulates across its
@@ -14,10 +14,6 @@ use App\Services\ExchangeRateService;
  */
 class BudgetRepository
 {
-    public function __construct(private ExchangeRateService $fx)
-    {
-    }
-
     /** The matter billing tab's budget card. */
     public function forMatter(Matter $matter): array
     {
@@ -81,12 +77,12 @@ class BudgetRepository
 
         // Query-level sums return raw minor units; collection sums on
         // loaded models (below) already come through the Money cast.
-        $consumed = \App\Support\MoneyMinor::fromMinor(
+        $consumed = MoneyMinor::fromMinor(
             (int) $matter->timeEntries()->tap($counted)->sum('amount')
             + (int) $matter->disbursements()->tap($counted)->sum('amount')
             + (int) $matter->charges()->tap($counted)->sum('amount')
         );
-        $consumedBase = \App\Support\MoneyMinor::fromMinor(
+        $consumedBase = MoneyMinor::fromMinor(
             (int) $matter->timeEntries()->tap($counted)->sum('base_amount')
             + (int) $matter->disbursements()->tap($counted)->sum('base_amount')
             + (int) $matter->charges()->tap($counted)->sum('base_amount')

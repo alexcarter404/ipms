@@ -14,7 +14,9 @@ use App\Models\MatterTask;
 use App\Models\OfficeSubmission;
 use App\Models\Renewal;
 use App\Models\TimeEntry;
+use App\Support\MoneyMinor;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use OwenIt\Auditing\Models\Audit;
 
 /**
@@ -118,7 +120,7 @@ class AuditRepository
         foreach ($sources as $values) {
             foreach (['reference', 'title', 'name', 'description', 'narrative', 'subject'] as $key) {
                 if (! empty($values[$key]) && is_string($values[$key])) {
-                    return \Illuminate\Support\Str::limit($values[$key], 60);
+                    return Str::limit($values[$key], 60);
                 }
             }
         }
@@ -166,7 +168,7 @@ class AuditRepository
         }
 
         if ($isMoney && is_numeric($value)) {
-            return number_format(\App\Support\MoneyMinor::toMajor($value), 2, '.', '');
+            return number_format(MoneyMinor::toMajor($value), 2, '.', '');
         }
 
         if (is_bool($value)) {
@@ -174,7 +176,7 @@ class AuditRepository
         }
 
         if (is_array($value)) {
-            return \Illuminate\Support\Str::limit(json_encode($value), 80);
+            return Str::limit(json_encode($value), 80);
         }
 
         if ($value instanceof \BackedEnum) {
@@ -190,6 +192,6 @@ class AuditRepository
             return "{$m[1]} {$m[2]}";
         }
 
-        return \Illuminate\Support\Str::limit((string) $value, 120);
+        return Str::limit((string) $value, 120);
     }
 }

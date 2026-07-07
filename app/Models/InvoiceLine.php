@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
-use OwenIt\Auditing\Contracts\Auditable;
+use App\Casts\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class InvoiceLine extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'invoice_id', 'matter_id', 'billable_type', 'billable_id',
         'description', 'quantity', 'unit_amount', 'line_total', 'sort_order',
@@ -19,8 +21,8 @@ class InvoiceLine extends Model implements Auditable
     {
         return [
             'quantity' => 'decimal:2',
-            'unit_amount' => \App\Casts\Money::class,
-            'line_total' => \App\Casts\Money::class,
+            'unit_amount' => Money::class,
+            'line_total' => Money::class,
         ];
     }
 

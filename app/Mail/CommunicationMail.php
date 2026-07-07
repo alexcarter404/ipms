@@ -14,9 +14,7 @@ class CommunicationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Communication $communication)
-    {
-    }
+    public function __construct(public Communication $communication) {}
 
     public function envelope(): Envelope
     {

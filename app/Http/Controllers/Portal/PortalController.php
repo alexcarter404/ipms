@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Enums\RenewalStatus;
-use App\Exceptions\DomainActionException;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\Invoice;
 use App\Models\Renewal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,7 +101,7 @@ class PortalController extends Controller
                     'category' => $document->category->label(),
                     'created_at' => $document->created_at->toDateString(),
                 ]),
-            'invoices' => \App\Models\Invoice::with('entity:id,name')
+            'invoices' => Invoice::with('entity:id,name')
                 ->whereIn('status', ['issued', 'paid'])
                 ->whereHas('entity', fn ($q) => $q->where('client_id', $client->id))
                 ->latest()

@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class FileDropConnector implements IpoConnector
 {
-    public function __construct(private string $office)
-    {
-    }
+    public function __construct(private string $office) {}
 
     public function office(): string
     {

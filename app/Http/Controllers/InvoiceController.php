@@ -15,6 +15,8 @@ use App\Models\Invoice;
 use App\Models\Matter;
 use App\Repositories\ClientRepository;
 use App\Repositories\InvoiceRepository;
+use App\Services\LedesExporter;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,15 +24,15 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
-    public function pdf(\App\Models\Invoice $invoice)
+    public function pdf(Invoice $invoice)
     {
         $invoice->load(['lines.matter:id,reference,title', 'client:id,name', 'entity']);
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', ['invoice' => $invoice])
+        return Pdf::loadView('invoices.pdf', ['invoice' => $invoice])
             ->download($invoice->displayNumber().'.pdf');
     }
 
-    public function ledes(\App\Models\Invoice $invoice, \App\Services\LedesExporter $exporter)
+    public function ledes(Invoice $invoice, LedesExporter $exporter)
     {
         return response($exporter->export($invoice), 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
@@ -38,9 +40,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function __construct(private InvoiceRepository $invoices)
-    {
-    }
+    public function __construct(private InvoiceRepository $invoices) {}
 
     public function index(Request $request, ClientRepository $clients): Response
     {

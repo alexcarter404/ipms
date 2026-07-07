@@ -26,8 +26,7 @@ class QuoteController extends Controller
         private ClientRepository $clients,
         private MatterRepository $matters,
         private BillingSettingsRepository $settings,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
