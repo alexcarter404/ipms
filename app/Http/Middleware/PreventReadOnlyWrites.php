@@ -20,7 +20,7 @@ class PreventReadOnlyWrites
         $user = $request->user();
 
         if (
-            $user
+            $user instanceof \App\Models\User
             && ! $user->canWrite()
             && ! $request->isMethodSafe()
             && ! in_array($request->route()?->getName(), self::ALLOWED_ROUTES, true)

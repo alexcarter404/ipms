@@ -60,6 +60,12 @@ class ClientController extends Controller
             'matters' => $this->clients->paginateMatters($client),
             'audits' => $audits->forClient($client),
             'wallUserIds' => $client->walls()->pluck('user_id'),
+            'portalUsers' => $client->portalUsers()->get()->map(fn ($portalUser) => [
+                'id' => $portalUser->id,
+                'name' => $portalUser->name,
+                'email' => $portalUser->email,
+                'last_login_at' => $portalUser->last_login_at?->toDateTimeString(),
+            ]),
             'userOptions' => \App\Models\User::orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn ($u) => ['value' => $u->id, 'label' => $u->name]),

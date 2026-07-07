@@ -42,6 +42,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Client-side logins for the read-only portal
+        'portal' => [
+            'driver' => 'session',
+            'provider' => 'portal_users',
+        ],
     ],
 
     /*
@@ -65,6 +71,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'portal_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\PortalUser::class,
         ],
 
         // 'users' => [

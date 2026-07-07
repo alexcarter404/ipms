@@ -240,6 +240,18 @@ renewal/annuity management.
   Restores are saved through the model, so the time-travel itself
   lands in the audit trail
 
+### Client Portal
+- **Separate portal guard** at `/portal`: client-side logins (granted
+  and revoked by admins from the client's page) see their own
+  portfolio and nothing else — matters, upcoming renewals, documents
+  (with downloads) and issued invoices with balances, all hard-scoped
+  to the portal user's client
+- **Renewal instructions**: the killer portal feature — clients answer
+  "pay or let lapse?" themselves; instructions land straight in the
+  renewals pipeline (instructed with timestamp, or waived)
+- The portal session cannot reach the firm's system and vice versa
+  (distinct auth guards, firm routes pinned to the web guard)
+
 ### Roles, Permissions & Conflicts
 - **Access roles** orthogonal to timekeeper grades: administrator
   (everything, including configuration and users), professional
@@ -323,7 +335,7 @@ Log in with the seeded demo user: **admin@example.com / password**.
 
 ## Testing
 
-**Backend feature tests** (PHPUnit, in-memory SQLite — 265 tests covering
+**Backend feature tests** (PHPUnit, in-memory SQLite — 271 tests covering
 clients, matters, parties, classes, tasks, renewals scheduling rules,
 workflow application, stage contracts + matter take-on, billing (time
 rounding, rate cards, FX, markup, caps, invoicing, quotes, settings),
@@ -335,7 +347,7 @@ rendering, application auditing with audit-trail state restore, and the dashboar
 php artisan test
 ```
 
-**End-to-end UI tests** (Playwright, 69 tests driving the real app —
+**End-to-end UI tests** (Playwright, 71 tests driving the real app —
 login, navigation, matter/client creation, filtering, task completion,
 renewal generation + instruction, the workflow builder and applying
 workflows, matter take-on with stage contracts, the billing journey

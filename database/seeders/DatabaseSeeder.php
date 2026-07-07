@@ -618,6 +618,14 @@ class DatabaseSeeder extends Seeder
         }
         app(\App\Services\Integrations\RegisterReconciliation::class)->run();
 
+        // --- Client portal login for ACME ---
+        \App\Models\PortalUser::create([
+            'client_id' => $acme->id,
+            'name' => 'Sarah Bennett',
+            'email' => 'sarah.bennett@acme.example',
+            'password' => 'password',
+        ]);
+
         // --- A little edit history for the audit trail demo ---
         auth()->login($attorney);
         Matter::firstWhere('reference', 'P-2021-0001')->update([
