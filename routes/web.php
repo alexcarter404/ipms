@@ -33,6 +33,7 @@ use App\Http\Controllers\MatterTakeOnController;
 use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RenewalController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RenewalRuleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkflowApplicationController;
@@ -136,6 +137,16 @@ Route::middleware(['auth:web', 'verified'])->group(function () {
 
     // Audit log: roll a record back/forward across an update entry
     Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
+
+    // Reports: ad-hoc runs, saved definitions, CSV export
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('reports', [ReportController::class, 'store'])->name('reports.store');
+    Route::get('reports/csv', [ReportController::class, 'csv'])->name('reports.csv');
+    Route::delete('reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+
+    // Invoice exports: client-ready PDF + LEDES 1998B e-billing
+    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    Route::get('invoices/{invoice}/ledes', [InvoiceController::class, 'ledes'])->name('invoices.ledes');
 
     // Register import & reconciliation
     Route::post('matters/import', [MatterImportController::class, 'store'])->name('matters.import');

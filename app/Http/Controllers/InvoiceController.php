@@ -22,6 +22,22 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
+    public function pdf(\App\Models\Invoice $invoice)
+    {
+        $invoice->load(['lines.matter:id,reference,title', 'client:id,name', 'entity']);
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', ['invoice' => $invoice])
+            ->download($invoice->displayNumber().'.pdf');
+    }
+
+    public function ledes(\App\Models\Invoice $invoice, \App\Services\LedesExporter $exporter)
+    {
+        return response($exporter->export($invoice), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$invoice->displayNumber().'-ledes1998b.txt"',
+        ]);
+    }
+
     public function __construct(private InvoiceRepository $invoices)
     {
     }

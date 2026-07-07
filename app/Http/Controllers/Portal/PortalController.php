@@ -108,7 +108,7 @@ class PortalController extends Controller
                 ->limit(25)
                 ->get()
                 ->map(fn ($invoice) => [
-                    'number' => $invoice->number,
+                    'number' => $invoice->invoice_no,
                     'entity' => $invoice->entity?->name,
                     'status' => $invoice->status->value,
                     'currency' => $invoice->currency_code,

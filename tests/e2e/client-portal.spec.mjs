@@ -42,7 +42,7 @@ test.describe('Client portal', () => {
             .click();
         expect((await downloadPromise).suggestedFilename()).toBe('specification-as-filed.pdf');
 
-        // Invoice scoping: NovaTech's seeded INV-2026-0001 never shows for Acme
+        // Invoice scoping: NovaTech's seeded INV-2026-0001 never shows for Acme (number = invoice_no)
         const invoices = page.locator('[data-testid="portal-invoices"]');
         await expect(invoices.getByRole('heading', { name: 'Invoices' })).toBeVisible();
         await expect(invoices.getByText('INV-2026-0001')).toHaveCount(0);

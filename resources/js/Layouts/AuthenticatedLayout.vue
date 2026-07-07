@@ -22,6 +22,7 @@ const navigation = [
     { name: 'Workflows', route: 'workflows.index', current: 'workflows.*' },
     { name: 'Integrations', route: 'integrations.index', current: 'integrations.*' },
     { name: 'Mailroom', route: 'mailroom.index', current: 'mailroom.*' },
+    { name: 'Reports', route: 'reports.index', current: 'reports.*' },
     { name: 'Templates', route: 'templates.index', current: 'templates.*' },
 ];
 
