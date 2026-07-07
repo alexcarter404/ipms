@@ -17,5 +17,8 @@ Schedule::command('ipo:poll')->hourly();
 // Capture inbound email from the docketing mailbox drop.
 Schedule::command('mail:ingest')->everyFifteenMinutes();
 
+// Weekly register hygiene: flag drift against the office records.
+Schedule::command('ipo:reconcile')->weeklyOn(1, '05:00');
+
 // The morning docket: due tasks and renewals per user.
 Schedule::command('reminders:digest')->weekdays()->dailyAt('07:00');

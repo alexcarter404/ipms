@@ -23,7 +23,19 @@ const props = defineProps({
     submissions: Array,
     submissionTypes: Array,
     openTasks: Object,
+    registerChecks: { type: Array, default: () => [] },
 });
+
+const fieldLabel = (field) => field.replaceAll('_', ' ');
+
+const runReconciliation = () =>
+    router.post(route('integrations.reconcile'), {}, { preserveScroll: true });
+
+const acceptCheck = (check) =>
+    router.post(route('register-checks.accept', check.id), {}, { preserveScroll: true });
+
+const dismissCheck = (check) =>
+    router.post(route('register-checks.dismiss', check.id), {}, { preserveScroll: true });
 
 const form = reactive({
     status: props.filters.status ?? '',
@@ -305,6 +317,67 @@ const shortDate = (value) =>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Register reconciliation -->
+            <div class="overflow-hidden rounded-lg bg-white shadow-sm" data-testid="register-checks">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Register Reconciliation</h3>
+                        <p class="text-sm text-gray-500">
+                            Our docket vs the office record — drift means the register says
+                            something we don't.
+                        </p>
+                    </div>
+                    <SecondaryButton @click="runReconciliation">Reconcile Now</SecondaryButton>
+                </div>
+                <div v-if="!registerChecks.length" class="px-4 py-6 text-center text-sm text-gray-500">
+                    No open register checks — the docket matches the offices.
+                </div>
+                <div v-else class="divide-y">
+                    <div v-for="check in registerChecks" :key="check.id" class="px-4 py-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="text-sm">
+                                <Link
+                                    v-if="check.matter"
+                                    :href="route('matters.show', check.matter.id)"
+                                    class="font-medium text-indigo-600 hover:underline"
+                                >
+                                    {{ check.matter.reference }}
+                                </Link>
+                                <span class="ml-2 uppercase text-gray-400">{{ check.office }}</span>
+                                <StatusBadge
+                                    :status="check.status"
+                                    :label="check.status === 'not_found' ? 'Not on register' : 'Drift'"
+                                    class="ml-2"
+                                />
+                            </div>
+                            <div class="flex gap-2 text-xs">
+                                <button
+                                    v-if="check.status === 'drift'"
+                                    type="button"
+                                    class="text-indigo-600 hover:underline"
+                                    @click="acceptCheck(check)"
+                                >
+                                    Accept office values
+                                </button>
+                                <button type="button" class="text-gray-500 hover:underline" @click="dismissCheck(check)">
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                        <dl v-if="check.differences.length" class="mt-2 space-y-1 text-sm">
+                            <div v-for="difference in check.differences" :key="difference.field" class="flex flex-wrap gap-x-2">
+                                <dt class="font-medium capitalize text-gray-500">{{ fieldLabel(difference.field) }}</dt>
+                                <dd class="text-gray-700">
+                                    <span class="text-gray-400 line-through">{{ difference.ours ?? '—' }}</span>
+                                    <span class="mx-1 text-gray-400">vs register</span>
+                                    <span class="font-medium">{{ difference.theirs ?? '—' }}</span>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
             </div>
         </div>
 

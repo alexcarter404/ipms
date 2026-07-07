@@ -52,6 +52,9 @@ class MatterController extends Controller
             'statuses' => MatterStatus::options(),
             'countries' => Countries::options(),
             'clients' => $clients->options(),
+            'offices' => collect(config('integrations.offices'))
+                ->map(fn ($config, $code) => ['value' => $code, 'label' => $config['name']])
+                ->values(),
         ]);
     }
 

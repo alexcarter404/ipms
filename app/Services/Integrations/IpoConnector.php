@@ -26,6 +26,13 @@ interface IpoConnector
     public function submit(array $payload): array;
 
     /**
+     * Look up an application on the office register. Returns the
+     * office's record (title, applicant, official numbers and dates,
+     * status) or null when the number is unknown.
+     */
+    public function lookup(string $applicationNo): ?array;
+
+    /**
      * Pull pending inbound messages. Each message is an array with:
      * external_id, event_type, and optionally application_no,
      * registration_no, event_date, summary, and a payload of

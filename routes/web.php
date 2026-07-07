@@ -24,6 +24,7 @@ use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\MailroomController;
 use App\Http\Controllers\MatterClassController;
 use App\Http\Controllers\MatterContactController;
+use App\Http\Controllers\MatterImportController;
 use App\Http\Controllers\MatterController;
 use App\Http\Controllers\OfficeMessageController;
 use App\Http\Controllers\OfficeSubmissionController;
@@ -121,6 +122,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit log: roll a record back/forward across an update entry
     Route::post('audits/{audit}/transition', [AuditController::class, 'transition'])->name('audits.transition');
+
+    // Register import & reconciliation
+    Route::post('matters/import', [MatterImportController::class, 'store'])->name('matters.import');
+    Route::post('integrations/reconcile', [MatterImportController::class, 'reconcile'])->name('integrations.reconcile');
+    Route::post('register-checks/{registerCheck}/accept', [MatterImportController::class, 'accept'])->name('register-checks.accept');
+    Route::post('register-checks/{registerCheck}/dismiss', [MatterImportController::class, 'dismiss'])->name('register-checks.dismiss');
 
     // Users & access (admin): roles and ethical walls
     Route::get('settings/users', [UserAccessController::class, 'index'])

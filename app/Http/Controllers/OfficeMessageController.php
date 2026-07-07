@@ -65,6 +65,19 @@ class OfficeMessageController extends Controller
                 'processed' => OfficeMessage::where('status', OfficeMessageStatus::Processed)->count(),
             ],
             'matterOptions' => $matters->referenceOptions(),
+            'registerChecks' => \App\Models\RegisterCheck::with('matter:id,reference,title')
+                ->whereNull('resolved_at')
+                ->latest('checked_at')
+                ->limit(50)
+                ->get()
+                ->map(fn ($check) => [
+                    'id' => $check->id,
+                    'office' => $check->office,
+                    'status' => $check->status,
+                    'matter' => $check->matter?->only('id', 'reference', 'title'),
+                    'differences' => $check->differences ?? [],
+                    'checked_at' => $check->checked_at->toDateTimeString(),
+                ]),
             'submissions' => OfficeSubmission::with(['matter:id,reference', 'task:id,title', 'creator:id,name'])
                 ->latest()
                 ->limit(50)
